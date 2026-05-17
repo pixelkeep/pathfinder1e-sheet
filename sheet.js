@@ -97,11 +97,11 @@ function calcInit() {
 // ── ARMOR CLASS ────────────────────────────────────────────────────
 function calcAC() {
   const dexMod  = getEffectiveMod('dex');
-  const armor   = parseInt(val('ac_armor'))   || 0;
-  const shield  = parseInt(val('ac_shield'))  || 0;
+  const armor   = Math.max(0, parseInt(val('ac_armor'))   || 0);
+  const shield  = Math.max(0, parseInt(val('ac_shield'))  || 0);
   const size    = parseInt(val('ac_size'))    || 0;
-  const natural = parseInt(val('ac_natural')) || 0;
-  const deflect = parseInt(val('ac_deflect')) || 0;
+  const natural = Math.max(0, parseInt(val('ac_natural')) || 0);
+  const deflect = Math.max(0, parseInt(val('ac_deflect')) || 0);
   const misc    = parseInt(val('ac_misc'))    || 0;
 
   set('ac_dex', dexMod);
@@ -1783,9 +1783,13 @@ function buildFeatsSection(classKey, level) {
               title="${isBonus ? `Bonus feat (${bonusAbil?.description || ''})` : `Regular feat (gained level ${gainedLevel})`}">
           ${isBonus ? `B${bonusIdx+1}` : `L${gainedLevel}`}
         </span>
-        <input type="text" id="feat_name_${i}" class="feat-name-input"
-               value="${(existing_i.name||'').replace(/"/g,'&quot;')}"
-               placeholder="${isBonus ? `Bonus ${bonusAbil?.name?.includes('Combat') ? 'combat ' : ''}feat…` : 'Feat name…'}">
+        <div class="feat-search-wrap" style="position:relative;flex:1;min-width:80px">
+          <input type="text" id="feat_name_${i}" class="feat-name-input"
+                 value="${(existing_i.name||'').replace(/"/g,'&quot;')}"
+                 placeholder="${isBonus ? `Bonus feat…` : 'Type to search feats…'}"
+                 oninput="onFeatSearch(${i})" autocomplete="off">
+          <div id="feat_suggestions_${i}" class="feat-suggestions" style="display:none"></div>
+        </div>
         <select id="feat_type_${i}" class="feat-type-select" onchange="onFeatTypeChange(${i})">
           <option value=""     ${(existing_i.type||'')==''      ?'selected':''}>—</option>
           <option value="combat"   ${existing_i.type==='combat'  ?'selected':''}>Combat</option>
@@ -1824,6 +1828,62 @@ function onFeatWeaponLink(i) {
   // Just refresh the weapon slot dropdown labels
   buildFeatsSection(_currentClass, _currentLevel);
 }
+
+// ── FEAT AUTOCOMPLETE ─────────────────────────────
+function onFeatSearch(i) {
+  const query = val(`feat_name_${i}`);
+  const suggestions = document.getElementById(`feat_suggestions_${i}`);
+  if (!suggestions) return;
+
+  if (typeof searchFeats === 'undefined' || query.length < 2) {
+    suggestions.style.display = 'none';
+    return;
+  }
+
+  const results = searchFeats(query);
+  if (!results.length) { suggestions.style.display = 'none'; return; }
+
+  suggestions.innerHTML = results.map(f => {
+    const safeName = f.name.replace(/'/g, '&#39;');
+    const safePrereqs = (f.prereqs||'').replace(/"/g,'&quot;');
+    const shortBenefit = f.benefit.length > 60 ? f.benefit.substring(0,60) + '…' : f.benefit;
+    return `<div class="feat-suggestion-item" onclick="selectFeat(${i}, '${`${f.name}`.replace(/'/g,'&#39;')}')"
+         title="${safePrereqs}">
+      <span class="feat-sug-name">${f.name}</span>
+      <span class="feat-sug-type">${f.type}</span>
+      <span class="feat-sug-benefit">${shortBenefit}</span>
+    </div>`;
+  }).join('');
+  suggestions.style.display = 'block';
+}
+
+function selectFeat(i, name) {
+  name = name.replace(/&#39;/g, "'");
+  const feat = (typeof getFeatByName !== 'undefined') ? getFeatByName(name) : null;
+  set(`feat_name_${i}`, name);
+  if (feat) {
+    set(`feat_desc_${i}`, feat.benefit);
+    // Auto-set type
+    const typeSel = document.getElementById(`feat_type_${i}`);
+    if (typeSel) typeSel.value = feat.type === 'combat' ? 'combat' : feat.type === 'metamagic' ? 'metamagic' : feat.type === 'item_creation' ? 'item' : 'general';
+    // Auto-show weapon link if needed
+    if (feat.weaponLinked) {
+      const wpnSel = document.getElementById(`feat_wpn_${i}`);
+      if (wpnSel) wpnSel.classList.remove('hidden');
+    }
+    onFeatTypeChange(i);
+  }
+  // Hide suggestions
+  const suggestions = document.getElementById(`feat_suggestions_${i}`);
+  if (suggestions) suggestions.style.display = 'none';
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.feat-search-wrap')) {
+    document.querySelectorAll('.feat-suggestions').forEach(el => el.style.display = 'none');
+  }
+});
 
 // ── CLASS ABILITIES SECTION ────────────────────────
 function buildClassAbilitiesSection(classKey, level) {
@@ -2301,3 +2361,94 @@ function restoreFeatData(feats) {
     onFeatTypeChange(i);
   });
 }
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEMS / WANDS / CHARGES
+   ══════════════════════════════════════════════════ */
+const MAGIC_ITEM_COUNT = 8;
+
+function buildMagicItems() {
+  const container = document.getElementById('magic-items-container');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
+    const row = document.createElement('div');
+    row.className = 'magic-item-row';
+    row.innerHTML = `
+      <input type="text" id="mi_name_${i}" class="mi-name-input" placeholder="e.g. Wand of Cure Moderate Wounds">
+      <div class="mi-charges-wrap">
+        <input type="number" id="mi_charges_max_${i}" class="num small-num" placeholder="50" oninput="updateMagicItemDots(${i})" min="0" max="50">
+        <span class="mi-label">max</span>
+        <input type="number" id="mi_charges_used_${i}" class="num small-num" placeholder="0" oninput="updateMagicItemDots(${i})" min="0">
+        <span class="mi-label">used</span>
+        <span id="mi_dots_${i}" class="mi-dots"></span>
+        <span id="mi_remaining_${i}" class="mi-remaining"></span>
+      </div>
+    `;
+    container.appendChild(row);
+  }
+}
+
+function updateMagicItemDots(i) {
+  const max  = parseInt(val(`mi_charges_max_${i}`))  || 0;
+  const used = parseInt(val(`mi_charges_used_${i}`)) || 0;
+  const remaining = Math.max(0, max - used);
+
+  const remainEl = document.getElementById(`mi_remaining_${i}`);
+  if (remainEl) remainEl.textContent = max > 0 ? `${remaining}/${max}` : '';
+
+  // Dot display — show up to 20 dots, scaled
+  const dotsEl = document.getElementById(`mi_dots_${i}`);
+  if (!dotsEl || max === 0) { if (dotsEl) dotsEl.innerHTML = ''; return; }
+  const show = Math.min(max, 20);
+  const usedDots = Math.round((used / max) * show);
+  let html = '';
+  for (let d = 0; d < show; d++) {
+    html += `<span class="mi-dot ${d < (show - usedDots) ? 'mi-dot-full' : 'mi-dot-used'}"
+             onclick="useMagicItemCharge(${i})" title="Click to use charge"></span>`;
+  }
+  dotsEl.innerHTML = html;
+}
+
+function useMagicItemCharge(i) {
+  const max  = parseInt(val(`mi_charges_max_${i}`))  || 0;
+  const used = parseInt(val(`mi_charges_used_${i}`)) || 0;
+  if (used < max) {
+    set(`mi_charges_used_${i}`, used + 1);
+    updateMagicItemDots(i);
+  }
+}
+
+// Add to DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  buildMagicItems();
+});
+
+// Extend collectData
+const _collectData_v3 = collectData;
+collectData = function() {
+  const data = _collectData_v3();
+  data.magicItems = [];
+  for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
+    data.magicItems.push({
+      name:       val(`mi_name_${i}`),
+      chargesMax: val(`mi_charges_max_${i}`),
+      chargesUsed:val(`mi_charges_used_${i}`),
+    });
+  }
+  return data;
+};
+
+// Extend populateData
+const _populateData_v3 = populateData;
+populateData = function(data) {
+  _populateData_v3(data);
+  if (data.magicItems) {
+    data.magicItems.forEach((m, i) => {
+      set(`mi_name_${i}`,         m.name        || '');
+      set(`mi_charges_max_${i}`,  m.chargesMax  || '');
+      set(`mi_charges_used_${i}`, m.chargesUsed || '');
+      updateMagicItemDots(i);
+    });
+  }
+};

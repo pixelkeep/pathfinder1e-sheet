@@ -220,7 +220,7 @@ input.short-text { width: 48px; }
 input.tiny       { width: 42px; }
 input.num        { width: 40px; text-align: center; font-family: var(--font-mono); }
 input.small-num  { width: 32px; text-align: center; font-family: var(--font-mono); font-size: 10px; }
-input.big-num    { width: 48px; text-align: center; font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+input.big-num    { width: 44px; text-align: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
 input.calc-result { background: var(--readonly-bg); color: var(--accent); font-weight: 700; }
 input.full-width-input { width: 100%; }
 
@@ -1696,4 +1696,109 @@ textarea.small-textarea  { min-height: 36px; }
   color: #8b6f3e;
   margin-left: 4px;
   font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   FEAT AUTOCOMPLETE
+   ══════════════════════════════════════════════════ */
+.feat-search-wrap { position: relative; flex: 1; min-width: 80px; }
+
+.feat-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.feat-suggestion-item {
+  padding: 3px 6px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  display: grid;
+  grid-template-columns: auto 60px 1fr;
+  gap: 4px;
+  align-items: baseline;
+}
+.feat-suggestion-item:hover { background: rgba(42,74,107,.08); }
+
+.feat-sug-name {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.feat-sug-type {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  text-transform: uppercase;
+  text-align: center;
+}
+.feat-sug-benefit {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEMS / CHARGES
+   ══════════════════════════════════════════════════ */
+.magic-item-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 0 4px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+}
+.magic-item-row:last-child { border-bottom: none; }
+
+.mi-name-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+}
+.mi-name-input:focus { border-bottom-color: var(--accent2); outline: none; }
+
+.mi-charges-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.mi-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+}
+.mi-dots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.mi-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity .1s;
+}
+.mi-dot-full { background: var(--accent2); }
+.mi-dot-used { background: var(--border-light); opacity: .4; }
+.mi-dot:hover { opacity: .7; }
+
+.mi-remaining {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
 }
