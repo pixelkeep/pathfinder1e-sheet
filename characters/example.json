@@ -1,1 +1,16 @@
-
+{
+  "_note": "This is a placeholder. Save your character using the Save button in the sheet, then replace this file.",
+  "_version": "1.0",
+  "charName": "Example Character",
+  "classLevel": "Warpriest 1",
+  "race": "Dwarf",
+  "alignment": "LG",
+  "str_score": "14",
+  "dex_score": "10",
+  "con_score": "14",
+  "int_score": "10",
+  "wis_score": "16",
+  "cha_score": "8",
+  "hp_max": "11",
+  "bab": "0"
+}
