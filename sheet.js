@@ -55,6 +55,7 @@ const GEAR_COUNT    = 20;
 // ── INIT ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   buildSkillsTable();
+  buildLanguagePicker([], []);
   buildWeapons();
   buildACItems();
   buildGear();
@@ -169,7 +170,7 @@ function buildSkillsTable() {
     const abilLabel = ability.toUpperCase();
     tr.innerHTML = `
       <td><span class="cs-dot" id="cs_${id}" onclick="toggleCS('${id}')" title="Class Skill"></span></td>
-      <td class="skill-name">${name}${trainedMark} <span class="skill-abil-tag">${abilLabel}</span></td>
+      <td class="skill-name"><span class="skill-abil-tag">${abilLabel}</span> ${name}${trainedMark}</td>
       <td><input type="number" id="sk_total_${id}" class="num small-num" readonly></td>
       <td><input type="number" id="sk_ability_${id}" class="num small-num" readonly></td>
       <td><input type="number" id="sk_ranks_${id}" class="num small-num" oninput="calcSkill('${id}')"></td>
@@ -179,10 +180,120 @@ function buildSkillsTable() {
   });
 }
 
+// ── LANGUAGE PICKER ────────────────────────────────────────────────
+// Race defaults and bonus languages are highlighted when set via Setup
+let _racialLanguages   = [];   // auto-known for this race
+let _bonusLanguages    = [];   // available as bonus choices
+
+function buildLanguagePicker(racialLangs, bonusLangs) {
+  _racialLanguages = racialLangs  || [];
+  _bonusLanguages  = bonusLangs   || [];
+
+  const container = document.getElementById('languages-checkboxes');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  ALL_LANGUAGES.forEach(lang => {
+    const isRacial = _racialLanguages.includes(lang);
+    const isBonus  = _bonusLanguages.includes(lang);
+    const isChecked = isRacial; // racial languages pre-checked
+
+    const label = document.createElement('label');
+    label.className = 'lang-item' +
+      (isRacial ? ' lang-racial' : '') +
+      (isBonus  ? ' lang-bonus'  : '');
+    label.title = isRacial ? 'Racial language (auto-known)'
+                : isBonus  ? 'Available as bonus language choice'
+                : '';
+
+    label.innerHTML = `
+      <input type="checkbox" id="lang_${lang.replace(/[^a-z]/gi,'_')}"
+             class="lang-checkbox" data-lang="${lang}"
+             ${isChecked ? 'checked' : ''}
+             onchange="updateLanguageField()">
+      ${lang}`;
+
+    container.appendChild(label);
+  });
+
+  updateLanguageField();
+}
+
+function updateLanguageField() {
+  // Build the languages text field from checked boxes + custom
+  const checked = [...document.querySelectorAll('.lang-checkbox:checked')]
+    .map(cb => cb.dataset.lang);
+  const custom = val('languages_custom');
+  const all = custom ? [...checked, custom] : checked;
+  // Keep the hidden text field in sync for save/load compatibility
+  set('languages', all.join(', '));
+}
+
+function restoreLanguagePicker(langString) {
+  if (!langString) return;
+  const langs = langString.split(',').map(l => l.trim());
+  langs.forEach(lang => {
+    const id = `lang_${lang.replace(/[^a-z]/gi,'_')}`;
+    const cb = document.getElementById(id);
+    if (cb) cb.checked = true;
+  });
+  updateLanguageField();
+}
+
+
 function toggleCS(id) {
   const dot = document.getElementById(`cs_${id}`);
   dot.classList.toggle('checked');
   calcSkill(id);
+}
+
+// Active deity bonus state — typed, matches DEITY_PERKS bonus array
+// Keyed by bonus type so calcSkill/calcSaves/etc can look up what applies
+let _deityBonuses = {
+  skill_ability: [],   // { targets: ['str'], amount, bonusType, condition }
+  skill:         [],   // { targets: ['climb', ...], amount, bonusType, condition }
+  save:          [],   // { targets: ['fort','ref','will'], amount, bonusType, condition }
+  attack:        [],   // { targets: ['weapon name'], amount, bonusType, condition }
+  concentration: [],   // { targets: ['concentration'], amount, bonusType, condition }
+  ac:            [],   // { targets: [...], amount, bonusType, condition }
+};
+let _deityBonusLabel = '';
+
+function applyDeityBonuses(perkData, deityName) {
+  // Reset
+  Object.keys(_deityBonuses).forEach(k => _deityBonuses[k] = []);
+  _deityBonusLabel = deityName;
+
+  if (!perkData || !perkData.bonus) return;
+
+  perkData.bonus.forEach(b => {
+    const key = b.type;
+    if (_deityBonuses[key] !== undefined) {
+      _deityBonuses[key].push(b);
+    }
+  });
+
+  // Recalculate affected totals
+  calcSkills();
+  calcSaves();
+}
+
+function getDeitySkillBonus(skillId, ability) {
+  let total = 0;
+  // skill_ability: bonus on all skills using this ability
+  _deityBonuses.skill_ability.forEach(b => {
+    if (b.targets.includes(ability)) total += b.amount;
+  });
+  // skill: bonus on specific skill ids
+  _deityBonuses.skill.forEach(b => {
+    if (b.targets.includes(skillId)) total += b.amount;
+  });
+  return total;
+}
+
+function getDeityConcentrationBonus() {
+  return _deityBonuses.concentration.reduce((sum, b) => sum + b.amount, 0);
 }
 
 function calcSkill(id) {
@@ -195,8 +306,15 @@ function calcSkill(id) {
   const isCS    = document.getElementById(`cs_${id}`).classList.contains('checked');
   const csBonus = (isCS && ranks > 0) ? 3 : 0;
 
+  // Apply deity obedience bonus (typed, universal)
+  const deityBonus = getDeitySkillBonus(id, ability);
+
   set(`sk_ability_${id}`, abilMod);
-  set(`sk_total_${id}`, abilMod + ranks + misc + csBonus);
+  set(`sk_total_${id}`, abilMod + ranks + misc + csBonus + deityBonus);
+
+  // Visually mark skills that benefit from obedience bonus
+  const row = document.querySelector(`tr[data-skill="${id}"]`);
+  if (row) row.classList.toggle('obedience-bonus', deityBonus > 0);
 }
 
 function calcSkills() {
@@ -404,7 +522,7 @@ function collectData() {
     'bab','spell_res',
     'cmb_size','cmb_misc','cmd_size',
     'speed_land','speed_armor','speed_fly','speed_maneuv','speed_swim','speed_climb','speed_burrow',
-    'languages','skill_conditional','_applied_race',
+    'languages','languages_custom','skill_conditional','_applied_race',
     'money_pp','money_gp','money_sp','money_cp',
     'xp_current','xp_next',
     'feats','special_abilities','notes',
@@ -1010,6 +1128,18 @@ populateData = function(data) {
   set('formulae_book',  data.formulae_book  || '');
   set('campaign_notes', data.campaign_notes || '');
 
+  // Restore language checkboxes
+  if (data.languages) {
+    // Rebuild picker with race data if available
+    const raceKey = data._applied_race;
+    const race = raceKey && RACES[raceKey];
+    buildLanguagePicker(
+      race ? race.languages      : [],
+      race ? race.bonusLanguages : []
+    );
+    restoreLanguagePicker(data.languages);
+  }
+
   updateCarryWeight();
 };
 
@@ -1269,8 +1399,8 @@ function applySetup() {
     set('speed_land', race.speed);
     set('speed_armor', race.size === 'Medium' ? race.speed - 10 : race.speed);
 
-    // Languages
-    set('languages', race.languages.join(', '));
+    // Languages — build picker with racial defaults pre-checked
+    buildLanguagePicker(race.languages, race.bonusLanguages);
 
     // Racial skill bonuses + traits as notes
     const traitText = race.traits.join('\n');
@@ -1302,17 +1432,19 @@ function applySetup() {
     if (perkData) {
       // Add to special abilities as a permanent reference (once)
       const existingSA = val('special_abilities');
-      const perkNote = `[Deity Obedience — ${deityEl2.value}] ${perkData.perk}\n  Obedience: ${perkData.obedience}`;
+      const perkNote = `[Deity Obedience — ${deityEl2.value}]\n${perkData.perk}\n⚠ Requires: ${perkData.obedience}`;
       if (!existingSA.includes('Deity Obedience')) {
         set('special_abilities', existingSA ? existingSA + '\n\n' + perkNote : perkNote);
       }
-      // Add to buff tracker slot 0 as an active reminder (page 5)
-      // Only if empty
+      // Add to buff tracker slot 0 (page 5) as reminder
       if (!val('buff_name_0')) {
         set('buff_name_0',     `${deityEl2.value} Obedience`);
         set('buff_effect_0',   perkData.perk);
-        set('buff_duration_0', 'Daily (after 1h obedience)');
+        set('buff_duration_0', 'Daily (1h prayer required)');
       }
+
+      // Apply typed bonus objects from the structured perk data
+      applyDeityBonuses(perkData, deityEl2.value);
     }
   }
 

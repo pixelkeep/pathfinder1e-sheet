@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '0.9.0';
+const SHEET_VERSION = '1.1.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -755,24 +755,227 @@ const COMMON_GEAR = {
 
 
 // ══════════════════════════════════════════════════
-// DEITY OBEDIENCE PERKS
+// DEITY OBEDIENCE PERKS — typed, universal structure
 // Source: Inner Sea Gods, Chronicle of the Righteous
-// Format: deityName -> { obedience, perk }
+//
+// bonus: array of typed bonus objects that the sheet
+//        can apply automatically. Types:
+//   { type, amount, bonusType, targets }
+//   type:      'skill_ability' | 'skill' | 'save' |
+//              'attack' | 'concentration' | 'ac' |
+//              'note' (display only, no auto-calc)
+//   amount:    numeric bonus
+//   bonusType: 'sacred' | 'profane' | 'insight' etc.
+//   targets:   array of specific targets (ability keys,
+//              skill ids, save names, etc.)
+//   condition: optional string — shown as tooltip/note
 // ══════════════════════════════════════════════════
 const DEITY_PERKS = {
-  'Torag': { obedience: "Spend 1 hour working at a forge, crafting or repairing items while praying.", perk: "+4 sacred bonus on Craft (armor) and Craft (weapons) checks." },
-  'Iomedae': { obedience: "Spend 1 hour in prayer and weapon drill, reciting the Acts of Iomedae.", perk: "+4 sacred bonus on saving throws against fear effects." },
-  'Sarenrae': { obedience: "Spend 1 hour in prayer facing the sunrise or a flame, reciting the Dawnflower's tenets.", perk: "+4 sacred bonus on Diplomacy checks." },
-  'Desna': { obedience: "Spend 1 hour stargazing and singing, tracing constellations on the ground.", perk: "+4 sacred bonus on saves against curses and compulsions." },
-  'Pharasma': { obedience: "Lay bones in a spiral with names of the newborn and recently deceased; chant hymns.", perk: "+2 sacred bonus on attack rolls made with daggers." },
-  'Nethys': { obedience: "Inscribe blessings and arcane notations on parchment (not complete spells); cast a spell.", perk: "+4 sacred bonus on concentration checks." },
-  'Cayden Cailean': { obedience: "Drink a tankard of ale and sing a song of freedom; share a drink with a stranger.", perk: "+4 sacred bonus on saves against poison." },
-  'Erastil': { obedience: "Spend 1 hour in prayer while tending crops, livestock, or hunting.", perk: "+4 sacred bonus on Survival checks." },
-  'Abadar': { obedience: "Spend 1 hour in meditation on the principles of fair trade; balance your accounts.", perk: "+4 sacred bonus on Appraise checks and Sense Motive checks to detect lies." },
-  'Irori': { obedience: "Spend 1 hour in meditation and physical training, working through a prescribed regimen.", perk: "+4 sacred bonus on Knowledge (history) checks." },
-  'Gorum': { obedience: "Spend 1 hour in combat practice, reciting prayers of battle while sparring.", perk: "+4 sacred bonus on saves against fear and mind-affecting effects while raging." },
-  'Shelyn': { obedience: "Spend 1 hour creating art (painting, music, poetry, sculpture) dedicated to Shelyn.", perk: "+4 sacred bonus on Perform checks." },
-  'Arqueros': { obedience: "Pray for 1 hour while holding a heavy shield overhead.", perk: "+4 sacred bonus on Strength checks and Strength-based skill checks." },
+
+  // ── CORE DEITIES ──────────────────────────────
+  'Abadar': {
+    obedience: "Spend 1 hour balancing accounts and meditating on fair trade principles.",
+    perk: "+4 sacred bonus on Appraise checks and Sense Motive checks to detect lies.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['appraise'] },
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['sense_motive'], condition: 'to detect lies only' },
+    ],
+  },
+
+  'Calistria': {
+    obedience: "Spend 1 hour recounting wrongs done to you and planning your revenge.",
+    perk: "+4 sacred bonus on saves against charm and compulsion effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['fort','ref','will'], condition: 'vs charm and compulsion effects only' },
+    ],
+  },
+
+  'Cayden Cailean': {
+    obedience: "Drink a tankard of ale and sing a song of freedom; share a drink with a stranger.",
+    perk: "+4 sacred bonus on saving throws against poison.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['fort'], condition: 'vs poison effects only' },
+    ],
+  },
+
+  'Desna': {
+    obedience: "Spend 1 hour stargazing and singing, tracing constellations on the ground.",
+    perk: "+4 sacred bonus on saving throws against curses and compulsions.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs curses and compulsions only' },
+    ],
+  },
+
+  'Erastil': {
+    obedience: "Spend 1 hour in prayer while tending crops, livestock, or practicing your craft.",
+    perk: "+4 sacred bonus on Survival checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['survival'] },
+    ],
+  },
+
+  'Gorum': {
+    obedience: "Spend 1 hour in vigorous combat practice while reciting prayers of battle.",
+    perk: "+4 sacred bonus on saves against fear and mind-affecting effects while raging.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs fear and mind-affecting, while raging only' },
+    ],
+  },
+
+  'Iomedae': {
+    obedience: "Spend 1 hour in prayer and weapon drill, reciting the Acts of Iomedae.",
+    perk: "+4 sacred bonus on saving throws against fear effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs fear effects only' },
+    ],
+  },
+
+  'Irori': {
+    obedience: "Spend 1 hour in meditation and physical training following a prescribed regimen.",
+    perk: "+4 sacred bonus on Knowledge (history) checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['k_history'] },
+    ],
+  },
+
+  'Lamashtu': {
+    obedience: "Draw your own blood and offer it to Lamashtu while chanting her praises.",
+    perk: "+4 profane bonus on saves against confusion and insanity effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'profane', targets: ['will'], condition: 'vs confusion and insanity only' },
+    ],
+  },
+
+  'Nethys': {
+    obedience: "Inscribe blessings and arcane notations on parchment; cast a spell at the culmination.",
+    perk: "+4 sacred bonus on concentration checks.",
+    bonus: [
+      { type: 'concentration', amount: 4, bonusType: 'sacred', targets: ['concentration'] },
+    ],
+  },
+
+  'Pharasma': {
+    obedience: "Lay bones in a spiral; place names of the newborn and recently deceased at each end; chant hymns.",
+    perk: "+2 sacred bonus on attack rolls made with daggers.",
+    bonus: [
+      { type: 'attack', amount: 2, bonusType: 'sacred', targets: ['dagger'], condition: 'with daggers only' },
+    ],
+  },
+
+  'Rovagug': {
+    obedience: "Destroy something beautiful or meaningful; offer the wreckage to the Rough Beast.",
+    perk: "+4 profane bonus on saves against paralysis and petrification.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'profane', targets: ['fort'], condition: 'vs paralysis and petrification only' },
+    ],
+  },
+
+  'Sarenrae': {
+    obedience: "Spend 1 hour in prayer facing the sunrise or a flame, reciting the Dawnflower's tenets.",
+    perk: "+4 sacred bonus on Diplomacy checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['diplomacy'] },
+    ],
+  },
+
+  'Shelyn': {
+    obedience: "Spend 1 hour creating art — painting, music, poetry, or sculpture — dedicated to Shelyn.",
+    perk: "+4 sacred bonus on Perform checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['perform1','perform2'] },
+    ],
+  },
+
+  'Torag': {
+    obedience: "Spend 1 hour working at a forge, crafting or repairing items while praying to Torag.",
+    perk: "+4 sacred bonus on Craft (armor) and Craft (weapons) checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['craft1','craft2'], condition: 'for armor and weapons only' },
+    ],
+  },
+
+  'Urgathoa': {
+    obedience: "Consume raw meat while reciting prayers to Urgathoa; allow some to putrefy first if possible.",
+    perk: "+4 profane bonus on saves against disease.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'profane', targets: ['fort'], condition: 'vs disease only' },
+    ],
+  },
+
+  'Zon-Kuthon': {
+    obedience: "Inflict or receive pain through ritual; whip your own back while chanting praises.",
+    perk: "+2 sacred bonus on saving throws against spells that deal hit point damage.",
+    bonus: [
+      { type: 'save', amount: 2, bonusType: 'sacred', targets: ['fort','ref','will'], condition: 'vs spells dealing HP damage only' },
+    ],
+  },
+
+  // ── EMPYREAL LORDS ────────────────────────────
+  'Arqueros': {
+    obedience: "Pray for 1 hour while holding a heavy shield overhead. Source: Chronicle of the Righteous.",
+    perk: "+4 sacred bonus on Strength checks and Strength-based skill checks.",
+    bonus: [
+      { type: 'skill_ability', amount: 4, bonusType: 'sacred', targets: ['str'] },
+    ],
+  },
+
+  'Andoletta': {
+    obedience: "Recite the Obeisance of Glorious Preservation from memory while weaving a basket for the poor.",
+    perk: "+4 sacred bonus on saving throws against fear and charm effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs fear and charm effects only' },
+    ],
+  },
+
+  'Black Butterfly': {
+    obedience: "Perform an anonymous act of charity without speaking or gazing at the recipient.",
+    perk: "+4 sacred bonus on saving throws against gaze and sonic attacks.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['fort','ref','will'], condition: 'vs gaze and sonic attacks only' },
+    ],
+  },
+
+  'Desna': {
+    obedience: "Spend 1 hour stargazing and singing, tracing constellations on the ground.",
+    perk: "+4 sacred bonus on saving throws against curses and compulsions.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs curses and compulsions only' },
+    ],
+  },
+
+  'Iomedae': {
+    obedience: "Spend 1 hour in prayer and weapon drill, reciting the Acts of Iomedae.",
+    perk: "+4 sacred bonus on saving throws against fear effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs fear effects only' },
+    ],
+  },
+
+  'Ragathiel': {
+    obedience: "Spend 1 hour in weapons drill and prayer; vow to fight evil with every strike.",
+    perk: "+4 sacred bonus on saves against charm and compulsion effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['will'], condition: 'vs charm and compulsion only' },
+    ],
+  },
+
+  // ── DWARVEN DEITIES ───────────────────────────
+  'Angradd': {
+    obedience: "Spend 1 hour at a forge or campfire, reciting battle-prayers while tending the flame.",
+    perk: "+4 sacred bonus on saves against fire effects.",
+    bonus: [
+      { type: 'save', amount: 4, bonusType: 'sacred', targets: ['ref'], condition: 'vs fire effects only' },
+    ],
+  },
+
+  'Torag': {
+    obedience: "Spend 1 hour working at a forge, crafting or repairing items while praying to Torag.",
+    perk: "+4 sacred bonus on Craft (armor) and Craft (weapons) checks.",
+    bonus: [
+      { type: 'skill', amount: 4, bonusType: 'sacred', targets: ['craft1','craft2'], condition: 'for armor and weapons crafting' },
+    ],
+  },
+
 };
 
 // ══════════════════════════════════════════════════
