@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '0.8.0';
+const SHEET_VERSION = '0.9.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────

@@ -166,9 +166,10 @@ function buildSkillsTable() {
 
     const trainedMark = trainedOnly ? '<span class="trained-marker" title="Trained Only">*</span>' : '';
 
+    const abilLabel = ability.toUpperCase();
     tr.innerHTML = `
       <td><span class="cs-dot" id="cs_${id}" onclick="toggleCS('${id}')" title="Class Skill"></span></td>
-      <td class="skill-name">${name}${trainedMark}</td>
+      <td class="skill-name">${name}${trainedMark} <span class="skill-abil-tag">${abilLabel}</span></td>
       <td><input type="number" id="sk_total_${id}" class="num small-num" readonly></td>
       <td><input type="number" id="sk_ability_${id}" class="num small-num" readonly></td>
       <td><input type="number" id="sk_ranks_${id}" class="num small-num" oninput="calcSkill('${id}')"></td>
@@ -1126,31 +1127,22 @@ function onSizeChange() {
 }
 
 function onDeityChange() {
+  // Set deity field on the sheet immediately for convenience
   const sel = document.getElementById('setup_deity');
-  const opt = sel.options[sel.selectedIndex];
-  if (!opt || !opt.value) return;
-  const deityName = opt.value;
-  const perk = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityName];
-  const info = document.getElementById('setup-info');
-  if (info) {
-    let html = `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
-      <span class="setup-info-tag">🏛 Domains: ${opt.dataset.domains}</span>`;
-    if (perk) {
-      html += `<span class="setup-info-tag deity-perk" title="${perk.obedience}">🙏 Obedience perk: ${perk.perk}</span>`;
-    }
-    info.innerHTML = html;
-  }
+  if (sel && sel.value) set('deity', sel.value);
+  showSetupInfo();
 }
 
 function showSetupInfo() {
   const info = document.getElementById('setup-info');
   if (!info) return;
-  const raceKey  = document.getElementById('setup_race').value;
-  const classKey = document.getElementById('setup_class').value;
-  const level    = parseInt(document.getElementById('setup_level').value) || 1;
+  const raceKey  = document.getElementById('setup_race') ? document.getElementById('setup_race').value : '';
+  const classKey = document.getElementById('setup_class') ? document.getElementById('setup_class').value : '';
+  const level    = parseInt(document.getElementById('setup_level') && document.getElementById('setup_level').value) || 1;
   const race  = RACES[raceKey];
   const cls   = CLASSES[classKey];
   let html = '';
+
   if (race) {
     html += `<span class="setup-info-tag">👁 ${race.vision}</span>
              <span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
@@ -1164,6 +1156,21 @@ function showSetupInfo() {
     const xpNext = getXPForLevel(level);
     if (xpNext) html += `<span class="setup-info-tag">XP to next: ${xpNext.toLocaleString()}</span>`;
   }
+
+  // Always include deity perk if a deity is selected
+  const deityEl = document.getElementById('setup_deity');
+  if (deityEl && deityEl.value) {
+    const opt = deityEl.options[deityEl.selectedIndex];
+    if (opt && opt.dataset.weapon) {
+      html += `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
+               <span class="setup-info-tag">🏛 ${opt.dataset.domains}</span>`;
+    }
+    const perk = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityEl.value];
+    if (perk) {
+      html += `<span class="setup-info-tag deity-perk" title="Obedience: ${perk.obedience}">🙏 ${perk.perk}</span>`;
+    }
+  }
+
   info.innerHTML = html;
 }
 
@@ -1286,15 +1293,25 @@ function applySetup() {
   calcSaves();
   calcCombat();
 
-  // Write deity perk to notes if deity has one
+  // Write deity perk info:
+  // 1. Into the special abilities box as a reference note
+  // 2. Into buff tracker slot 0 on page 5 (as a reminder to apply after obedience)
   const deityEl2 = document.getElementById('setup_deity');
   if (deityEl2 && deityEl2.value) {
     const perkData = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityEl2.value];
     if (perkData) {
-      const perkText = `--- Deity Obedience (${deityEl2.value}) ---\nObedience: ${perkData.obedience}\nPerk: ${perkData.perk}`;
-      const existingNotes = val('notes');
-      if (!existingNotes.includes('Deity Obedience')) {
-        set('notes', existingNotes ? existingNotes + '\n\n' + perkText : perkText);
+      // Add to special abilities as a permanent reference (once)
+      const existingSA = val('special_abilities');
+      const perkNote = `[Deity Obedience — ${deityEl2.value}] ${perkData.perk}\n  Obedience: ${perkData.obedience}`;
+      if (!existingSA.includes('Deity Obedience')) {
+        set('special_abilities', existingSA ? existingSA + '\n\n' + perkNote : perkNote);
+      }
+      // Add to buff tracker slot 0 as an active reminder (page 5)
+      // Only if empty
+      if (!val('buff_name_0')) {
+        set('buff_name_0',     `${deityEl2.value} Obedience`);
+        set('buff_effect_0',   perkData.perk);
+        set('buff_duration_0', 'Daily (after 1h obedience)');
       }
     }
   }

@@ -1249,3 +1249,13 @@ textarea.small-textarea  { min-height: 36px; }
   white-space: normal;
   line-height: 1.3;
 }
+
+/* Ability tag next to skill name */
+.skill-abil-tag {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border-light);
+  letter-spacing: .2px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
