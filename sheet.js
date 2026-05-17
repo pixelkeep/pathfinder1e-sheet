@@ -872,3 +872,403 @@ populateData = function(data) {
 
   updateCarryWeight();
 };
+
+/* ══════════════════════════════════════════════════
+   CHARACTER SETUP — class/race/level auto-fill
+   Requires data.js loaded before sheet.js
+   ══════════════════════════════════════════════════ */
+
+// ── BUILD SETUP PANEL IN HTML ──────────────────────
+function buildSetupPanel() {
+  const panel = document.getElementById('setup-panel');
+  if (!panel) return;
+
+  // Class options
+  const classOpts = Object.entries(CLASSES)
+    .sort((a,b) => a[1].name.localeCompare(b[1].name))
+    .map(([k,v]) => `<option value="${k}">${v.name} (${v.source})</option>`)
+    .join('');
+
+  // Race options
+  const raceOpts = Object.entries(RACES)
+    .sort((a,b) => a[1].name.localeCompare(b[1].name))
+    .map(([k,v]) => `<option value="${k}">${v.name}</option>`)
+    .join('');
+
+  // Size options
+  const sizeOpts = Object.keys(SIZE_DATA)
+    .map(s => `<option value="${s}"${s==='Medium'?' selected':''}>${s}</option>`)
+    .join('');
+
+  // Deity options
+  const deityOpts = DEITIES
+    .map(d => `<option value="${d[0]}" data-align="${d[1]}" data-domains="${d[2]}" data-weapon="${d[3]}">${d[0]} (${d[1]}) — ${d[3]}</option>`)
+    .join('');
+
+  panel.innerHTML = `
+    <div class="setup-row">
+      <label class="setup-label">Race
+        <select id="setup_race" onchange="onRaceChange()">
+          <option value="">— select —</option>
+          ${raceOpts}
+        </select>
+      </label>
+      <label class="setup-label">Class
+        <select id="setup_class" onchange="onClassChange()">
+          <option value="">— select —</option>
+          ${classOpts}
+        </select>
+      </label>
+      <label class="setup-label">Level
+        <input type="number" id="setup_level" min="1" max="20" value="1" style="width:42px" oninput="onLevelChange()">
+      </label>
+      <label class="setup-label">Size
+        <select id="setup_size" onchange="onSizeChange()">
+          ${sizeOpts}
+        </select>
+      </label>
+      <label class="setup-label">Deity
+        <select id="setup_deity" onchange="onDeityChange()" style="max-width:180px">
+          <option value="">— select —</option>
+          ${deityOpts}
+        </select>
+      </label>
+      <button class="setup-apply-btn" onclick="applySetup()">Apply Setup</button>
+    </div>
+    <div id="setup-info" class="setup-info"></div>
+  `;
+}
+
+// ── ON CHANGE HANDLERS ─────────────────────────────
+function onRaceChange() {
+  const key = document.getElementById('setup_race').value;
+  const race = RACES[key];
+  if (!race) return;
+  showSetupInfo();
+}
+
+function onClassChange() {
+  showSetupInfo();
+}
+
+function onLevelChange() {
+  showSetupInfo();
+  const lvl = parseInt(document.getElementById('setup_level').value) || 1;
+  const classKey = document.getElementById('setup_class').value;
+  if (classKey) previewClassStats(classKey, lvl);
+}
+
+function onSizeChange() {
+  const size = document.getElementById('setup_size').value;
+  const sizeData = SIZE_DATA[size];
+  if (!sizeData) return;
+  set('ac_size', sizeData.acMod);
+  set('cmb_size', sizeData.cmbMod);
+  set('cmd_size', sizeData.cmbMod);
+  calcAC();
+  calcCombat();
+}
+
+function onDeityChange() {
+  const sel = document.getElementById('setup_deity');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  const info = document.getElementById('setup-info');
+  if (info) {
+    const existing = info.innerHTML;
+    const deityHtml = `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
+      <span class="setup-info-tag">🏛 Domains: ${opt.dataset.domains}</span>`;
+    info.innerHTML = deityHtml;
+  }
+}
+
+function showSetupInfo() {
+  const info = document.getElementById('setup-info');
+  if (!info) return;
+  const raceKey  = document.getElementById('setup_race').value;
+  const classKey = document.getElementById('setup_class').value;
+  const level    = parseInt(document.getElementById('setup_level').value) || 1;
+  const race  = RACES[raceKey];
+  const cls   = CLASSES[classKey];
+  let html = '';
+  if (race) {
+    html += `<span class="setup-info-tag">👁 ${race.vision}</span>
+             <span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
+  }
+  if (cls) {
+    const bab   = getBAB(classKey, level);
+    const saves = getClassSaves(classKey, level);
+    html += `<span class="setup-info-tag">⚔ BAB +${bab}</span>
+             <span class="setup-info-tag">Fort +${saves.fort} / Ref +${saves.ref} / Will +${saves.will}</span>
+             <span class="setup-info-tag">HD d${cls.hd} · ${cls.skillsPerLevel} skills/level</span>`;
+    const xpNext = getXPForLevel(level);
+    if (xpNext) html += `<span class="setup-info-tag">XP to next: ${xpNext.toLocaleString()}</span>`;
+  }
+  info.innerHTML = html;
+}
+
+function previewClassStats(classKey, level) {
+  // Just update the info display
+  showSetupInfo();
+}
+
+// ── APPLY SETUP ────────────────────────────────────
+function applySetup() {
+  const raceKey  = document.getElementById('setup_race').value;
+  const classKey = document.getElementById('setup_class').value;
+  const level    = parseInt(document.getElementById('setup_level').value) || 1;
+  const sizeKey  = document.getElementById('setup_size').value;
+  const deityEl  = document.getElementById('setup_deity');
+  const deityOpt = deityEl ? deityEl.options[deityEl.selectedIndex] : null;
+
+  const race = RACES[raceKey];
+  const cls  = CLASSES[classKey];
+
+  // ── Deity
+  if (deityOpt && deityOpt.value) {
+    set('deity', deityOpt.value);
+  }
+
+  // ── Class + level
+  if (cls) {
+    set('classLevel', `${cls.name} ${level}`);
+
+    // BAB
+    const bab = getBAB(classKey, level);
+    set('bab', bab);
+
+    // Base saves
+    const saves = getClassSaves(classKey, level);
+    set('fort_base', saves.fort);
+    set('ref_base',  saves.ref);
+    set('will_base', saves.will);
+
+    // Spell ability for page 3
+    if (cls.spellAbility) set('spell_ability', cls.spellAbility.toUpperCase());
+
+    // Caster level for page 3
+    set('caster_level', level);
+
+    // XP
+    set('xp_current', '0');
+    const xpNext = getXPForLevel(level);
+    if (xpNext) set('xp_next', xpNext);
+
+    // Class skills — mark dots
+    markClassSkills(cls.classSkills);
+
+    // Resource pool labels (page 3)
+    if (typeof updatePoolDots === 'function') {
+      cls.resources.forEach((r, i) => {
+        set(`pool_label_${i}`, r.label);
+      });
+    }
+  }
+
+  // ── Race
+  if (race) {
+    set('race', race.name);
+
+    // Ability score racial mods — add to existing scores if set
+    ['str','dex','con','int','wis','cha'].forEach(ab => {
+      const mod = race.abilityMods[ab] || 0;
+      if (mod !== 0) {
+        const current = parseInt(val(`${ab}_score`)) || 10;
+        set(`${ab}_score`, current + mod);
+      }
+    });
+
+    // Size
+    set('size', race.size);
+    const setupSize = document.getElementById('setup_size');
+    if (setupSize) setupSize.value = race.size;
+    onSizeChange();
+
+    // Speed
+    set('speed_land', race.speed);
+    set('speed_armor', race.size === 'Medium' ? race.speed - 10 : race.speed);
+
+    // Languages
+    set('languages', race.languages.join(', '));
+
+    // Racial skill bonuses + traits as notes
+    const traitText = race.traits.join('\n');
+    const existingFeatures = val('special_abilities');
+    set('special_abilities', existingFeatures
+      ? existingFeatures + '\n\n--- Racial Traits ---\n' + traitText
+      : '--- Racial Traits ---\n' + traitText);
+
+    // Racial bonus languages note
+    if (race.bonusLanguages && race.bonusLanguages.length) {
+      const existing = val('skill_conditional') || '';
+      set('skill_conditional',
+        (existing ? existing + ' | ' : '') +
+        `Bonus languages: ${race.bonusLanguages.join(', ')}`);
+    }
+  }
+
+  // ── Recalculate everything
+  calcAll();
+  calcSaves();
+  calcCombat();
+
+  alert(`Setup applied!\n\nCheck:\n• Ability scores (racial mods added to existing values)\n• Special Abilities tab (racial traits added)\n• Class Skills (dots marked)\n• BAB, Saves, Size updated\n\nTip: If this is a new character, set ability scores to 10 first, then apply setup.`);
+}
+
+// ── MARK CLASS SKILLS ──────────────────────────────
+function markClassSkills(classSkillIds) {
+  // First clear all
+  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
+  // Mark class skills
+  classSkillIds.forEach(id => {
+    const dot = document.getElementById(`cs_${id}`);
+    if (dot) {
+      dot.classList.add('checked');
+      calcSkill(id.replace(/\d+$/, '') === id ? id : id); // handle craft1/craft2
+    }
+  });
+  // Recalc all skills
+  calcSkills();
+}
+
+// ── WEAPON LOOKUP ──────────────────────────────────
+function buildWeaponLookup() {
+  const container = document.getElementById('weapon-lookup');
+  if (!container) return;
+
+  const opts = Object.keys(WEAPONS).sort()
+    .map(w => `<option value="${w}">${w}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="weapon-lookup-row">
+      <select id="wpn_lookup_name" style="width:180px">
+        <option value="">— lookup weapon —</option>
+        ${opts}
+      </select>
+      <select id="wpn_lookup_slot" style="width:60px">
+        ${Array.from({length:WEAPON_COUNT},(_,i)=>`<option value="${i}">Slot ${i+1}</option>`).join('')}
+      </select>
+      <label><input type="checkbox" id="wpn_lookup_mw"> Masterwork (+1 atk)</label>
+      <label>Enhance <input type="number" id="wpn_lookup_enhance" class="num small-num" min="0" max="5" value="0"> </label>
+      <button onclick="applyWeaponLookup()">Fill Slot</button>
+    </div>
+  `;
+}
+
+function applyWeaponLookup() {
+  const name    = val('wpn_lookup_name');
+  const slot    = parseInt(val('wpn_lookup_slot')) || 0;
+  const mw      = document.getElementById('wpn_lookup_mw').checked;
+  const enhance = parseInt(val('wpn_lookup_enhance')) || 0;
+  const wpn     = WEAPONS[name];
+  if (!wpn) { alert('Select a weapon first.'); return; }
+
+  set(`wpn_name_${slot}`,  name + (mw && enhance===0 ? ' (MW)' : '') + (enhance > 0 ? ` +${enhance}` : ''));
+  set(`wpn_crit_${slot}`,  wpn.crit);
+  set(`wpn_dmg_${slot}`,   wpn.dmg);
+  set(`wpn_type_${slot}`,  wpn.type);
+  set(`wpn_range_${slot}`, wpn.range > 0 ? wpn.range + ' ft.' : 'melee');
+
+  // Calculate attack bonus: BAB + STR or DEX mod + masterwork + enhancement
+  const strMod = getEffectiveMod('str');
+  const dexMod = getEffectiveMod('dex');
+  const bab    = parseInt(val('bab')) || 0;
+  const abilMod = (wpn.group === 'ranged' || wpn.group === 'light') ? Math.max(strMod, dexMod) : strMod;
+  const mwBonus = (mw || enhance > 0) ? 1 : 0;
+  const atkTotal = bab + abilMod + mwBonus + enhance;
+  set(`wpn_atk_${slot}`, atkTotal >= 0 ? '+' + atkTotal : atkTotal);
+}
+
+// ── ARMOR LOOKUP ───────────────────────────────────
+function buildArmorLookup() {
+  const container = document.getElementById('armor-lookup');
+  if (!container) return;
+
+  const opts = Object.keys(ARMOR).sort()
+    .map(a => `<option value="${a}">${a}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="armor-lookup-row">
+      <select id="armor_lookup_name" style="width:180px">
+        <option value="">— lookup armor/shield —</option>
+        ${opts}
+      </select>
+      <select id="armor_lookup_slot" style="width:60px">
+        ${Array.from({length:AC_ITEM_COUNT},(_,i)=>`<option value="${i}">Slot ${i+1}</option>`).join('')}
+      </select>
+      <label><input type="checkbox" id="armor_lookup_mw"> Masterwork</label>
+      <label>Enhance <input type="number" id="armor_lookup_enhance" class="num small-num" min="0" max="5" value="0"></label>
+      <button onclick="applyArmorLookup()">Fill Slot</button>
+    </div>
+  `;
+}
+
+function applyArmorLookup() {
+  const name    = val('armor_lookup_name');
+  const slot    = parseInt(val('armor_lookup_slot')) || 0;
+  const mw      = document.getElementById('armor_lookup_mw').checked;
+  const enhance = parseInt(val('armor_lookup_enhance')) || 0;
+  const armor   = ARMOR[name];
+  if (!armor) { alert('Select armor or shield first.'); return; }
+
+  const checkPen = mw || enhance > 0
+    ? Math.min(0, armor.checkPen + 1)
+    : armor.checkPen;
+
+  set(`aci_name_${slot}`,  name + (mw && enhance===0 ? ' (MW)' : '') + (enhance > 0 ? ` +${enhance}` : ''));
+  set(`aci_bonus_${slot}`, armor.bonus + enhance);
+  set(`aci_type_${slot}`,  armor.type);
+  set(`aci_check_${slot}`, checkPen);
+  set(`aci_sf_${slot}`,    armor.sf);
+  set(`aci_wt_${slot}`,    armor.weight);
+
+  calcACItems();
+}
+
+// ── GEAR LOOKUP ────────────────────────────────────
+function buildGearLookup() {
+  const container = document.getElementById('gear-lookup');
+  if (!container) return;
+
+  const opts = Object.keys(COMMON_GEAR).sort()
+    .map(g => `<option value="${g}">${g} (${COMMON_GEAR[g].weight} lbs, ${COMMON_GEAR[g].cost} gp)</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="gear-lookup-row">
+      <select id="gear_lookup_name" style="width:220px">
+        <option value="">— quick-add gear —</option>
+        ${opts}
+      </select>
+      <button onclick="applyGearLookup()">Add to Gear</button>
+    </div>
+  `;
+}
+
+function applyGearLookup() {
+  const name = val('gear_lookup_name');
+  const item = COMMON_GEAR[name];
+  if (!item) { alert('Select an item first.'); return; }
+
+  // Find first empty gear slot
+  for (let i = 0; i < GEAR_COUNT; i++) {
+    if (!val(`gear_name_${i}`)) {
+      set(`gear_name_${i}`, name);
+      set(`gear_wt_${i}`,   item.weight);
+      calcGear();
+      return;
+    }
+  }
+  alert('No empty gear slots. Clear a slot first.');
+}
+
+// ── INIT: attach lookups after DOM ready ───────────
+const _originalDOMReady = document.addEventListener;
+document.addEventListener('DOMContentLoaded', () => {
+  buildSetupPanel();
+  buildWeaponLookup();
+  buildArmorLookup();
+  buildGearLookup();
+});

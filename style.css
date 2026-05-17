@@ -869,3 +869,119 @@ textarea.small-textarea  { min-height: 36px; }
 
 /* Offline note */
 .offline-note { color: var(--border); text-align: center; padding: 12px; font-family: var(--font-mono); font-size: 10px; }
+
+/* ══════════════════════════════════════════════════
+   SETUP PANEL + LOOKUP BARS
+   ══════════════════════════════════════════════════ */
+
+.setup-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: flex-end;
+}
+
+.setup-label {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--border);
+  gap: 2px;
+}
+
+.setup-label select,
+.setup-label input {
+  font-family: var(--font-body);
+  font-size: 11px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  color: var(--ink);
+  padding: 2px 4px;
+  outline: none;
+}
+.setup-label select:focus,
+.setup-label input:focus {
+  border-color: var(--accent2);
+}
+
+.setup-apply-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 5px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  align-self: flex-end;
+}
+.setup-apply-btn:hover { background: var(--accent2); }
+
+.setup-info {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 20px;
+}
+
+.setup-info-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  padding: 2px 6px;
+  color: var(--ink-light);
+}
+
+/* Lookup rows */
+.weapon-lookup-row,
+.armor-lookup-row,
+.gear-lookup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-light);
+}
+
+.weapon-lookup-row select,
+.armor-lookup-row select,
+.gear-lookup-row select {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 2px 4px;
+}
+
+.weapon-lookup-row button,
+.armor-lookup-row button,
+.gear-lookup-row button {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  background: var(--accent2);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.weapon-lookup-row button:hover,
+.armor-lookup-row button:hover,
+.gear-lookup-row button:hover { opacity: .85; }
+
+.weapon-lookup-row label,
+.armor-lookup-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}

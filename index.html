@@ -433,8 +433,36 @@
   </div><!-- /page2-grid -->
 </div><!-- /page2 -->
 
+<!-- SETUP PANEL -->
+<div class="no-print" id="setup-section" style="width:210mm;margin:0 auto 8px;background:#ede8da;border:1px solid #c9ab76;padding:6px 10px;">
+  <div style="font-family:'IM Fell English',serif;font-size:13px;color:#8b1a1a;border-bottom:1px solid #c9ab76;margin-bottom:5px;padding-bottom:2px;">
+    ⚙ Character Setup — auto-fill from class &amp; race data
+    <span style="font-family:monospace;font-size:9px;color:#8b6f3e;margin-left:8px;">Set scores to 10 first for a new character, then Apply</span>
+  </div>
+  <div id="setup-panel"></div>
+</div>
+
+<!-- WEAPON LOOKUP -->
+<div class="no-print" id="weapon-lookup-section" style="width:210mm;margin:0 auto 4px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
+  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">⚔ Weapon Quick-Fill</div>
+  <div id="weapon-lookup"></div>
+</div>
+
+<!-- ARMOR LOOKUP -->
+<div class="no-print" id="armor-lookup-section" style="width:210mm;margin:0 auto 4px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
+  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">🛡 Armor / Shield Quick-Fill</div>
+  <div id="armor-lookup"></div>
+</div>
+
+<!-- GEAR LOOKUP -->
+<div class="no-print" id="gear-lookup-section" style="width:210mm;margin:0 auto 20px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
+  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">🎒 Gear Quick-Add</div>
+  <div id="gear-lookup"></div>
+</div>
+
 <div id="pages35-container"></div>
 
+<script src="data.js"></script>
 <script src="sheet.js"></script>
 <script>
   fetch('pages35.html')
@@ -445,7 +473,7 @@
     })
     .catch(() => {
       const d = document.getElementById('pages35-container');
-      d.innerHTML = '<p class="offline-note no-print" style="color:#8b6f3e;text-align:center;padding:12px;font-family:monospace;font-size:11px;">💡 Pages 3–5 load via server (GitHub Pages) or <a href=\"pages35.html\" target=\"_blank\">open separately</a>. Locally: run a simple server (e.g. <code>python3 -m http.server</code>).</p>';
+      d.innerHTML = '<p class="offline-note no-print" style="color:#8b6f3e;text-align:center;padding:12px;font-family:monospace;font-size:11px;">💡 Pages 3–5 load via GitHub Pages or run: <code>python3 -m http.server</code> · then <a href="http://localhost:8000">localhost:8000</a></p>';
     });
 </script>
 </body>
