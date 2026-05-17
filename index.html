@@ -23,6 +23,42 @@
   <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)">
 </div>
 
+
+<!-- ═══════════════════════ SETUP PANELS (no-print) ═══════════════════════ -->
+<div class="no-print setup-panels-wrapper">
+
+  <!-- CHARACTER SETUP -->
+  <div class="setup-panel-block">
+    <div class="setup-panel-title">⚙ Character Setup
+      <span class="setup-panel-hint">Select race, class &amp; level → Apply to auto-fill BAB, saves, skills, traits</span>
+    </div>
+    <div id="setup-panel"></div>
+  </div>
+
+  <!-- WEAPON QUICK-FILL -->
+  <div class="setup-panel-block">
+    <div class="setup-panel-title">⚔ Weapon Quick-Fill
+      <span class="setup-panel-hint">Select weapon → slot → masterwork/enhancement → Fill</span>
+    </div>
+    <div id="weapon-lookup"></div>
+  </div>
+
+  <!-- ARMOR QUICK-FILL -->
+  <div class="setup-panel-block">
+    <div class="setup-panel-title">🛡 Armor &amp; Shield Quick-Fill
+      <span class="setup-panel-hint">Select armor or shield → slot → Fill (auto-calculates AC Items on page 2)</span>
+    </div>
+    <div id="armor-lookup"></div>
+  </div>
+
+  <!-- GEAR QUICK-ADD -->
+  <div class="setup-panel-block">
+    <div class="setup-panel-title">🎒 Gear Quick-Add</div>
+    <div id="gear-lookup"></div>
+  </div>
+
+</div><!-- /setup-panels-wrapper -->
+
 <!-- ═══════════════════════════════════════════════ PAGE 1 ═══ -->
 <div class="page" id="page1">
 
@@ -388,7 +424,7 @@
 
       <div class="section-box flex-grow">
         <div class="section-title">Special Abilities</div>
-        <textarea id="special_abilities" class="big-textarea" placeholder="Class features, racial traits, etc..."></textarea>
+        <textarea id="special_abilities" class="big-textarea special-abilities-textarea" placeholder="Class features, racial traits, etc..."></textarea>
       </div>
 
       <div class="section-box">
@@ -432,41 +468,12 @@
     </div><!-- /page2-right -->
 
   </div><!-- /page2-grid -->
-</div><!-- /page2 -->
-
-<!-- SETUP PANEL -->
-<div class="no-print" id="setup-section" style="width:210mm;margin:0 auto 8px;background:#ede8da;border:1px solid #c9ab76;padding:6px 10px;">
-  <div style="font-family:'IM Fell English',serif;font-size:13px;color:#8b1a1a;border-bottom:1px solid #c9ab76;margin-bottom:5px;padding-bottom:2px;">
-    ⚙ Character Setup — auto-fill from class &amp; race data
-    <span style="font-family:monospace;font-size:9px;color:#8b6f3e;margin-left:8px;">Set scores to 10 first for a new character, then Apply</span>
-  </div>
-  <div id="setup-panel"></div>
-</div>
-
-<!-- WEAPON LOOKUP -->
-<div class="no-print" id="weapon-lookup-section" style="width:210mm;margin:0 auto 4px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
-  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">⚔ Weapon Quick-Fill</div>
-  <div id="weapon-lookup"></div>
-</div>
-
-<!-- ARMOR LOOKUP -->
-<div class="no-print" id="armor-lookup-section" style="width:210mm;margin:0 auto 4px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
-  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">🛡 Armor / Shield Quick-Fill</div>
-  <div id="armor-lookup"></div>
-</div>
-
-<!-- GEAR LOOKUP -->
-<div class="no-print" id="gear-lookup-section" style="width:210mm;margin:0 auto 20px;background:#ede8da;border:1px solid #c9ab76;padding:4px 10px;">
-  <div style="font-family:'IM Fell English',serif;font-size:11px;color:#2a4a6b;margin-bottom:3px;">🎒 Gear Quick-Add</div>
-  <div id="gear-lookup"></div>
-</div>
 
 <div id="pages35-container"></div>
 
 <script src="data.js"></script>
 <script src="sheet.js"></script>
 <script>
-  // Show version in toolbar and print header
   document.addEventListener('DOMContentLoaded', () => {
     const v = (typeof SHEET_VERSION !== 'undefined') ? `v${SHEET_VERSION} (${SHEET_DATE})` : '';
     const tv = document.getElementById('toolbar-version');

@@ -210,18 +210,88 @@ function buildWeapons() {
     container.innerHTML += `
       <div class="weapon-block">
         <div class="weapon-name-row">
-          <label>Weapon <input type="text" id="wpn_name_${i}" class="wide"></label>
-          <label>Attack <input type="number" id="wpn_atk_${i}" class="num small-num"></label>
-          <label>Critical <input type="text" id="wpn_crit_${i}" style="width:48px"></label>
-        </div>
-        <div class="weapon-stats-row">
-          <label>Type <input type="text" id="wpn_type_${i}" style="width:36px"></label>
-          <label>Range <input type="text" id="wpn_range_${i}" style="width:36px"></label>
+          <label>Weapon <input type="text" id="wpn_name_${i}" class="wide" placeholder="e.g. Lucerne Hammer +1"></label>
+          <label>Crit <input type="text" id="wpn_crit_${i}" style="width:52px" placeholder="×3"></label>
+          <label>Type <input type="text" id="wpn_type_${i}" style="width:36px" placeholder="B/P"></label>
+          <label>Range <input type="text" id="wpn_range_${i}" style="width:44px" placeholder="melee"></label>
           <label>Ammo <input type="text" id="wpn_ammo_${i}" style="width:36px"></label>
-          <label>Damage <input type="text" id="wpn_dmg_${i}" style="width:48px"></label>
+        </div>
+        <div class="weapon-breakdown-row">
+          <span class="breakdown-label">Attack</span>
+          <span class="breakdown-eq">=</span>
+          <label class="bd-cell">BAB<br><input type="number" id="wpn_bab_${i}" class="num small-num" readonly></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Str/Dex<br><input type="number" id="wpn_abil_${i}" class="num small-num" readonly></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Enh.<br><input type="number" id="wpn_enh_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Feats<br><input type="number" id="wpn_feat_${i}" class="num small-num" oninput="calcWeapon(${i})" title="Weapon Focus, Greater WF, etc."></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Misc<br><input type="number" id="wpn_misc_atk_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
+          <span class="breakdown-op">=</span>
+          <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_atk_${i}" class="num small-num atk-total" readonly></label>
+        </div>
+        <div class="weapon-breakdown-row">
+          <span class="breakdown-label">Damage</span>
+          <span class="breakdown-eq">=</span>
+          <label class="bd-cell">Dice<br><input type="text" id="wpn_dmg_dice_${i}" style="width:36px" placeholder="1d8" oninput="calcWeapon(${i})"></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Str<br><input type="number" id="wpn_dmg_str_${i}" class="num small-num" readonly></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Enh.<br><input type="number" id="wpn_dmg_enh_${i}" class="num small-num" readonly></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Feats<br><input type="number" id="wpn_dmg_feat_${i}" class="num small-num" oninput="calcWeapon(${i})" title="Power Attack, Weapon Spec, etc."></label>
+          <span class="breakdown-op">+</span>
+          <label class="bd-cell">Misc<br><input type="number" id="wpn_dmg_misc_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
+          <span class="breakdown-op">=</span>
+          <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_dmg_${i}" style="width:60px" class="atk-total" readonly placeholder="1d8+5"></label>
+        </div>
+        <div class="weapon-flags-row">
+          <label><input type="checkbox" id="wpn_twohanded_${i}" onchange="calcWeapon(${i})"> Two-handed (×1.5 Str)</label>
+          <label><input type="checkbox" id="wpn_offhand_${i}" onchange="calcWeapon(${i})"> Off-hand (×0.5 Str)</label>
+          <label><input type="checkbox" id="wpn_ranged_${i}" onchange="calcWeapon(${i})"> Ranged (DEX to hit)</label>
+          <label><input type="checkbox" id="wpn_mw_${i}" onchange="calcWeapon(${i})"> Masterwork</label>
         </div>
       </div>`;
   }
+}
+
+function calcWeapon(i) {
+  const bab       = parseInt(val('bab'))               || 0;
+  const strMod    = getEffectiveMod('str');
+  const dexMod    = getEffectiveMod('dex');
+  const enh       = parseInt(val(`wpn_enh_${i}`))      || 0;
+  const feat      = parseInt(val(`wpn_feat_${i}`))     || 0;
+  const miscAtk   = parseInt(val(`wpn_misc_atk_${i}`)) || 0;
+  const dmgFeat   = parseInt(val(`wpn_dmg_feat_${i}`)) || 0;
+  const dmgMisc   = parseInt(val(`wpn_dmg_misc_${i}`)) || 0;
+  const twoHanded = document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked;
+  const offHand   = document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked;
+  const ranged    = document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked;
+  const mw        = document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked;
+  const mwBonus   = (mw && enh === 0) ? 1 : 0;
+
+  const atkAbil = ranged ? dexMod : strMod;
+  let strMult = 1;
+  if (twoHanded) strMult = 1.5;
+  if (offHand)   strMult = 0.5;
+  const strDmg = Math.floor(strMod * strMult);
+
+  set(`wpn_bab_${i}`,     bab);
+  set(`wpn_abil_${i}`,    atkAbil);
+  set(`wpn_dmg_str_${i}`, strDmg);
+  set(`wpn_dmg_enh_${i}`, enh);
+
+  const atkTotal = bab + atkAbil + enh + mwBonus + feat + miscAtk;
+  set(`wpn_atk_${i}`, atkTotal >= 0 ? `+${atkTotal}` : `${atkTotal}`);
+
+  const dice   = val(`wpn_dmg_dice_${i}`) || '—';
+  const dmgMod = strDmg + enh + dmgFeat + dmgMisc;
+  set(`wpn_dmg_${i}`, dmgMod !== 0 ? `${dice}${dmgMod >= 0 ? '+' : ''}${dmgMod}` : dice);
+}
+
+function calcAllWeapons() {
+  for (let i = 0; i < WEAPON_COUNT; i++) calcWeapon(i);
 }
 
 // ── AC ITEMS ───────────────────────────────────────────────────────
@@ -285,6 +355,7 @@ function updateHP() {
 // ── CALC ALL ───────────────────────────────────────────────────────
 function calcAll() {
   ['str','dex','con','int','wis','cha'].forEach(a => calcMod(a));
+  calcAllWeapons();
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -356,13 +427,21 @@ function collectData() {
   data.weapons = [];
   for (let i = 0; i < WEAPON_COUNT; i++) {
     data.weapons.push({
-      name: val(`wpn_name_${i}`),
-      atk:  val(`wpn_atk_${i}`),
-      crit: val(`wpn_crit_${i}`),
-      type: val(`wpn_type_${i}`),
-      range:val(`wpn_range_${i}`),
-      ammo: val(`wpn_ammo_${i}`),
-      dmg:  val(`wpn_dmg_${i}`),
+      name:       val(`wpn_name_${i}`),
+      crit:       val(`wpn_crit_${i}`),
+      type:       val(`wpn_type_${i}`),
+      range:      val(`wpn_range_${i}`),
+      ammo:       val(`wpn_ammo_${i}`),
+      enh:        val(`wpn_enh_${i}`),
+      feat:       val(`wpn_feat_${i}`),
+      miscAtk:    val(`wpn_misc_atk_${i}`),
+      dmgDice:    val(`wpn_dmg_dice_${i}`),
+      dmgFeat:    val(`wpn_dmg_feat_${i}`),
+      dmgMisc:    val(`wpn_dmg_misc_${i}`),
+      twoHanded:  document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked,
+      offHand:    document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked,
+      ranged:     document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked,
+      mw:         document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked,
     });
   }
 
@@ -418,13 +497,23 @@ function populateData(data) {
   // Weapons
   if (data.weapons) {
     data.weapons.forEach((w, i) => {
-      set(`wpn_name_${i}`,  w.name  || '');
-      set(`wpn_atk_${i}`,   w.atk   || '');
-      set(`wpn_crit_${i}`,  w.crit  || '');
-      set(`wpn_type_${i}`,  w.type  || '');
-      set(`wpn_range_${i}`, w.range || '');
-      set(`wpn_ammo_${i}`,  w.ammo  || '');
-      set(`wpn_dmg_${i}`,   w.dmg   || '');
+      set(`wpn_name_${i}`,      w.name     || '');
+      set(`wpn_crit_${i}`,      w.crit     || '');
+      set(`wpn_type_${i}`,      w.type     || '');
+      set(`wpn_range_${i}`,     w.range    || '');
+      set(`wpn_ammo_${i}`,      w.ammo     || '');
+      set(`wpn_enh_${i}`,       w.enh      || '');
+      set(`wpn_feat_${i}`,      w.feat     || '');
+      set(`wpn_misc_atk_${i}`,  w.miscAtk  || '');
+      set(`wpn_dmg_dice_${i}`,  w.dmgDice  || '');
+      set(`wpn_dmg_feat_${i}`,  w.dmgFeat  || '');
+      set(`wpn_dmg_misc_${i}`,  w.dmgMisc  || '');
+      const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+      setCheck(`wpn_twohanded_${i}`, w.twoHanded);
+      setCheck(`wpn_offhand_${i}`,   w.offHand);
+      setCheck(`wpn_ranged_${i}`,    w.ranged);
+      setCheck(`wpn_mw_${i}`,        w.mw);
+      calcWeapon(i);
     });
   }
 

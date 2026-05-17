@@ -995,3 +995,128 @@ textarea.small-textarea  { min-height: 36px; }
   opacity: .7;
   letter-spacing: .3px;
 }
+
+/* ══════════════════════════════════════════════════
+   SETUP PANELS WRAPPER (above page 1)
+   ══════════════════════════════════════════════════ */
+.setup-panels-wrapper {
+  width: 210mm;
+  margin: 8px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setup-panel-block {
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  padding: 5px 10px 7px;
+}
+
+.setup-panel-title {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 3px;
+  margin-bottom: 5px;
+}
+
+.setup-panel-hint {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   WEAPON BREAKDOWN
+   ══════════════════════════════════════════════════ */
+.weapon-breakdown-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.breakdown-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  min-width: 44px;
+  padding-bottom: 2px;
+  font-weight: 600;
+}
+
+.breakdown-eq {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--border);
+  padding-bottom: 1px;
+}
+
+.breakdown-op {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border-light);
+  padding-bottom: 1px;
+}
+
+.bd-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  text-transform: uppercase;
+  gap: 1px;
+}
+
+.total-cell {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+.atk-total {
+  background: var(--readonly-bg) !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+}
+
+.weapon-flags-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.weapon-flags-row label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-light);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════
+   SPECIAL ABILITIES — bigger textarea for print
+   ══════════════════════════════════════════════════ */
+.special-abilities-textarea {
+  min-height: 160px !important;
+}
+
+@media print {
+  .special-abilities-textarea {
+    min-height: 200px !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '0.4.0';
+const SHEET_VERSION = '0.5.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -640,6 +640,14 @@ const WEAPONS = {
   'Warhammer':        { dmg:'1d8', crit:'×3',       type:'B',      range:0,   weight:5,  cost:12,  category:'martial', group:'onehanded' },
 
   // Martial — Two-handed
+  'Lucerne hammer':   { dmg:'1d12',crit:'×2',       type:'B or P', range:0,   weight:12, cost:15,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
+  'Bardiche':         { dmg:'1d10',crit:'19-20/×2', type:'S',      range:0,   weight:14, cost:13,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
+  'Bec de corbin':    { dmg:'1d10',crit:'×3',       type:'B or P', range:0,   weight:12, cost:15,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
+  'Bill':             { dmg:'1d8', crit:'×3',       type:'S',      range:0,   weight:11, cost:11,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
+  'Fauchard':         { dmg:'1d10',crit:'18-20/×2', type:'S',      range:0,   weight:10, cost:14,  category:'exotic',  group:'twohanded', twoHanded:true, reach:true },
+  'Glaive-guisarme':  { dmg:'2d4', crit:'×3',       type:'S',      range:0,   weight:15, cost:12,  category:'exotic',  group:'twohanded', twoHanded:true, reach:true },
+  'Longspear':        { dmg:'1d8', crit:'×3',       type:'P',      range:0,   weight:9,  cost:5,   category:'simple',  group:'twohanded', twoHanded:true, reach:true },
+  'Spear':            { dmg:'1d8', crit:'×3',       type:'P',      range:20,  weight:6,  cost:2,   category:'simple',  group:'onehanded' },
   'Falchion':         { dmg:'2d4', crit:'18-20/×2', type:'S',      range:0,   weight:8,  cost:75,  category:'martial', group:'twohanded', twoHanded:true },
   'Glaive':           { dmg:'1d10',crit:'×3',       type:'S',      range:0,   weight:10, cost:8,   category:'martial', group:'twohanded', twoHanded:true, reach:true },
   'Greataxe':         { dmg:'1d12',crit:'×3',       type:'S',      range:0,   weight:12, cost:20,  category:'martial', group:'twohanded', twoHanded:true },
