@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '0.5.0';
+const SHEET_VERSION = '0.6.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -640,7 +640,7 @@ const WEAPONS = {
   'Warhammer':        { dmg:'1d8', crit:'×3',       type:'B',      range:0,   weight:5,  cost:12,  category:'martial', group:'onehanded' },
 
   // Martial — Two-handed
-  'Lucerne hammer':   { dmg:'1d12',crit:'×2',       type:'B or P', range:0,   weight:12, cost:15,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
+  'Lucerne hammer':   { dmg:'1d12',crit:'×2',       type:'B or P', range:0,   weight:12, cost:15,  category:'martial', group:'polearm',   twoHanded:true, reach:true, special:'brace; +2 CMB to sunder medium/heavy armor' },
   'Bardiche':         { dmg:'1d10',crit:'19-20/×2', type:'S',      range:0,   weight:14, cost:13,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
   'Bec de corbin':    { dmg:'1d10',crit:'×3',       type:'B or P', range:0,   weight:12, cost:15,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
   'Bill':             { dmg:'1d8', crit:'×3',       type:'S',      range:0,   weight:11, cost:11,  category:'martial', group:'twohanded', twoHanded:true, reach:true },
@@ -676,30 +676,30 @@ const WEAPONS = {
 // ══════════════════════════════════════════════════
 const ARMOR = {
   // Light armor
-  'Padded':           { bonus:1, maxDex:8, checkPen:0,  sf:5,  weight:10, cost:5,   type:'Light armor' },
-  'Leather':          { bonus:2, maxDex:6, checkPen:0,  sf:10, weight:15, cost:10,  type:'Light armor' },
-  'Studded leather':  { bonus:3, maxDex:5, checkPen:-1, sf:15, weight:20, cost:25,  type:'Light armor' },
-  'Chain shirt':      { bonus:4, maxDex:4, checkPen:-2, sf:20, weight:25, cost:100, type:'Light armor' },
+  'Padded':           { bonus:1, maxDex:8,  checkPen:0,  sf:5,  weight:10, cost:5,   type:'Light armor',   special:'' },
+  'Leather':          { bonus:2, maxDex:6,  checkPen:0,  sf:10, weight:15, cost:10,  type:'Light armor',   special:'' },
+  'Studded leather':  { bonus:3, maxDex:5,  checkPen:-1, sf:15, weight:20, cost:25,  type:'Light armor',   special:'' },
+  'Chain shirt':      { bonus:4, maxDex:4,  checkPen:-2, sf:20, weight:25, cost:100, type:'Light armor',   special:'' },
 
   // Medium armor
-  'Hide':             { bonus:4, maxDex:4, checkPen:-3, sf:20, weight:25, cost:15,  type:'Medium armor' },
-  'Scale mail':       { bonus:5, maxDex:3, checkPen:-4, sf:25, weight:30, cost:50,  type:'Medium armor' },
-  'Chainmail':        { bonus:6, maxDex:2, checkPen:-5, sf:30, weight:40, cost:150, type:'Medium armor' },
-  'Breastplate':      { bonus:6, maxDex:3, checkPen:-4, sf:25, weight:30, cost:200, type:'Medium armor' },
+  'Hide':             { bonus:4, maxDex:4,  checkPen:-3, sf:20, weight:25, cost:15,  type:'Medium armor',  special:'' },
+  'Scale mail':       { bonus:5, maxDex:3,  checkPen:-4, sf:25, weight:30, cost:50,  type:'Medium armor',  special:'' },
+  'Chainmail':        { bonus:6, maxDex:2,  checkPen:-5, sf:30, weight:40, cost:150, type:'Medium armor',  special:'' },
+  'Breastplate':      { bonus:6, maxDex:3,  checkPen:-4, sf:25, weight:30, cost:200, type:'Medium armor',  special:'' },
 
   // Heavy armor
-  'Splint mail':      { bonus:7, maxDex:0, checkPen:-7, sf:35, weight:45, cost:200, type:'Heavy armor' },
-  'Banded mail':      { bonus:7, maxDex:1, checkPen:-6, sf:35, weight:35, cost:250, type:'Heavy armor' },
-  'Half-plate':       { bonus:8, maxDex:0, checkPen:-7, sf:40, weight:50, cost:600, type:'Heavy armor' },
-  'Full plate':       { bonus:9, maxDex:1, checkPen:-6, sf:35, weight:50, cost:1500,type:'Heavy armor' },
+  'Splint mail':      { bonus:7, maxDex:0,  checkPen:-7, sf:35, weight:45, cost:200, type:'Heavy armor',   special:'' },
+  'Banded mail':      { bonus:7, maxDex:1,  checkPen:-6, sf:35, weight:35, cost:250, type:'Heavy armor',   special:'' },
+  'Half-plate':       { bonus:8, maxDex:0,  checkPen:-7, sf:40, weight:50, cost:600, type:'Heavy armor',   special:'' },
+  'Full plate':       { bonus:9, maxDex:1,  checkPen:-6, sf:35, weight:50, cost:1500,type:'Heavy armor',   special:'' },
 
   // Shields
-  'Buckler':          { bonus:1, maxDex:99,checkPen:-1, sf:5,  weight:5,  cost:5,   type:'Shield' },
-  'Shield, light wooden':{ bonus:1,maxDex:99,checkPen:-1,sf:5,weight:5,  cost:3,   type:'Shield' },
-  'Shield, light steel': { bonus:1,maxDex:99,checkPen:-1,sf:5,weight:6,  cost:9,   type:'Shield' },
-  'Shield, heavy wooden':{ bonus:2,maxDex:99,checkPen:-2,sf:15,weight:10, cost:7,   type:'Shield' },
-  'Shield, heavy steel': { bonus:2,maxDex:99,checkPen:-2,sf:15,weight:15, cost:20,  type:'Shield' },
-  'Shield, tower':    { bonus:4, maxDex:2, checkPen:-10,sf:50, weight:45, cost:30,  type:'Shield' },
+  'Buckler':          { bonus:1, maxDex:99, checkPen:-1, sf:5,  weight:5,  cost:5,   type:'Shield',        special:'-1 atk with buckler arm' },
+  'Shield, light wooden':{ bonus:1,maxDex:99,checkPen:-1,sf:5, weight:5,  cost:3,   type:'Shield',        special:'' },
+  'Shield, light steel': { bonus:1,maxDex:99,checkPen:-1,sf:5, weight:6,  cost:9,   type:'Shield',        special:'' },
+  'Shield, heavy wooden':{ bonus:2,maxDex:99,checkPen:-2,sf:15,weight:10, cost:7,   type:'Shield',        special:'' },
+  'Shield, heavy steel': { bonus:2,maxDex:99,checkPen:-2,sf:15,weight:15, cost:20,  type:'Shield',        special:'' },
+  'Shield, tower':    { bonus:4, maxDex:2,  checkPen:-10,sf:50,weight:45, cost:30,  type:'Shield',        special:'Full cover vs ranged; –2 atk in melee' },
 };
 
 // ══════════════════════════════════════════════════

@@ -1120,3 +1120,111 @@ textarea.small-textarea  { min-height: 36px; }
     overflow: visible !important;
   }
 }
+
+/* ══════════════════════════════════════════════════
+   PAGE 2 REDESIGN — AC Items full width + Blessings
+   ══════════════════════════════════════════════════ */
+
+.p2-fullwidth {
+  margin-bottom: 5px;
+}
+
+.section-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+/* AC Items wide table */
+.ac-items-wide { font-size: 9.5px; }
+.ac-items-wide th { font-size: 8px; text-transform: uppercase; font-family: var(--font-mono); color: var(--border); padding: 2px 4px; border-bottom: 1px solid var(--border-light); }
+.ac-items-wide td { padding: 1px 4px; border-bottom: 1px solid rgba(139,111,62,.1); vertical-align: middle; }
+.ac-items-wide tfoot td { font-family: var(--font-mono); font-weight: 600; border-top: 1px solid var(--border-light); }
+
+.aci-col-name  { width: 28%; }
+.aci-col-bonus { width: 6%;  text-align: center; }
+.aci-col-type  { width: 12%; }
+.aci-col-maxdex{ width: 8%;  text-align: center; }
+.aci-col-check { width: 8%;  text-align: center; }
+.aci-col-sf    { width: 8%;  text-align: center; }
+.aci-col-wt    { width: 7%;  text-align: center; }
+.aci-col-props { width: 23%; }
+
+/* Blessings grid */
+.blessings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.blessing-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.blessing-label {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  gap: 2px;
+}
+
+.blessing-sublabel {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  gap: 1px;
+}
+
+.blessing-textarea {
+  width: 100%;
+  min-height: 44px;
+  resize: vertical;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 2px 4px;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.level-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border-light);
+  font-style: italic;
+  margin-left: 3px;
+}
+
+.sacred-weapon-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Short select for size dropdown */
+.short-select {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  padding: 1px 2px;
+  outline: none;
+  width: 80px;
+}
+.short-select:focus { border-bottom-color: var(--accent2); }
+
+/* Level field trigger styling */
+#charLevel { color: var(--accent2); font-weight: 600; font-family: var(--font-mono); }

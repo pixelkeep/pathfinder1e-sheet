@@ -449,14 +449,31 @@ function collectData() {
   data.acItems = [];
   for (let i = 0; i < AC_ITEM_COUNT; i++) {
     data.acItems.push({
-      name:  val(`aci_name_${i}`),
-      bonus: val(`aci_bonus_${i}`),
-      type:  val(`aci_type_${i}`),
-      check: val(`aci_check_${i}`),
-      sf:    val(`aci_sf_${i}`),
-      wt:    val(`aci_wt_${i}`),
+      name:   val(`aci_name_${i}`),
+      bonus:  val(`aci_bonus_${i}`),
+      type:   val(`aci_type_${i}`),
+      maxDex: val(`aci_maxdex_${i}`),
+      check:  val(`aci_check_${i}`),
+      sf:     val(`aci_sf_${i}`),
+      wt:     val(`aci_wt_${i}`),
+      props:  val(`aci_props_${i}`),
     });
   }
+
+  // Blessings
+  data.blessings = {
+    b1name:  val('blessing1_name'),  b1minor: val('blessing1_minor'), b1major: val('blessing1_major'),
+    b2name:  val('blessing2_name'),  b2minor: val('blessing2_minor'), b2major: val('blessing2_major'),
+    sacredWeaponName:    val('sacred_weapon_name'),
+    sacredWeaponEnh:     val('sacred_weapon_enh'),
+    sacredWeaponDmg:     val('sacred_weapon_dmg'),
+    sacredWeaponSpecial: val('sacred_weapon_special'),
+    weaponFocus:         val('weapon_focus'),
+  };
+
+  // Separate class and level
+  data.charClass = val('charClass');
+  data.charLevel = val('charLevel');
 
   // Gear
   data.gear = [];
@@ -520,14 +537,38 @@ function populateData(data) {
   // AC Items
   if (data.acItems) {
     data.acItems.forEach((a, i) => {
-      set(`aci_name_${i}`,  a.name  || '');
-      set(`aci_bonus_${i}`, a.bonus || '');
-      set(`aci_type_${i}`,  a.type  || '');
-      set(`aci_check_${i}`, a.check || '');
-      set(`aci_sf_${i}`,    a.sf    || '');
-      set(`aci_wt_${i}`,    a.wt    || '');
+      set(`aci_name_${i}`,   a.name   || '');
+      set(`aci_bonus_${i}`,  a.bonus  || '');
+      set(`aci_type_${i}`,   a.type   || '');
+      set(`aci_maxdex_${i}`, a.maxDex || '');
+      set(`aci_check_${i}`,  a.check  || '');
+      set(`aci_sf_${i}`,     a.sf     || '');
+      set(`aci_wt_${i}`,     a.wt     || '');
+      set(`aci_props_${i}`,  a.props  || '');
     });
     calcACItems();
+  }
+
+  // Blessings
+  if (data.blessings) {
+    const b = data.blessings;
+    set('blessing1_name',  b.b1name  || ''); set('blessing1_minor', b.b1minor || ''); set('blessing1_major', b.b1major || '');
+    set('blessing2_name',  b.b2name  || ''); set('blessing2_minor', b.b2minor || ''); set('blessing2_major', b.b2major || '');
+    set('sacred_weapon_name',    b.sacredWeaponName    || '');
+    set('sacred_weapon_enh',     b.sacredWeaponEnh     || '');
+    set('sacred_weapon_dmg',     b.sacredWeaponDmg     || '');
+    set('sacred_weapon_special', b.sacredWeaponSpecial || '');
+    set('weapon_focus',          b.weaponFocus         || '');
+  }
+
+  // Class and level (separate fields)
+  if (data.charClass) set('charClass', data.charClass);
+  if (data.charLevel) set('charLevel', data.charLevel);
+  // Legacy: classLevel combined field
+  if (data.classLevel && !data.charClass) {
+    const parts = data.classLevel.match(/^(.*?)\s+(\d+)$/);
+    if (parts) { set('charClass', parts[1]); set('charLevel', parts[2]); }
+    else set('charClass', data.classLevel);
   }
 
   // Gear
@@ -1029,6 +1070,23 @@ function buildSetupPanel() {
 }
 
 // ── ON CHANGE HANDLERS ─────────────────────────────
+function onLevelFieldChange() {
+  // When the level field on page 1 is changed directly, update preview
+  const lvl = parseInt(document.getElementById('charLevel') && document.getElementById('charLevel').value) || 1;
+  const setupLevel = document.getElementById('setup_level');
+  if (setupLevel) setupLevel.value = lvl;
+  showSetupInfo();
+}
+
+function onSizeFieldChange() {
+  // Size dropdown on page 1 changed
+  const size = document.getElementById('size') && document.getElementById('size').value;
+  if (!size) return;
+  const setupSize = document.getElementById('setup_size');
+  if (setupSize) setupSize.value = size;
+  onSizeChange();
+}
+
 function onRaceChange() {
   const key = document.getElementById('setup_race').value;
   const race = RACES[key];
@@ -1120,7 +1178,8 @@ function applySetup() {
 
   // ── Class + level
   if (cls) {
-    set('classLevel', `${cls.name} ${level}`);
+    set('charClass', cls.name);
+    set('charLevel', level);
 
     // BAB
     const bab = getBAB(classKey, level);
