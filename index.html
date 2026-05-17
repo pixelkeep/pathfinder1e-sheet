@@ -11,6 +11,7 @@
 <div id="toolbar" class="no-print">
   <div class="toolbar-left">
     <span class="toolbar-title">⚔ Pathfinder 1e Character Sheet</span>
+    <a class="toolbar-link" href="https://aonprd.com/" target="_blank" title="Archives of Nethys — Pathfinder 1e SRD">Archives of Nethys ↗</a>
   </div>
   <div class="toolbar-right">
     <button onclick="newCharacter()" title="New character">New</button>
@@ -27,6 +28,7 @@
   <!-- HEADER -->
   <div class="sheet-header">
     <div class="header-logo">PATHFINDER</div>
+    <div class="header-edition">First Edition</div>
     <div class="header-sub">Roleplaying Game — Character Sheet</div>
   </div>
 
@@ -431,6 +433,20 @@
   </div><!-- /page2-grid -->
 </div><!-- /page2 -->
 
+<div id="pages35-container"></div>
+
 <script src="sheet.js"></script>
+<script>
+  fetch('pages35.html')
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('pages35-container').innerHTML = html;
+      if (typeof initPages35 === 'function') initPages35();
+    })
+    .catch(() => {
+      const d = document.getElementById('pages35-container');
+      d.innerHTML = '<p class="offline-note no-print" style="color:#8b6f3e;text-align:center;padding:12px;font-family:monospace;font-size:11px;">💡 Pages 3–5 load via server (GitHub Pages) or <a href=\"pages35.html\" target=\"_blank\">open separately</a>. Locally: run a simple server (e.g. <code>python3 -m http.server</code>).</p>';
+    });
+</script>
 </body>
 </html>

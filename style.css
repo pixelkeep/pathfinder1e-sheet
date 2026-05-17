@@ -63,6 +63,18 @@ body {
   letter-spacing: .5px;
 }
 
+.toolbar-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border-light);
+  text-decoration: none;
+  opacity: .7;
+  margin-left: 14px;
+  letter-spacing: .3px;
+  transition: opacity .15s;
+}
+.toolbar-link:hover { opacity: 1; }
+
 .toolbar-right {
   display: flex;
   gap: 8px;
@@ -126,6 +138,15 @@ body {
   color: var(--accent);
   letter-spacing: 4px;
   text-shadow: 1px 1px 0 rgba(139,111,62,.3);
+}
+
+.header-edition {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: -2px;
 }
 
 .header-sub {
@@ -551,3 +572,300 @@ textarea.small-textarea  { min-height: 36px; }
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #2a1f0e; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ══════════════════════════════════════════════════
+   PAGES 3–5 STYLES
+   ══════════════════════════════════════════════════ */
+
+/* ── PAGE 3: SPELLS + CLASS RESOURCES ─────────── */
+.page3-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page3-left, .page3-right { display: flex; flex-direction: column; gap: 4px; }
+
+.helper-text {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+/* Class resource pool row */
+.resource-pool-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+}
+.resource-pool-row:last-child { border-bottom: none; }
+.resource-pool-label { width: 110px; }
+.resource-pool-max { width: 32px; }
+.pool-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.pool-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background .1s;
+  flex-shrink: 0;
+}
+.pool-dot.filled { background: var(--accent2); border-color: var(--accent2); }
+
+/* Resource table */
+.resource-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.resource-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: center;
+}
+.resource-table td { padding: 1px 3px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.resource-table input { width: 100%; }
+.resource-table input.num { width: 36px; }
+
+/* Spell slots table */
+.spell-slots-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.spell-slots-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.spell-slots-table td { padding: 2px 3px; border-bottom: 1px solid rgba(139,111,62,.1); vertical-align: middle; }
+
+/* Spell meta row */
+.spell-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 4px;
+}
+.spell-meta-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-light);
+}
+
+/* Spell level block */
+.spell-level-block {
+  border: 1px solid var(--border-light);
+  margin-bottom: 4px;
+  background: var(--cream);
+}
+.spell-level-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 5px;
+  background: var(--section-bg);
+  border-bottom: 1px solid var(--border-light);
+}
+.spell-level-label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 48px;
+}
+.spell-level-header label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.spell-slot-dots {
+  display: flex;
+  gap: 3px;
+  margin-left: 4px;
+}
+.spell-slot-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background .1s;
+}
+.spell-slot-dot.used { background: var(--accent); border-color: var(--accent); }
+.spell-names-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 4px;
+  padding: 2px 5px 3px;
+}
+.spell-names-grid input {
+  width: 100%;
+  font-size: 9.5px;
+  border-bottom: 1px solid rgba(139,111,62,.2);
+}
+
+/* ── PAGE 4: COMBAT REFERENCE ──────────────────── */
+.page4-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.ref-col { display: flex; flex-direction: column; gap: 4px; }
+
+.ref-note {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 3px;
+}
+.ref-note.mt4 { margin-top: 4px; }
+.ref-note strong { color: var(--ink); }
+
+/* Action blocks */
+.action-block { margin-bottom: 5px; }
+.action-type {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  display: inline-block;
+  margin-bottom: 2px;
+  border-radius: 1px;
+}
+.action-type.standard  { background: #8b1a1a; color: #fff; }
+.action-type.move      { background: #2a4a6b; color: #fff; }
+.action-type.full      { background: #3d2e14; color: #f0e8d0; }
+.action-type.swift     { background: #5a6e2a; color: #fff; }
+.action-type.immediate { background: #6b5a2a; color: #fff; }
+.action-type.free      { background: #5a5a5a; color: #fff; }
+.action-limit { font-family: var(--font-mono); font-size: 8px; opacity: .85; }
+
+.action-list {
+  margin: 0 0 0 16px;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.action-list li { margin-bottom: 1px; }
+
+/* Reference tables */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 2px; }
+.ref-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: left;
+}
+.ref-table td {
+  padding: 1px 3px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  font-family: var(--font-body);
+  font-size: 9px;
+  vertical-align: top;
+}
+.ref-table tr:hover td { background: rgba(42,74,107,.04); }
+
+/* Source tag */
+.source-tag {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 4px;
+}
+.source-tag a { color: var(--border); }
+
+/* Conditions table */
+.conditions-table { width: 100%; border-collapse: collapse; }
+.cond-row { border-bottom: 1px solid rgba(139,111,62,.1); }
+.cond-row:hover td { background: rgba(42,74,107,.04); }
+.cond-name {
+  font-family: var(--font-heading);
+  font-size: 9.5px;
+  color: var(--accent);
+  padding: 2px 4px 2px 2px;
+  white-space: nowrap;
+  vertical-align: top;
+  min-width: 68px;
+}
+.cond-row td:last-child {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink);
+  padding: 2px 2px;
+  line-height: 1.35;
+}
+
+/* ── PAGE 5: CHARACTER CHEATSHEET ──────────────── */
+.page5-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page5-col { display: flex; flex-direction: column; gap: 4px; }
+
+/* My go-to actions */
+.my-actions-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.my-actions-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.my-actions-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.my-actions-table input { width: 100%; }
+
+/* Buff tracker */
+.buff-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.buff-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.buff-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.buff-table input { width: 100%; }
+
+/* Carry weight */
+.carry-table { font-family: var(--font-mono); font-size: 9px; }
+.carry-table table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.carry-table th {
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: right;
+}
+.carry-table td { padding: 1px 4px; text-align: right; font-size: 9px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.carry-table td:first-child { text-align: left; color: var(--border); }
+.carry-highlight { color: var(--accent2); font-weight: 600; }
+
+/* Offline note */
+.offline-note { color: var(--border); text-align: center; padding: 12px; font-family: var(--font-mono); font-size: 10px; }
