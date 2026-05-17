@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '1.3.0';
+const SHEET_VERSION = '2.0.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -1010,4 +1010,301 @@ function getClassSaves(className, level) {
 /** Get XP needed for next level (medium progression) */
 function getXPForLevel(level) {
   return XP_TABLE.medium[level] || null;
+}
+
+// ══════════════════════════════════════════════════
+// CLASS ABILITIES — per level, per class
+// Source: aonprd.com
+//
+// Each entry: { level, name, type, description, resource, weaponLinked }
+// type: 'passive'|'active'|'bonus_feat'|'resource'|'weapon'|'armor'
+// resource: optional { id, formula } — links to resource pool
+// weaponLinked: true = show "link to weapon slot" option in feats
+// unlockLevel: ability becomes available at this level
+// ══════════════════════════════════════════════════
+const CLASS_ABILITIES = {
+
+  warpriest: [
+    { level:1,  name:'Aura',                    type:'passive',    description:'Powerful aura matching deity alignment (as cleric). Detected by detect evil/good/law/chaos.' },
+    { level:1,  name:'Blessings (minor)',        type:'active',     description:'Two blessings from deity domains. Minor power usable 3+½lvl/day (max 13). Swift action.', resource:'blessings_per_day' },
+    { level:1,  name:'Fervor',                  type:'resource',   description:'½lvl+WIS uses/day. Touch ally to heal 1d6+1d6/3lvls as standard, or self as swift. Or: cast any prepared warpriest spell on self as swift action.', resource:'fervor_pool' },
+    { level:1,  name:'Orisons',                 type:'passive',    description:'Cast 0-level cleric spells at will. Unlimited uses.' },
+    { level:1,  name:'Sacred Weapon — Focus',   type:'weapon',     description:'Weapon Focus as bonus feat for chosen weapon. That weapon becomes the Sacred Weapon.', weaponLinked:true },
+    { level:1,  name:'Sacred Weapon — Damage',  type:'weapon',     description:'Override weapon damage die based on class level: 1d6 (lvl1-4), 1d8 (5-9), 1d10 (10-14), 2d6 (15-19), 2d8 (20). Two-handed does not increase this die.', weaponLinked:true },
+    { level:1,  name:'Spontaneous Casting',     type:'passive',    description:'Sacrifice prepared spell to cast cure/inflict wounds of same level or lower.' },
+    { level:3,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Select any combat feat, treating warpriest level as fighter level for prerequisites. BAB counts as full for feat prerequisites.', bonusFeatCount:1 },
+    { level:4,  name:'Channel Energy',          type:'active',     description:'Channel positive/negative energy by spending 2 Fervor uses. Heals/harms as cleric of same level. 30-ft burst.', resource:'fervor_pool' },
+    { level:4,  name:'Sacred Weapon — Enhance', type:'weapon',     description:'Swift action: enhance Sacred Weapon for lvl rounds/day. +1 at lvl4 (+2 at 8, +3 at 12, +4 at 16, +5 at 20). Can spend points for special abilities instead.', weaponLinked:true, resource:'sw_enhance_rounds' },
+    { level:6,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional combat feat (see level 3).', bonusFeatCount:2 },
+    { level:7,  name:'Sacred Armor',            type:'armor',      description:'Swift action: enhance armor/shield for lvl minutes/day. +1 at lvl7 (+2 at 13, +3 at 19). Can spend points for properties.', resource:'sa_enhance_minutes' },
+    { level:9,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional combat feat (see level 3).', bonusFeatCount:3 },
+    { level:10, name:'Blessings (major)',        type:'active',     description:'Major blessing powers now available. Same pool as minor blessings.', resource:'blessings_per_day' },
+    { level:12, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional combat feat (see level 3).', bonusFeatCount:4 },
+    { level:13, name:'Sacred Armor (improve)',  type:'armor',      description:'Sacred Armor enhancement bonus increases to +2.' },
+    { level:15, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional combat feat (see level 3).', bonusFeatCount:5 },
+    { level:16, name:'Sacred Weapon +4',        type:'weapon',     description:'Sacred Weapon enhancement bonus increases to +4.', weaponLinked:true },
+    { level:18, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional combat feat (see level 3).', bonusFeatCount:6 },
+    { level:19, name:'Sacred Armor (improve)',  type:'armor',      description:'Sacred Armor enhancement bonus increases to +3.' },
+    { level:20, name:'Sacred Weapon +5',        type:'weapon',     description:'Sacred Weapon enhancement bonus increases to +5.', weaponLinked:true },
+  ],
+
+  fighter: [
+    { level:1,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Fighter bonus feat. Access to fighter-only feats.', bonusFeatCount:1 },
+    { level:1,  name:'Bravery',                 type:'passive',    description:'+1 Will save vs fear. Increases by +1 every 4 levels.' },
+    { level:2,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:2 },
+    { level:2,  name:'Armor Training 1',        type:'passive',    description:'Reduce armor check penalty by 1, max Dex bonus +1. Move at full speed in medium armor.' },
+    { level:4,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:3 },
+    { level:5,  name:'Weapon Training 1',       type:'weapon',     description:'+1 attack and damage with chosen weapon group. Applies to all weapons in group.', weaponLinked:true },
+    { level:6,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:4 },
+    { level:6,  name:'Armor Training 2',        type:'passive',    description:'Armor check penalty –2, max Dex +2. Move at full speed in heavy armor.' },
+    { level:8,  name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:5 },
+    { level:9,  name:'Weapon Training 2',       type:'weapon',     description:'+1 attack/damage second weapon group; first group increases to +2.', weaponLinked:true },
+    { level:10, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:6 },
+    { level:10, name:'Armor Training 3',        type:'passive',    description:'Armor check penalty –3, max Dex +3.' },
+    { level:11, name:'Armor Mastery',           type:'passive',    description:'DR 5/— while in medium or heavy armor.' },
+    { level:12, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:7 },
+    { level:13, name:'Weapon Training 3',       type:'weapon',     description:'+1 to third group; prior groups +1.', weaponLinked:true },
+    { level:14, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:8 },
+    { level:16, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:9 },
+    { level:17, name:'Weapon Training 4',       type:'weapon',     description:'+1 to fourth group; prior groups +1.', weaponLinked:true },
+    { level:18, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:10 },
+    { level:19, name:'Weapon Mastery',          type:'weapon',     description:'Chosen weapon always scores a critical hit on 19-20. Cannot be disarmed.', weaponLinked:true },
+    { level:20, name:'Bonus Combat Feat',       type:'bonus_feat', description:'Additional bonus feat.', bonusFeatCount:11 },
+  ],
+
+  barbarian: [
+    { level:1,  name:'Fast Movement',           type:'passive',    description:'+10 ft land speed (not in heavy armor).' },
+    { level:1,  name:'Rage',                    type:'resource',   description:'4+CON mod rounds/day (+2/level after 1st). +4 morale STR/CON, +2 Will, –2 AC. Fatigued after.', resource:'rage_rounds' },
+    { level:2,  name:'Rage Power',              type:'active',     description:'Select one rage power. New power every 2 levels.' },
+    { level:2,  name:'Uncanny Dodge',           type:'passive',    description:'Retain Dex to AC when flat-footed or attacked by invisible creature.' },
+    { level:3,  name:'Trap Sense',              type:'passive',    description:'+1 Reflex saves and AC vs traps. Increases by +1 every 3 levels.' },
+    { level:5,  name:'Improved Uncanny Dodge',  type:'passive',    description:'Cannot be flanked unless rogue is 4+ levels higher.' },
+    { level:7,  name:'Damage Reduction',        type:'passive',    description:'DR 1/—. Increases by 1 every 3 levels (max DR 5/— at level 19).' },
+    { level:11, name:'Greater Rage',            type:'passive',    description:'Rage bonuses increase to +6 STR/CON, +3 Will.' },
+    { level:14, name:'Indomitable Will',        type:'passive',    description:'+4 Will saves vs enchantment while raging.' },
+    { level:17, name:'Tireless Rage',           type:'passive',    description:'No longer fatigued after rage.' },
+    { level:20, name:'Mighty Rage',             type:'passive',    description:'Rage bonuses increase to +8 STR/CON, +4 Will.' },
+  ],
+
+  bard: [
+    { level:1,  name:'Bardic Knowledge',        type:'passive',    description:'+½ level on all Knowledge checks. Use all Knowledge untrained.' },
+    { level:1,  name:'Bardic Performance',      type:'resource',   description:'4+CHA mod rounds/day (+2/level after 1st). Multiple types available.', resource:'bardic_performance' },
+    { level:1,  name:'Cantrips',                type:'passive',    description:'0-level spells at will.' },
+    { level:2,  name:'Versatile Performance',   type:'passive',    description:'Use Perform bonus for two related skills. New pair every 4 levels.' },
+    { level:2,  name:'Well-Versed',             type:'passive',    description:'+4 saves vs bardic performance, sonic, and language-dependent effects.' },
+    { level:3,  name:'Inspire Competence',      type:'active',     description:'+2 competence on ally skill checks. Increases every 4 levels.', resource:'bardic_performance' },
+    { level:5,  name:'Lore Master',             type:'active',     description:'Take 10 on Knowledge checks. Once/day take 20 (additional use every 6 levels).' },
+    { level:5,  name:'Inspire Greatness',       type:'active',     description:'+2d10 HP, +2 BAB, +1 Fort. Starts at 1 target; 14th level up to 3.', resource:'bardic_performance' },
+    { level:8,  name:'Dirge of Doom',           type:'active',     description:'Enemies within 30 ft become shaken while you perform.', resource:'bardic_performance' },
+    { level:9,  name:'Inspire Heroics',         type:'active',     description:'+4 morale saves and AC to one ally. At 15th level, up to 2.', resource:'bardic_performance' },
+    { level:10, name:'Jack-of-All-Trades',      type:'passive',    description:'Use any skill untrained. At 16th level, all skills count as class skills.' },
+    { level:12, name:'Soothing Performance',    type:'active',     description:'Magical calming of violent creatures and removing conditions.', resource:'bardic_performance' },
+    { level:20, name:'Deadly Performance',      type:'active',     description:'Target must save or die. Supernatural ability.', resource:'bardic_performance' },
+  ],
+
+  cleric: [
+    { level:1,  name:'Aura',                    type:'passive',    description:'Aura of alignment matching deity.' },
+    { level:1,  name:'Channel Energy',          type:'resource',   description:'3+CHA mod/day. Heal 1d6+1d6/2lvls in 30-ft burst (or harm undead). Vs undead: DC 10+½lvl+CHA.', resource:'channel_energy' },
+    { level:1,  name:'Domains',                 type:'passive',    description:'Two domains from deity. Each grants domain power and bonus spells.' },
+    { level:1,  name:'Orisons',                 type:'passive',    description:'0-level spells at will.' },
+    { level:1,  name:'Spontaneous Casting',     type:'passive',    description:'Sacrifice spell to cast cure/inflict wounds of same level or lower.' },
+  ],
+
+  druid: [
+    { level:1,  name:'Nature Bond',             type:'passive',    description:'Animal companion or domain (from druid domain list).' },
+    { level:1,  name:'Nature Sense',            type:'passive',    description:'+2 Knowledge (nature) and Survival.' },
+    { level:1,  name:'Orisons',                 type:'passive',    description:'0-level spells at will.' },
+    { level:1,  name:'Wild Empathy',            type:'active',     description:'Improve animal attitude as Diplomacy. Roll d20 + druid level + CHA.' },
+    { level:2,  name:'Woodland Stride',         type:'passive',    description:'Move through natural difficult terrain at full speed.' },
+    { level:3,  name:'Trackless Step',          type:'passive',    description:'Leave no trail in natural environments.' },
+    { level:4,  name:'Resist Nature\'s Lure',   type:'passive',    description:'+4 saves vs fey spell-like abilities and spells with plant descriptor.' },
+    { level:4,  name:'Wild Shape',              type:'resource',   description:'1/day at lvl4. +1/day every 2 levels. Becomes small/medium animal. Duration = level hours.', resource:'wild_shape' },
+    { level:9,  name:'Venom Immunity',          type:'passive',    description:'Immune to all poisons.' },
+    { level:13, name:'A Thousand Faces',        type:'active',     description:'At will: alter self (humanoid forms only).' },
+    { level:15, name:'Timeless Body',           type:'passive',    description:'No ability score penalties from aging; immune to magical aging.' },
+  ],
+
+  paladin: [
+    { level:1,  name:'Aura of Good',            type:'passive',    description:'Powerful aura of good (as cleric).' },
+    { level:1,  name:'Detect Evil',             type:'active',     description:'At will: detect evil as the spell.' },
+    { level:1,  name:'Smite Evil',              type:'resource',   description:'1+1/3lvls/day. +CHA to attack, +level to damage vs evil. +2 AC vs target.', resource:'smite_evil' },
+    { level:2,  name:'Divine Grace',            type:'passive',    description:'+CHA modifier to all saving throws.' },
+    { level:2,  name:'Lay on Hands',            type:'resource',   description:'½lvl+CHA/day. Heal 1d6/2lvls as standard (others) or swift (self). Remove conditions with mercies.', resource:'lay_on_hands' },
+    { level:3,  name:'Aura of Courage',         type:'passive',    description:'Immune to fear. Allies within 10 ft get +4 vs fear.' },
+    { level:3,  name:'Divine Health',           type:'passive',    description:'Immune to all diseases including supernatural.' },
+    { level:3,  name:'Mercy',                   type:'passive',    description:'Lay on Hands removes one condition. New mercy every 3 levels.' },
+    { level:4,  name:'Channel Positive Energy', type:'resource',   description:'Channel positive energy (costs 2 Lay on Hands uses).', resource:'lay_on_hands' },
+    { level:5,  name:'Divine Bond',             type:'active',     description:'Holy weapon or mount. Weapon: enhance 1 min/level, +1 bonus (+1/3 levels beyond 5th).', resource:'divine_bond' },
+    { level:8,  name:'Aura of Resolve',         type:'passive',    description:'Immune to charm. Allies within 10 ft +4 vs charm.' },
+    { level:11, name:'Aura of Justice',         type:'active',     description:'2 Smite Evil uses: grant allies within 10 ft ability to smite evil.' },
+    { level:14, name:'Aura of Faith',           type:'passive',    description:'Weapons count as good-aligned for DR.' },
+    { level:17, name:'Aura of Righteousness',   type:'passive',    description:'DR 5/evil. Immune to compulsion.' },
+    { level:20, name:'Holy Champion',           type:'passive',    description:'DR 10/evil. Smite evil banishes evil outsiders on kill.' },
+  ],
+
+  ranger: [
+    { level:1,  name:'Favored Enemy',           type:'passive',    description:'+2 attack/damage and skills vs chosen creature type. +2 more per 5 levels.', weaponLinked:true },
+    { level:1,  name:'Track',                   type:'passive',    description:'+½ level on Survival checks to follow tracks.' },
+    { level:1,  name:'Wild Empathy',            type:'active',     description:'Improve animal attitude. Roll d20 + ranger level + CHA.' },
+    { level:2,  name:'Combat Style Feat',       type:'bonus_feat', description:'Bonus feat from chosen combat style (archery or two-weapon fighting).', bonusFeatCount:1 },
+    { level:3,  name:'Endurance',               type:'passive',    description:'Endurance as bonus feat.' },
+    { level:3,  name:'Favored Terrain',         type:'passive',    description:'+2 initiative, Knowledge, Perception, Stealth, Survival in chosen terrain. +2 every 5 levels.' },
+    { level:4,  name:'Animal Companion',        type:'passive',    description:'Animal companion as druid of level –3.' },
+    { level:6,  name:'Combat Style Feat',       type:'bonus_feat', description:'Additional combat style feat.', bonusFeatCount:2 },
+    { level:7,  name:'Woodland Stride',         type:'passive',    description:'Move through natural difficult terrain at full speed.' },
+    { level:8,  name:'Swift Tracker',           type:'passive',    description:'Track at full speed without –5 penalty.' },
+    { level:9,  name:'Evasion',                 type:'passive',    description:'Reflex save for no damage instead of half.' },
+    { level:10, name:'Combat Style Feat',       type:'bonus_feat', description:'Additional combat style feat.', bonusFeatCount:3 },
+    { level:11, name:'Quarry',                  type:'active',     description:'Standard: designate one creature as quarry. +2 attack, auto-confirm crits.' },
+    { level:14, name:'Combat Style Feat',       type:'bonus_feat', description:'Additional combat style feat.', bonusFeatCount:4 },
+    { level:16, name:'Improved Evasion',        type:'passive',    description:'Failed Reflex save = half damage.' },
+    { level:18, name:'Combat Style Feat',       type:'bonus_feat', description:'Additional combat style feat.', bonusFeatCount:5 },
+    { level:19, name:'Improved Quarry',         type:'active',     description:'Free action to quarry. Quarry persists even if you lose sight.' },
+    { level:20, name:'Master Hunter',           type:'passive',    description:'Full attack as standard vs Favored Enemy. Kill instantly on hit if target fails Fort save.' },
+  ],
+
+  rogue: [
+    { level:1,  name:'Sneak Attack',            type:'passive',    description:'+1d6 on flanked/flat-footed/denied Dex targets. +1d6 every 2 levels (max +10d6 at lvl19).' },
+    { level:1,  name:'Trapfinding',             type:'passive',    description:'+½ level Perception to find traps. Disable Device on magic traps.' },
+    { level:2,  name:'Evasion',                 type:'passive',    description:'Reflex save for no damage instead of half.' },
+    { level:2,  name:'Rogue Talent',            type:'active',     description:'Select one rogue talent. Additional talent every 2 levels.' },
+    { level:3,  name:'Trap Sense',              type:'passive',    description:'+1 Reflex and AC vs traps. +1 every 3 levels.' },
+    { level:4,  name:'Uncanny Dodge',           type:'passive',    description:'Retain Dex to AC when flat-footed.' },
+    { level:8,  name:'Improved Uncanny Dodge',  type:'passive',    description:'Cannot be flanked unless rogue is 4+ levels higher.' },
+    { level:10, name:'Advanced Talents',        type:'active',     description:'Talent selection expands to advanced rogue talents.' },
+    { level:20, name:'Master Strike',           type:'active',     description:'On sneak attack: target must Fort save or be paralyzed/unconscious/dead (your choice).' },
+  ],
+
+  alchemist: [
+    { level:1,  name:'Alchemy',                 type:'passive',    description:'+level on Craft (alchemy). Can create mundane alchemical items as a wizard creates scrolls.' },
+    { level:1,  name:'Bomb',                    type:'resource',   description:'level+INT mod bombs/day. 1d6+INT fire damage +1d6/2lvls. 20-ft range. Splash 1 damage.', resource:'bombs_per_day' },
+    { level:1,  name:'Brew Potion',             type:'passive',    description:'Brew Potion as bonus feat.' },
+    { level:1,  name:'Mutagen',                 type:'resource',   description:'1/day, 10 min/level. +4 alchemical to chosen physical score, –2 to mental. +2 natural AC.', resource:'mutagen_per_day' },
+    { level:1,  name:'Throw Anything',          type:'passive',    description:'Throw Anything as bonus feat. +1 to attack with splash weapons.' },
+    { level:2,  name:'Discovery',               type:'active',     description:'Select one discovery. Additional discovery every 2 levels.' },
+    { level:2,  name:'Poison Resistance',       type:'passive',    description:'+2 saves vs poison. Increases every 2 levels (+4 at 5, +6 at 8, immune at 10).' },
+    { level:3,  name:'Swift Alchemy',           type:'passive',    description:'Create alchemical items in half normal time. Apply poison as move action.' },
+    { level:6,  name:'Swift Poisoning',         type:'passive',    description:'Apply poison as free action.' },
+    { level:14, name:'Persistent Mutagen',      type:'passive',    description:'Mutagen lasts indefinitely.' },
+    { level:18, name:'Instant Alchemy',         type:'passive',    description:'Create alchemical items as standard action.' },
+    { level:20, name:'Grand Discovery',         type:'active',     description:'Select one grand discovery (True Mutagen, Philosopher\'s Stone, etc.).' },
+  ],
+
+  monk: [
+    { level:1,  name:'Bonus Feat',              type:'bonus_feat', description:'Improved Unarmed Strike + one of: Catch Off-Guard, Combat Reflexes, Deflect Arrows, Dodge, Improved Grapple, Scorpion Style, or Throw Anything.', bonusFeatCount:1 },
+    { level:1,  name:'Flurry of Blows',         type:'active',     description:'Full-attack at highest BAB –2 with extra strike. Off-hand penalty does not apply.' },
+    { level:1,  name:'Stunning Fist',           type:'resource',   description:'level uses/day. On hit: Fort DC 10+½lvl+WIS or stunned 1 round.', resource:'stunning_fist' },
+    { level:1,  name:'Unarmed Strike',          type:'weapon',     description:'1d6 unarmed (medium). Treated as natural and manufactured weapon. +1d die every 4 levels.', weaponLinked:true },
+    { level:2,  name:'Bonus Feat',              type:'bonus_feat', description:'Combat Reflexes, Deflect Arrows, Improved Trip, Mobility, Scorpion Style, or Spring Attack.', bonusFeatCount:2 },
+    { level:2,  name:'Evasion',                 type:'passive',    description:'Reflex save for no damage.' },
+    { level:3,  name:'Fast Movement',           type:'passive',    description:'+10 ft speed (not in armor). +10 every 3 levels.' },
+    { level:3,  name:'Maneuver Training',       type:'passive',    description:'Use monk level instead of BAB for CMB.' },
+    { level:3,  name:'Still Mind',              type:'passive',    description:'+2 saves vs enchantment spells and effects.' },
+    { level:4,  name:'Ki Pool',                 type:'resource',   description:'½lvl+WIS ki points. Spend 1: extra attack at highest BAB, +20 speed, +4 Stealth.', resource:'ki_pool' },
+    { level:4,  name:'Slow Fall',               type:'active',     description:'Within arm\'s reach of wall: reduce falling damage. 20 ft at lvl4, +10/2 levels.' },
+    { level:5,  name:'High Jump',               type:'passive',    description:'+level on Acrobatics for jumping. Always count as running start.' },
+    { level:5,  name:'Purity of Body',          type:'passive',    description:'Immune to all diseases including supernatural.' },
+    { level:6,  name:'Bonus Feat',              type:'bonus_feat', description:'Gorgon\'s Fist, Improved Bull Rush, Improved Disarm, Improved Feint, Improved Trip, or Mobility.', bonusFeatCount:3 },
+    { level:7,  name:'Wholeness of Body',       type:'active',     description:'Spend 2 ki: heal own HP equal to monk level as standard action.' },
+    { level:9,  name:'Improved Evasion',        type:'passive',    description:'Failed Reflex save = half damage.' },
+    { level:10, name:'Bonus Feat',              type:'bonus_feat', description:'Combat Reflexes, Medusa\'s Wrath, Snatch Arrows, or Spring Attack.', bonusFeatCount:4 },
+    { level:11, name:'Diamond Body',            type:'passive',    description:'Immune to all poisons.' },
+    { level:12, name:'Abundant Step',           type:'active',     description:'Spend 2 ki: dimension door as spell-like ability (CL = ½ monk level).' },
+    { level:13, name:'Diamond Soul',            type:'passive',    description:'Spell resistance = monk level + 10.' },
+    { level:15, name:'Quivering Palm',          type:'resource',   description:'1/day. On hit: set resonance. Use standard action within level days: target Fort DC 10+½lvl+WIS or die.', resource:'quivering_palm' },
+    { level:17, name:'Timeless Body',           type:'passive',    description:'No ability score penalties from aging.' },
+    { level:19, name:'Empty Body',              type:'active',     description:'Spend 3 ki: etherealness for 1 minute/level.' },
+    { level:20, name:'Perfect Self',            type:'passive',    description:'Outsider (native) type. DR 10/chaotic. +2 insight to any ability score.' },
+  ],
+
+  magus: [
+    { level:1,  name:'Arcane Pool',             type:'resource',   description:'½lvl+INT points (min 1). Spend 1 as swift: enhance weapon +1 magic (+1/4 levels) for 1 minute.', resource:'arcane_pool' },
+    { level:1,  name:'Spell Combat',            type:'active',     description:'Full-round: make all attacks and cast one magus spell. –2 to all attacks. Spell in off hand.' },
+    { level:2,  name:'Spellstrike',             type:'active',     description:'Cast spell with range "touch" through weapon. Deliver via melee attack. Extra attack of opportunity to deliver.' },
+    { level:3,  name:'Magus Arcana',            type:'active',     description:'Select one magus arcana. New arcana every 3 levels.' },
+    { level:4,  name:'Spell Recall',            type:'active',     description:'Spend pool points to recall spent spells (1 pt per spell level).' },
+    { level:5,  name:'Bonus Feat',              type:'bonus_feat', description:'Combat or metamagic feat.', bonusFeatCount:1 },
+    { level:7,  name:'Medium Armor',            type:'passive',    description:'Cast arcane spells in medium armor without arcane spell failure.' },
+    { level:8,  name:'Improved Spell Combat',   type:'active',     description:'Spell combat concentration check replaced by concentration check DC 15+spell level.' },
+    { level:9,  name:'Magus Arcana',            type:'active',     description:'Additional magus arcana.' },
+    { level:10, name:'Fighter Training',        type:'passive',    description:'Count ½ magus level as fighter level for combat feat prerequisites.' },
+    { level:11, name:'Bonus Feat',              type:'bonus_feat', description:'Additional combat or metamagic feat.', bonusFeatCount:2 },
+    { level:11, name:'Improved Spell Recall',   type:'active',     description:'Spend 1 pool point to recall any 1st-level spell; 2 pts for 2nd-level, etc.' },
+    { level:13, name:'Heavy Armor',             type:'passive',    description:'Cast arcane spells in heavy armor without arcane spell failure.' },
+    { level:14, name:'Greater Spell Combat',    type:'active',     description:'Add insight bonus from spell to any one attack roll or AC.' },
+    { level:15, name:'Bonus Feat',              type:'bonus_feat', description:'Additional combat or metamagic feat.', bonusFeatCount:3 },
+    { level:17, name:'Greater Spellstrike',     type:'active',     description:'Free action to release stored spell from weapon at any point in round.' },
+    { level:18, name:'Magus Arcana',            type:'active',     description:'Additional magus arcana.' },
+    { level:19, name:'Bonus Feat',              type:'bonus_feat', description:'Additional combat or metamagic feat.', bonusFeatCount:4 },
+    { level:20, name:'True Magus',              type:'passive',    description:'Spend 2 pool points as swift: all attacks this round are maximized and empowered.' },
+  ],
+
+};
+
+// ── RESOURCE FORMULAS per class ──────────────────
+// Used to auto-calculate pool sizes on Apply Setup
+const CLASS_RESOURCES = {
+  warpriest: [
+    { id:'fervor_pool',        label:'Fervor/day',              formula: (lvl,mods) => Math.floor(lvl/2) + mods.wis },
+    { id:'blessings_per_day',  label:'Blessings/day',           formula: (lvl)      => 3 + Math.floor(lvl/2) },
+    { id:'sw_enhance_rounds',  label:'Sacred Weapon rounds/day',formula: (lvl)      => lvl },
+    { id:'sa_enhance_minutes', label:'Sacred Armor min/day',    formula: (lvl)      => lvl, minLevel:7 },
+  ],
+  fighter: [],
+  barbarian: [
+    { id:'rage_rounds',        label:'Rage rounds/day',         formula: (lvl,mods) => 4 + mods.con + (lvl-1)*2 },
+  ],
+  bard: [
+    { id:'bardic_performance', label:'Bardic Performance/day',  formula: (lvl,mods) => 4 + mods.cha + (lvl-1)*2 },
+  ],
+  cleric: [
+    { id:'channel_energy',     label:'Channel Energy/day',      formula: (lvl,mods) => 3 + mods.cha },
+  ],
+  druid: [
+    { id:'wild_shape',         label:'Wild Shape/day',          formula: (lvl)      => Math.max(0, Math.floor((lvl-2)/2)) },
+  ],
+  paladin: [
+    { id:'smite_evil',         label:'Smite Evil/day',          formula: (lvl)      => 1 + Math.floor((lvl-1)/3) },
+    { id:'lay_on_hands',       label:'Lay on Hands/day',        formula: (lvl,mods) => Math.floor(lvl/2) + mods.cha },
+    { id:'divine_bond',        label:'Divine Bond min/day',     formula: (lvl)      => lvl, minLevel:5 },
+  ],
+  ranger: [],
+  rogue:   [],
+  alchemist: [
+    { id:'bombs_per_day',      label:'Bombs/day',               formula: (lvl,mods) => lvl + mods.int },
+    { id:'mutagen_per_day',    label:'Mutagen/day',             formula: ()         => 1 },
+  ],
+  monk: [
+    { id:'stunning_fist',      label:'Stunning Fist/day',       formula: (lvl)      => lvl },
+    { id:'ki_pool',            label:'Ki Pool',                 formula: (lvl,mods) => Math.floor(lvl/2) + mods.wis },
+    { id:'quivering_palm',     label:'Quivering Palm/day',      formula: ()         => 1, minLevel:15 },
+  ],
+  magus: [
+    { id:'arcane_pool',        label:'Arcane Pool',             formula: (lvl,mods) => Math.floor(lvl/2) + mods.int },
+  ],
+};
+
+// Helper: get class abilities available at or below a given level
+function getClassAbilitiesForLevel(className, level) {
+  const abilities = CLASS_ABILITIES[className] || [];
+  return abilities.filter(a => a.level <= level);
+}
+
+// Helper: count bonus feats available at a given level
+function getBonusFeatCount(className, level) {
+  const abilities = CLASS_ABILITIES[className] || [];
+  const bonusFeats = abilities.filter(a => a.type === 'bonus_feat' && a.level <= level);
+  return bonusFeats.length > 0 ? bonusFeats[bonusFeats.length-1].bonusFeatCount || bonusFeats.length : 0;
+}
+
+// Helper: get resource pool sizes
+function getResourcePools(className, level, abilityMods) {
+  const resources = CLASS_RESOURCES[className] || [];
+  return resources
+    .filter(r => !r.minLevel || level >= r.minLevel)
+    .map(r => ({
+      id:      r.id,
+      label:   r.label,
+      max:     r.formula(level, abilityMods),
+    }));
 }

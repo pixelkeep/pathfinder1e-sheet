@@ -1421,3 +1421,197 @@ textarea.small-textarea  { min-height: 36px; }
   .languages-grid-wide { gap: 0 5px; font-size: 7px; }
   .lang-item { padding: 0 1px; font-size: 7.5px; }
 }
+
+/* ══════════════════════════════════════════════════
+   PAGE 2 — Adaptive Feats + Class Abilities
+   ══════════════════════════════════════════════════ */
+
+.p2-adaptive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 200mm; /* fill page */
+}
+.p2-feats-col, .p2-abilities-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Feat rows */
+.feat-row {
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  padding: 2px 0 3px;
+  margin-bottom: 1px;
+}
+.feat-row.feat-bonus {
+  background: rgba(42,74,107,.03);
+}
+.feat-row-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.feat-level-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.feat-badge-regular  { background: var(--section-bg); color: var(--border); border: 1px solid var(--border-light); }
+.feat-badge-bonus    { background: var(--accent2);    color: #fff; }
+.feat-name-input {
+  flex: 1;
+  min-width: 80px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+}
+.feat-name-input:focus { border-bottom-color: var(--accent2); outline: none; }
+.feat-type-select {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 2px;
+  color: var(--border);
+  max-width: 76px;
+}
+.feat-wpn-select {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--accent2);
+  background: rgba(42,74,107,.05);
+  padding: 1px 2px;
+  color: var(--accent2);
+  max-width: 110px;
+}
+.feat-wpn-select.hidden { display: none; }
+.feat-desc-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  background: transparent;
+  padding: 1px 2px 0 24px;
+  margin-top: 1px;
+}
+.feat-desc-input:focus { outline: none; color: var(--ink); }
+
+/* Class abilities */
+.ca-group { margin-bottom: 4px; }
+.ca-passive-group { opacity: .85; }
+.ca-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(139,111,62,.08);
+  flex-wrap: wrap;
+}
+.ca-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  min-width: 26px;
+  text-align: center;
+}
+.ca-badge-resource { background: var(--accent);   color: #fff; }
+.ca-badge-weapon   { background: #5a3a1a;          color: #fff; }
+.ca-badge-armor    { background: #2a4a6b;          color: #fff; }
+.ca-badge-active   { background: var(--accent2);   color: #fff; }
+.ca-badge-passive  { background: var(--section-bg); color: var(--border); border: 1px solid var(--border-light); }
+
+.ca-name {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ca-desc {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  line-height: 1.35;
+}
+.ca-pool-display {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ca-wpn-link {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 2px;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 3 — Armor, Gear, Class-specific
+   ══════════════════════════════════════════════════ */
+
+.p3-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.3fr 1fr;
+  gap: 4px;
+  margin-top: 4px;
+}
+.p3-gear-col, .p3-notes-col, .p3-money-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Warpriest block */
+.warpriest-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 8px;
+}
+.wp-block { display: flex; flex-direction: column; gap: 3px; }
+.wp-block-title {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--accent2);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1px;
+  margin-bottom: 2px;
+}
+.wp-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 4 — Spells / Extracts
+   ══════════════════════════════════════════════════ */
+
+.spells-page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding-top: 4px;
+}
+
+@media print {
+  .p2-adaptive-grid { min-height: 0; }
+  #page4-spells[style*="display:none"] { display: none !important; }
+}

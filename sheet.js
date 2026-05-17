@@ -624,6 +624,7 @@ function collectData() {
     });
   }
 
+  data.feats_structured = collectFeatData();
   data._version = '1.0';
   data._timestamp = new Date().toISOString();
   return data;
@@ -1152,6 +1153,12 @@ populateData = function(data) {
     restoreLanguagePicker(data.languages);
   }
 
+  // Restore structured feats
+  if (data.feats_structured) {
+    buildAdaptivePage2(data._applied_race ? (data.charClass || '').toLowerCase() : '', parseInt(data.charLevel) || 1);
+    restoreFeatData(data.feats_structured);
+  }
+
   updateCarryWeight();
 };
 
@@ -1460,6 +1467,9 @@ function applySetup() {
     }
   }
 
+  // Build adaptive pages
+  if (typeof afterApplySetup === 'function') afterApplySetup(classKey, level);
+
   alert(`Setup applied!\n\nCheck:\n• Ability scores (racial mods added to existing values)\n• Special Abilities tab (racial traits added)\n• Class Skills (dots marked)\n• BAB, Saves, Size updated\n\nTip: If this is a new character, set ability scores to 10 first, then apply setup.`);
 }
 
@@ -1638,3 +1648,577 @@ document.addEventListener('DOMContentLoaded', () => {
   buildArmorLookup();
   buildGearLookup();
 });
+
+/* ══════════════════════════════════════════════════
+   ADAPTIVE PAGE 2 — Class Abilities + Feats
+   ══════════════════════════════════════════════════ */
+
+// Stored class/level state for adaptive rendering
+let _currentClass = '';
+let _currentLevel = 1;
+
+// Total feat slots: 1 at level 1, then every odd level
+function getRegularFeatCount(level) {
+  // 1st level: 1 feat
+  // Every odd level after: +1
+  let count = 1;
+  for (let l = 3; l <= level; l += 2) count++;
+  return count;
+}
+
+function buildAdaptivePage2(classKey, level) {
+  _currentClass = classKey;
+  _currentLevel = level;
+  const cls = CLASSES[classKey];
+  if (!cls) return;
+
+  buildFeatsSection(classKey, level);
+  buildClassAbilitiesSection(classKey, level);
+  buildClassSpecificBlock(classKey, level);
+  buildPage4Spells(classKey, level);
+}
+
+// ── FEATS SECTION ──────────────────────────────────
+function buildFeatsSection(classKey, level) {
+  const container = document.getElementById('feats-container');
+  if (!container) return;
+
+  const regularFeats  = getRegularFeatCount(level);
+  const bonusFeats    = getBonusFeatCount(classKey, level);
+  const totalFeatSlots = regularFeats + bonusFeats;
+
+  // Update label
+  const label = document.getElementById('feat-count-label');
+  if (label) label.textContent = `${regularFeats} regular + ${bonusFeats} bonus = ${totalFeatSlots} total at level ${level}`;
+
+  // Build feat rows — preserve existing values
+  const existing = [];
+  for (let i = 0; i < 30; i++) {
+    const name = val(`feat_name_${i}`);
+    const desc = val(`feat_desc_${i}`);
+    const type = val(`feat_type_${i}`);
+    const wpn  = val(`feat_wpn_${i}`);
+    if (name || desc) existing.push({ name, desc, type, wpn });
+  }
+
+  container.innerHTML = '';
+
+  // Determine which feat slots are bonus feats
+  const bonusFeatAbilities = (CLASS_ABILITIES[classKey] || [])
+    .filter(a => a.type === 'bonus_feat' && a.level <= level)
+    .sort((a,b) => a.level - b.level);
+
+  for (let i = 0; i < totalFeatSlots; i++) {
+    const isBonus  = i >= regularFeats;
+    const bonusIdx = i - regularFeats;
+    const bonusAbil = isBonus ? bonusFeatAbilities[bonusIdx] : null;
+
+    // Regular feats: gained at level 1, 3, 5, 7...
+    const gainedLevel = isBonus
+      ? (bonusAbil ? bonusAbil.level : '?')
+      : (i === 0 ? 1 : 1 + (i * 2) - 1);
+
+    const existing_i = existing[i] || {};
+    const isWeaponFeat = existing_i.type === 'weapon';
+
+    const row = document.createElement('div');
+    row.className = `feat-row${isBonus ? ' feat-bonus' : ''}`;
+    row.innerHTML = `
+      <div class="feat-row-header">
+        <span class="feat-level-badge ${isBonus ? 'feat-badge-bonus' : 'feat-badge-regular'}"
+              title="${isBonus ? `Bonus feat (${bonusAbil?.description || ''})` : `Regular feat (gained level ${gainedLevel})`}">
+          ${isBonus ? `B${bonusIdx+1}` : `L${gainedLevel}`}
+        </span>
+        <input type="text" id="feat_name_${i}" class="feat-name-input"
+               value="${(existing_i.name||'').replace(/"/g,'&quot;')}"
+               placeholder="${isBonus ? `Bonus ${bonusAbil?.name?.includes('Combat') ? 'combat ' : ''}feat…` : 'Feat name…'}">
+        <select id="feat_type_${i}" class="feat-type-select" onchange="onFeatTypeChange(${i})">
+          <option value=""     ${(existing_i.type||'')==''      ?'selected':''}>—</option>
+          <option value="combat"   ${existing_i.type==='combat'  ?'selected':''}>Combat</option>
+          <option value="weapon"   ${existing_i.type==='weapon'  ?'selected':''}>Weapon</option>
+          <option value="metamagic"${existing_i.type==='metamagic'?'selected':''}>Metamagic</option>
+          <option value="general"  ${existing_i.type==='general' ?'selected':''}>General</option>
+          <option value="item"     ${existing_i.type==='item'    ?'selected':''}>Item Creation</option>
+        </select>
+        <select id="feat_wpn_${i}" class="feat-wpn-select ${isWeaponFeat ? '' : 'hidden'}"
+                title="Link to weapon slot" onchange="onFeatWeaponLink(${i})">
+          <option value="">— weapon slot —</option>
+          ${Array.from({length: WEAPON_COUNT}, (_,w) =>
+            `<option value="${w}" ${existing_i.wpn==w?'selected':''}>Slot ${w+1}: ${val(`wpn_name_${w}`) || '(empty)'}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <input type="text" id="feat_desc_${i}" class="feat-desc-input"
+             value="${(existing_i.desc||'').replace(/"/g,'&quot;')}"
+             placeholder="Brief effect — e.g. +1 attack with chosen weapon">
+    `;
+    container.appendChild(row);
+  }
+}
+
+function onFeatTypeChange(i) {
+  const type = val(`feat_type_${i}`);
+  const wpnSel = document.getElementById(`feat_wpn_${i}`);
+  if (wpnSel) wpnSel.classList.toggle('hidden', type !== 'weapon');
+}
+
+function onFeatWeaponLink(i) {
+  // Update weapon slot's feat dropdown label
+  const slotIdx = parseInt(val(`feat_wpn_${i}`));
+  const featName = val(`feat_name_${i}`);
+  // Trigger weapon recalc — feat bonus in wpn_feat_X is manually entered
+  // Just refresh the weapon slot dropdown labels
+  buildFeatsSection(_currentClass, _currentLevel);
+}
+
+// ── CLASS ABILITIES SECTION ────────────────────────
+function buildClassAbilitiesSection(classKey, level) {
+  const container = document.getElementById('class-abilities-container');
+  if (!container) return;
+
+  const label = document.getElementById('class-abilities-label');
+  const cls = CLASSES[classKey];
+  if (label && cls) label.textContent = `${cls.name} level ${level}`;
+
+  const abilities = getClassAbilitiesForLevel(classKey, level);
+  if (!abilities.length) {
+    container.innerHTML = '<p class="helper-text">Select a class in Character Setup and click Apply to populate class abilities.</p>';
+    return;
+  }
+
+  // Group by type
+  const groups = {
+    resource: abilities.filter(a => a.type === 'resource'),
+    weapon:   abilities.filter(a => a.type === 'weapon'),
+    armor:    abilities.filter(a => a.type === 'armor'),
+    active:   abilities.filter(a => a.type === 'active'),
+    passive:  abilities.filter(a => a.type === 'passive'),
+  };
+
+  let html = '';
+
+  // Resources first (most important at table)
+  if (groups.resource.length) {
+    html += `<div class="ca-group">`;
+    // Deduplicate by name (some abilities appear at multiple levels)
+    const seen = new Set();
+    groups.resource.forEach(a => {
+      if (seen.has(a.name)) return;
+      seen.add(a.name);
+      const poolId = a.resource || '';
+      html += `
+        <div class="ca-row ca-resource">
+          <span class="ca-badge ca-badge-resource">Pool</span>
+          <span class="ca-name">${a.name}</span>
+          <span class="ca-desc">${a.description}</span>
+          ${poolId ? `<span class="ca-pool-display" id="ca_pool_${poolId}"></span>` : ''}
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Weapon-linked abilities
+  if (groups.weapon.length) {
+    html += `<div class="ca-group">`;
+    const seen = new Set();
+    groups.weapon.forEach(a => {
+      if (seen.has(a.name)) return;
+      seen.add(a.name);
+      html += `
+        <div class="ca-row ca-weapon">
+          <span class="ca-badge ca-badge-weapon">Wpn</span>
+          <span class="ca-name">${a.name}</span>
+          ${a.weaponLinked ? `<select class="ca-wpn-link" title="Link to weapon slot"><option value="">— slot —</option>${Array.from({length:WEAPON_COUNT},(_,w)=>`<option value="${w}">Slot ${w+1}</option>`).join('')}</select>` : ''}
+          <span class="ca-desc">${a.description}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Armor
+  if (groups.armor.length) {
+    html += `<div class="ca-group">`;
+    const seen = new Set();
+    groups.armor.forEach(a => {
+      if (seen.has(a.name)) return;
+      seen.add(a.name);
+      html += `
+        <div class="ca-row ca-armor">
+          <span class="ca-badge ca-badge-armor">Arm</span>
+          <span class="ca-name">${a.name}</span>
+          <span class="ca-desc">${a.description}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Active abilities
+  if (groups.active.length) {
+    html += `<div class="ca-group">`;
+    const seen = new Set();
+    groups.active.forEach(a => {
+      if (seen.has(a.name)) return;
+      seen.add(a.name);
+      html += `
+        <div class="ca-row ca-active">
+          <span class="ca-badge ca-badge-active">Act</span>
+          <span class="ca-name">${a.name}</span>
+          <span class="ca-desc">${a.description}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Passive abilities (smaller, less prominent)
+  if (groups.passive.length) {
+    html += `<div class="ca-group ca-passive-group">`;
+    const seen = new Set();
+    groups.passive.forEach(a => {
+      if (seen.has(a.name)) return;
+      seen.add(a.name);
+      html += `
+        <div class="ca-row ca-passive">
+          <span class="ca-badge ca-badge-passive">—</span>
+          <span class="ca-name">${a.name}</span>
+          <span class="ca-desc">${a.description}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Update resource pool displays
+  updateResourcePoolDisplays(classKey, level);
+}
+
+function updateResourcePoolDisplays(classKey, level) {
+  const mods = {
+    str: getEffectiveMod('str'), dex: getEffectiveMod('dex'),
+    con: getEffectiveMod('con'), int: getEffectiveMod('int'),
+    wis: getEffectiveMod('wis'), cha: getEffectiveMod('cha'),
+  };
+  const pools = getResourcePools(classKey, level, mods);
+  pools.forEach(p => {
+    const el = document.getElementById(`ca_pool_${p.id}`);
+    if (el) el.textContent = `${p.max}/day`;
+  });
+}
+
+// ── CLASS-SPECIFIC BLOCK (page 3) ─────────────────
+function buildClassSpecificBlock(classKey, level) {
+  const container = document.getElementById('class-specific-block');
+  if (!container) return;
+
+  let html = '';
+
+  if (classKey === 'warpriest') {
+    html = buildWarpriestBlock(level);
+  } else if (classKey === 'barbarian') {
+    html = buildBarbarianBlock(level);
+  } else if (classKey === 'paladin') {
+    html = buildPaladinBlock(level);
+  } else if (['cleric','oracle','druid','ranger','bard','skald','inquisitor'].includes(classKey)) {
+    html = buildSpellcasterClassBlock(classKey, level);
+  } else {
+    // Generic: just a notes area
+    html = `<div class="section-box">
+      <div class="section-title">Class Notes
+        <span class="section-note">${CLASSES[classKey]?.name || classKey}</span>
+      </div>
+      <textarea id="class_notes" class="big-textarea" placeholder="Class-specific notes, special abilities, custom resources..."></textarea>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function buildWarpriestBlock(level) {
+  const mods = { wis: getEffectiveMod('wis') };
+  const fervorMax = Math.floor(level/2) + mods.wis;
+  const blessingsMax = 3 + Math.floor(level/2);
+  const swEnh = level >= 4 ? Math.floor((level-1)/4) : 0;
+  const swDmg = level >= 15 ? '2d8' : level >= 10 ? '2d6' : level >= 5 ? '1d10' : '1d8';
+  const saEnh = level >= 19 ? 3 : level >= 13 ? 2 : level >= 7 ? 1 : 0;
+
+  return `
+    <div class="section-box p2-fullwidth">
+      <div class="section-title">Warpriest Class Features
+        <span class="section-note">Level ${level} · Fervor ${fervorMax}/day · Blessings ${blessingsMax}/day</span>
+      </div>
+      <div class="warpriest-grid">
+
+        <div class="wp-block">
+          <div class="wp-block-title">Blessings (${blessingsMax}/day)</div>
+          <div class="blessing-slot">
+            <label class="blessing-sublabel">Blessing 1 <input type="text" id="blessing1_name" class="full-width-input" placeholder="Domain name…"></label>
+            <label class="blessing-sublabel">Minor power <textarea id="blessing1_minor" class="blessing-textarea" placeholder="Minor power (level 1+)…"></textarea></label>
+            ${level >= 10 ? `<label class="blessing-sublabel">Major power <textarea id="blessing1_major" class="blessing-textarea" placeholder="Major power (level 10+)…"></textarea></label>` : ''}
+          </div>
+          <div class="blessing-slot" style="margin-top:4px">
+            <label class="blessing-sublabel">Blessing 2 <input type="text" id="blessing2_name" class="full-width-input" placeholder="Domain name…"></label>
+            <label class="blessing-sublabel">Minor power <textarea id="blessing2_minor" class="blessing-textarea" placeholder="Minor power (level 1+)…"></textarea></label>
+            ${level >= 10 ? `<label class="blessing-sublabel">Major power <textarea id="blessing2_major" class="blessing-textarea" placeholder="Major power (level 10+)…"></textarea></label>` : ''}
+          </div>
+        </div>
+
+        <div class="wp-block">
+          <div class="wp-block-title">Sacred Weapon ${swEnh > 0 ? `(+${swEnh} enh · ${swEnh*level} rounds/day)` : '(level 1-3: no enhancement)'}</div>
+          <div class="wp-stats-grid">
+            <label class="blessing-sublabel">Weapon name<br><input type="text" id="sacred_weapon_name" style="width:100%" placeholder="e.g. Lucerne hammer"></label>
+            <label class="blessing-sublabel">Damage die (sacred)<br><input type="text" id="sacred_weapon_dmg" style="width:48px" value="${swDmg}"></label>
+            <label class="blessing-sublabel">Enh. bonus<br><input type="number" id="sacred_weapon_enh" class="num small-num" value="${swEnh}"></label>
+            <label class="blessing-sublabel">Special props<br><input type="text" id="sacred_weapon_special" style="width:120px" placeholder="flaming, keen…"></label>
+            <label class="blessing-sublabel">Enh. rounds/day<br><input type="number" id="sw_rounds_max" class="num" value="${level >= 4 ? level : 0}" readonly></label>
+          </div>
+          ${saEnh > 0 ? `
+          <div class="wp-block-title" style="margin-top:6px">Sacred Armor (+${saEnh} enh · ${level} min/day)</div>
+          <div class="wp-stats-grid">
+            <label class="blessing-sublabel">Armor name<br><input type="text" id="sacred_armor_name" style="width:100%" placeholder="e.g. Chainmail"></label>
+            <label class="blessing-sublabel">Enh. bonus<br><input type="number" id="sacred_armor_enh" class="num small-num" value="${saEnh}"></label>
+            <label class="blessing-sublabel">Special props<br><input type="text" id="sacred_armor_special" style="width:120px" placeholder="fortification…"></label>
+            <label class="blessing-sublabel">Enh. min/day<br><input type="number" id="sa_minutes_max" class="num" value="${level}" readonly></label>
+          </div>` : ''}
+          <div class="wp-block-title" style="margin-top:6px">Fervor (${fervorMax}/day)</div>
+          <p class="helper-text" style="margin:0">Heal 1d6+1d6/3lvls · Swift on self · Or: cast prepared spell on self as swift action${level >= 4 ? ' · Channel Energy (2 Fervor)' : ''}</p>
+        </div>
+
+        <div class="wp-block">
+          <div class="wp-block-title">Weapon Focus</div>
+          <label class="blessing-sublabel">Chosen weapon (bonus feat)<br><input type="text" id="weapon_focus" style="width:100%" placeholder="e.g. Lucerne hammer"></label>
+          <p class="helper-text">+1 attack with this weapon. Required for Weapon Specialization.</p>
+          <div class="wp-block-title" style="margin-top:6px">Aura &amp; Spontaneous Casting</div>
+          <p class="helper-text">Aura: ${level >= 1 ? 'Active — matches deity alignment' : '—'}<br>Spontaneous: sacrifice spell → cure/inflict wounds of same level or lower.</p>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+function buildBarbarianBlock(level) {
+  return `
+    <div class="section-box p2-fullwidth">
+      <div class="section-title">Barbarian Class Features
+        <span class="section-note">Level ${level}</span>
+      </div>
+      <div class="blessings-grid">
+        <div class="blessing-slot">
+          <div class="wp-block-title">Rage Powers</div>
+          ${Array.from({length: Math.floor(level/2)}, (_,i) =>
+            `<label class="blessing-sublabel">Power ${i+1}<br><input type="text" id="rage_power_${i}" style="width:100%" placeholder="e.g. Animal Fury, Knockdown…"></label>`
+          ).join('')}
+        </div>
+        <div class="blessing-slot">
+          <div class="wp-block-title">Rage Stats</div>
+          <p class="helper-text">While raging: +4 STR, +4 CON, +2 Will, –2 AC. Fatigued after.${level >= 11 ? '<br>Greater Rage: +6 STR/CON, +3 Will.' : ''}</p>
+          <label class="blessing-sublabel">Damage Reduction<br><input type="text" id="barbarian_dr" style="width:80px" value="${level >= 7 ? `DR ${Math.min(5,Math.floor((level-4)/3))}/—` : '—'}"></label>
+        </div>
+        <div class="blessing-slot">
+          <div class="wp-block-title">Notes</div>
+          <textarea id="class_notes" class="blessing-textarea" style="min-height:80px" placeholder="Favored enemy, rage notes..."></textarea>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildPaladinBlock(level) {
+  return `
+    <div class="section-box p2-fullwidth">
+      <div class="section-title">Paladin Class Features
+        <span class="section-note">Level ${level}</span>
+      </div>
+      <div class="blessings-grid">
+        <div class="blessing-slot">
+          <div class="wp-block-title">Mercies</div>
+          ${Array.from({length: Math.floor(level/3)}, (_,i) =>
+            `<label class="blessing-sublabel">Mercy ${i+1}<br><input type="text" id="mercy_${i}" style="width:100%" placeholder="e.g. Fatigued, Shaken…"></label>`
+          ).join('')}
+        </div>
+        <div class="blessing-slot">
+          <div class="wp-block-title">Divine Bond</div>
+          <label class="blessing-sublabel">Type (weapon/mount)<br><input type="text" id="divine_bond_type" style="width:100%" placeholder="Holy weapon / Mount"></label>
+          <label class="blessing-sublabel">Enhancement<br><input type="text" id="divine_bond_enh" style="width:100%" placeholder="+1 flaming…"></label>
+        </div>
+        <div class="blessing-slot">
+          <div class="wp-block-title">Notes</div>
+          <textarea id="class_notes" class="blessing-textarea" style="min-height:80px" placeholder="Code of conduct, oaths..."></textarea>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildSpellcasterClassBlock(classKey, level) {
+  const name = CLASSES[classKey]?.name || classKey;
+  return `
+    <div class="section-box p2-fullwidth">
+      <div class="section-title">${name} Class Features
+        <span class="section-note">Level ${level} · See Page 4 for full spell list</span>
+      </div>
+      <div class="blessings-grid">
+        <div class="blessing-slot">
+          <div class="wp-block-title">Domain / School / Bond</div>
+          <input type="text" id="domain_school" style="width:100%" placeholder="e.g. Abjuration, Fire domain…">
+          <textarea id="class_notes" class="blessing-textarea" style="margin-top:4px" placeholder="Domain powers, school powers, arcane bond…"></textarea>
+        </div>
+        <div class="blessing-slot">
+          <div class="wp-block-title">Special Abilities</div>
+          <textarea id="class_notes2" class="blessing-textarea" placeholder="Class-specific features…"></textarea>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── PAGE 4: SPELLS / EXTRACTS ──────────────────────
+const SPELLCASTER_CLASSES  = ['warpriest','cleric','druid','oracle','wizard','sorcerer','witch','shaman','inquisitor','bard','skald','ranger','paladin','magus'];
+const EXTRACT_CLASSES      = ['alchemist'];
+const NON_CASTER_CLASSES   = ['fighter','barbarian','rogue','monk','gunslinger','swashbuckler'];
+
+function buildPage4Spells(classKey, level) {
+  const page = document.getElementById('page4-spells');
+  const content = document.getElementById('page4-spells-content');
+  const subtitle = document.getElementById('p4-spells-subtitle');
+  if (!page || !content) return;
+
+  if (NON_CASTER_CLASSES.includes(classKey)) {
+    // Hide page 4 — non-casters don't need it
+    page.style.display = 'none';
+    return;
+  }
+
+  page.style.display = '';
+
+  if (EXTRACT_CLASSES.includes(classKey)) {
+    if (subtitle) subtitle.textContent = 'Extracts & Bombs — Page 4';
+    content.innerHTML = buildExtractsPage(level);
+    return;
+  }
+
+  // Spellcaster
+  if (subtitle) subtitle.textContent = `${CLASSES[classKey]?.name || classKey} Spells — Page 4`;
+  content.innerHTML = buildSpellsPage(classKey, level);
+}
+
+function buildSpellsPage(classKey, level) {
+  const maxSpellLevel = classKey === 'warpriest' ? 6
+    : classKey === 'ranger' || classKey === 'paladin' ? 4
+    : classKey === 'bard' || classKey === 'skald' ? 6
+    : 9;
+
+  const mods = { wis: getEffectiveMod('wis'), int: getEffectiveMod('int'), cha: getEffectiveMod('cha') };
+  const cls = CLASSES[classKey];
+  const abilKey = cls?.spellAbility || 'wis';
+  const abilMod = mods[abilKey] || 0;
+
+  let html = `<div class="spells-page-grid">`;
+
+  for (let lvl = 0; lvl <= maxSpellLevel; lvl++) {
+    const dc = lvl === 0 ? '—' : 10 + lvl + abilMod;
+    const dots = lvl === 0 ? 8 : 6;
+    const dotHtml = Array.from({length: dots}, (_,d) =>
+      `<span class="spell-slot-dot" onclick="this.classList.toggle('used')" title="Slot ${d+1}"></span>`
+    ).join('');
+
+    html += `
+      <div class="spell-level-block">
+        <div class="spell-level-header">
+          <span class="spell-level-label">Level ${lvl === 0 ? '0' : lvl}</span>
+          <label>DC <input type="number" id="spl_dc_${lvl}" class="num small-num" value="${dc}" ${lvl===0?'readonly':''}></label>
+          <label>Per day <input type="number" id="spl_perday_${lvl}" class="num small-num"></label>
+          ${lvl > 0 ? `<label>Bonus <input type="number" id="spl_bonus_${lvl}" class="num small-num"></label>` : ''}
+          <div class="spell-slot-dots">${dotHtml}</div>
+        </div>
+        <div class="spell-names-grid" id="spl_names_${lvl}">
+          ${Array.from({length:12}, (_,i) =>
+            `<input type="text" id="spl_name_${lvl}_${i}" placeholder="Spell name…">`
+          ).join('')}
+        </div>
+      </div>`;
+  }
+
+  html += `<div class="spell-level-block">
+    <div class="spell-level-header"><span class="spell-level-label">Conditional Modifiers</span></div>
+    <textarea id="spell_conditional" class="small-textarea" style="width:100%"></textarea>
+  </div>`;
+
+  html += `</div>`;
+  return html;
+}
+
+function buildExtractsPage(level) {
+  const intMod = getEffectiveMod('int');
+  const bomdsPerDay = level + intMod;
+
+  let html = `<div class="spells-page-grid">
+    <div class="spell-level-block" style="grid-column:1/-1">
+      <div class="spell-level-header">
+        <span class="spell-level-label">Bombs</span>
+        <span style="font-family:var(--font-mono);font-size:9px;color:var(--border)">
+          ${bomdsPerDay}/day · ${level}d6+${intMod} fire · Splash 1 · Range 20 ft
+        </span>
+        <div class="spell-slot-dots">
+          ${Array.from({length: Math.min(bomdsPerDay, 20)}, (_,d) =>
+            `<span class="spell-slot-dot" onclick="this.classList.toggle('used')"></span>`
+          ).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    const dc = 10 + lvl + intMod;
+    html += `
+      <div class="spell-level-block">
+        <div class="spell-level-header">
+          <span class="spell-level-label">Extract ${lvl}</span>
+          <label>DC <input type="number" class="num small-num" value="${dc}" readonly></label>
+          <label>Per day <input type="number" id="spl_perday_${lvl}" class="num small-num"></label>
+          <label>INT bonus <input type="number" id="spl_bonus_${lvl}" class="num small-num" value="${intMod > 0 ? intMod : 0}"></label>
+          <div class="spell-slot-dots">
+            ${Array.from({length:6}, (_,d) =>
+              `<span class="spell-slot-dot" onclick="this.classList.toggle('used')"></span>`
+            ).join('')}
+          </div>
+        </div>
+        <div class="spell-names-grid" id="spl_names_${lvl}">
+          ${Array.from({length:10}, (_,i) =>
+            `<input type="text" id="spl_name_${lvl}_${i}" placeholder="Extract name…">`
+          ).join('')}
+        </div>
+      </div>`;
+  }
+
+  html += `<div class="spell-level-block">
+    <div class="spell-level-header"><span class="spell-level-label">Formulae Book</span></div>
+    <textarea id="formulae_book" class="big-textarea" style="width:100%" placeholder="Known formulae by level…"></textarea>
+  </div></div>`;
+  return html;
+}
+
+// ── Wire into applySetup ───────────────────────────
+// Called from applySetup in the existing code
+function afterApplySetup(classKey, level) {
+  buildAdaptivePage2(classKey, level);
+}
+
+// ── Save/load feat data ────────────────────────────
+function collectFeatData() {
+  const feats = [];
+  for (let i = 0; i < 30; i++) {
+    const name = val(`feat_name_${i}`);
+    const desc = val(`feat_desc_${i}`);
+    const type = val(`feat_type_${i}`);
+    const wpn  = val(`feat_wpn_${i}`);
+    if (name || desc) feats.push({ name, desc, type, wpn });
+  }
+  return feats;
+}
+
+function restoreFeatData(feats) {
+  if (!feats) return;
+  feats.forEach((f, i) => {
+    set(`feat_name_${i}`, f.name || '');
+    set(`feat_desc_${i}`, f.desc || '');
+    set(`feat_type_${i}`, f.type || '');
+    set(`feat_wpn_${i}`,  f.wpn  || '');
+    onFeatTypeChange(i);
+  });
+}
