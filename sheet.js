@@ -395,7 +395,7 @@ function collectData() {
     'bab','spell_res',
     'cmb_size','cmb_misc','cmd_size',
     'speed_land','speed_armor','speed_fly','speed_maneuv','speed_swim','speed_climb','speed_burrow',
-    'languages','skill_conditional',
+    'languages','skill_conditional','_applied_race',
     'money_pp','money_gp','money_sp','money_cp',
     'xp_current','xp_next',
     'feats','special_abilities','notes',
@@ -1218,16 +1218,27 @@ function applySetup() {
   if (race) {
     set('race', race.name);
 
-    // Ability score racial mods — only apply if the field already has a value
-    // (prevents filling in scores the user hasn't set yet)
+    // Ability score racial mods — idempotent:
+    // reverse any previously applied race mods first, then apply new ones
+    const prevRaceKey = val('_applied_race');
+    const prevRace = prevRaceKey && RACES[prevRaceKey];
     ['str','dex','con','int','wis','cha'].forEach(ab => {
-      const mod = race.abilityMods[ab] || 0;
-      if (mod === 0) return;
       const raw = val(`${ab}_score`);
-      if (raw === '' || raw === null) return; // don't touch empty fields
-      const current = parseInt(raw) || 0;
-      set(`${ab}_score`, current + mod);
+      if (raw === '' || raw === null) return; // never touch empty fields
+      let score = parseInt(raw) || 0;
+      // Reverse old racial mod if a different race was applied before
+      if (prevRace && prevRaceKey !== raceKey) {
+        score -= (prevRace.abilityMods[ab] || 0);
+      }
+      // Apply new racial mod only if race changed or not yet applied
+      const newMod = race.abilityMods[ab] || 0;
+      if (prevRaceKey !== raceKey && newMod !== 0) {
+        score += newMod;
+        set(`${ab}_score`, score);
+      }
     });
+    // Remember which race we applied
+    set('_applied_race', raceKey);
 
     // Size
     set('size', race.size);
