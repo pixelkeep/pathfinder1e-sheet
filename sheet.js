@@ -247,10 +247,10 @@ function buildWeapons() {
           <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_dmg_${i}" style="width:60px" class="atk-total" readonly placeholder="1d8+5"></label>
         </div>
         <div class="weapon-flags-row">
-          <label><input type="checkbox" id="wpn_twohanded_${i}" onchange="calcWeapon(${i})"> Two-handed (×1.5 Str)</label>
-          <label><input type="checkbox" id="wpn_offhand_${i}" onchange="calcWeapon(${i})"> Off-hand (×0.5 Str)</label>
-          <label><input type="checkbox" id="wpn_ranged_${i}" onchange="calcWeapon(${i})"> Ranged (DEX to hit)</label>
-          <label><input type="checkbox" id="wpn_mw_${i}" onchange="calcWeapon(${i})"> Masterwork</label>
+          <label title="Auto-set for two-handed weapons"><input type="checkbox" id="wpn_twohanded_${i}" onchange="calcWeapon(${i})"> Two-handed (×1.5 Str)</label>
+          <label><input type="checkbox" id="wpn_offhand_${i}" onchange="calcWeapon(${i})"> Off-hand (×½ Str)</label>
+          <label title="Auto-set for ranged weapons"><input type="checkbox" id="wpn_ranged_${i}" onchange="calcWeapon(${i})"> Ranged (DEX to hit)</label>
+          <label><input type="checkbox" id="wpn_mw_${i}" onchange="calcWeapon(${i})"> Masterwork (+1 atk)</label>
         </div>
       </div>`;
   }
@@ -265,10 +265,11 @@ function calcWeapon(i) {
   const miscAtk   = parseInt(val(`wpn_misc_atk_${i}`)) || 0;
   const dmgFeat   = parseInt(val(`wpn_dmg_feat_${i}`)) || 0;
   const dmgMisc   = parseInt(val(`wpn_dmg_misc_${i}`)) || 0;
-  const twoHanded = document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked;
-  const offHand   = document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked;
-  const ranged    = document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked;
-  const mw        = document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked;
+  const chk = id => { const el = document.getElementById(id); return el ? el.checked : false; };
+  const twoHanded = chk(`wpn_twohanded_${i}`);
+  const offHand   = chk(`wpn_offhand_${i}`);
+  const ranged    = chk(`wpn_ranged_${i}`);
+  const mw        = chk(`wpn_mw_${i}`);
   const mwBonus   = (mw && enh === 0) ? 1 : 0;
 
   const atkAbil = ranged ? dexMod : strMod;
@@ -438,10 +439,10 @@ function collectData() {
       dmgDice:    val(`wpn_dmg_dice_${i}`),
       dmgFeat:    val(`wpn_dmg_feat_${i}`),
       dmgMisc:    val(`wpn_dmg_misc_${i}`),
-      twoHanded:  document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked,
-      offHand:    document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked,
-      ranged:     document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked,
-      mw:         document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked,
+      twoHanded:  !!(document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked),
+      offHand:    !!(document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked),
+      ranged:     !!(document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked),
+      mw:         !!(document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked),
     });
   }
 
@@ -1217,13 +1218,15 @@ function applySetup() {
   if (race) {
     set('race', race.name);
 
-    // Ability score racial mods — add to existing scores if set
+    // Ability score racial mods — only apply if the field already has a value
+    // (prevents filling in scores the user hasn't set yet)
     ['str','dex','con','int','wis','cha'].forEach(ab => {
       const mod = race.abilityMods[ab] || 0;
-      if (mod !== 0) {
-        const current = parseInt(val(`${ab}_score`)) || 10;
-        set(`${ab}_score`, current + mod);
-      }
+      if (mod === 0) return;
+      const raw = val(`${ab}_score`);
+      if (raw === '' || raw === null) return; // don't touch empty fields
+      const current = parseInt(raw) || 0;
+      set(`${ab}_score`, current + mod);
     });
 
     // Size
@@ -1307,25 +1310,43 @@ function buildWeaponLookup() {
 function applyWeaponLookup() {
   const name    = val('wpn_lookup_name');
   const slot    = parseInt(val('wpn_lookup_slot')) || 0;
-  const mw      = document.getElementById('wpn_lookup_mw').checked;
+  const mw      = document.getElementById('wpn_lookup_mw') && document.getElementById('wpn_lookup_mw').checked;
   const enhance = parseInt(val('wpn_lookup_enhance')) || 0;
   const wpn     = WEAPONS[name];
   if (!wpn) { alert('Select a weapon first.'); return; }
 
-  set(`wpn_name_${slot}`,  name + (mw && enhance===0 ? ' (MW)' : '') + (enhance > 0 ? ` +${enhance}` : ''));
-  set(`wpn_crit_${slot}`,  wpn.crit);
-  set(`wpn_dmg_${slot}`,   wpn.dmg);
-  set(`wpn_type_${slot}`,  wpn.type);
-  set(`wpn_range_${slot}`, wpn.range > 0 ? wpn.range + ' ft.' : 'melee');
+  // Helper to set a checkbox
+  const setChk = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) { el.checked = !!v; el.disabled = false; }
+  };
+  const lockChk = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) { el.checked = !!v; el.disabled = true; } // locked — weapon type forces this
+  };
 
-  // Calculate attack bonus: BAB + STR or DEX mod + masterwork + enhancement
-  const strMod = getEffectiveMod('str');
-  const dexMod = getEffectiveMod('dex');
-  const bab    = parseInt(val('bab')) || 0;
-  const abilMod = (wpn.group === 'ranged' || wpn.group === 'light') ? Math.max(strMod, dexMod) : strMod;
-  const mwBonus = (mw || enhance > 0) ? 1 : 0;
-  const atkTotal = bab + abilMod + mwBonus + enhance;
-  set(`wpn_atk_${slot}`, atkTotal >= 0 ? '+' + atkTotal : atkTotal);
+  // Name
+  set(`wpn_name_${slot}`, name + (enhance > 0 ? ` +${enhance}` : (mw ? ' (MW)' : '')));
+
+  // Stats from data
+  set(`wpn_crit_${slot}`,     wpn.crit);
+  set(`wpn_type_${slot}`,     wpn.type);
+  set(`wpn_range_${slot}`,    wpn.range > 0 ? wpn.range + ' ft.' : 'melee');
+  set(`wpn_dmg_dice_${slot}`, wpn.dmg);   // ← correct field: dice, not total
+  set(`wpn_enh_${slot}`,      enhance || '');
+
+  // Checkboxes — two-handed and ranged are locked by weapon type
+  const isRanged    = wpn.group === 'ranged';
+  const isTwoHanded = !!wpn.twoHanded;
+  const isLight     = wpn.group === 'light';
+
+  lockChk(`wpn_twohanded_${slot}`, isTwoHanded);  // locked: polearms/two-handers always two-handed
+  setChk(`wpn_offhand_${slot}`,  false);           // user can toggle
+  lockChk(`wpn_ranged_${slot}`,    isRanged);      // locked: ranged weapons always ranged
+  setChk(`wpn_mw_${slot}`,        mw && enhance === 0); // MW checkbox
+
+  // Recalculate full breakdown
+  calcWeapon(slot);
 }
 
 // ── ARMOR LOOKUP ───────────────────────────────────

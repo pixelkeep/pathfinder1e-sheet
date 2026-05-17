@@ -1228,3 +1228,13 @@ textarea.small-textarea  { min-height: 36px; }
 
 /* Level field trigger styling */
 #charLevel { color: var(--accent2); font-weight: 600; font-family: var(--font-mono); }
+
+/* Locked weapon checkboxes — auto-set by weapon type */
+.weapon-flags-row label input[type="checkbox"]:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.weapon-flags-row label:has(input:disabled) {
+  color: var(--accent2);
+  font-style: italic;
+}
