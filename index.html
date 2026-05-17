@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pathfinder 1e — Character Sheet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toolbar" class="no-print">
+  <div class="toolbar-left">
+    <span class="toolbar-title">⚔ Pathfinder 1e Character Sheet</span>
+  </div>
+  <div class="toolbar-right">
+    <button onclick="newCharacter()" title="New character">New</button>
+    <button onclick="loadCharacter()" title="Load JSON">Load</button>
+    <button onclick="saveCharacter()" title="Save JSON">Save</button>
+    <button onclick="window.print()" title="Print sheet">Print</button>
+  </div>
+  <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)">
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE 1 ═══ -->
+<div class="page" id="page1">
+
+  <!-- HEADER -->
+  <div class="sheet-header">
+    <div class="header-logo">PATHFINDER</div>
+    <div class="header-sub">Roleplaying Game — Character Sheet</div>
+  </div>
+
+  <div class="header-fields">
+    <div class="field-row">
+      <label>Character Name <input type="text" id="charName" class="wide"></label>
+      <label>Alignment <input type="text" id="alignment" class="short"></label>
+      <label>Player <input type="text" id="player" class="medium"></label>
+    </div>
+    <div class="field-row">
+      <label>Class &amp; Level <input type="text" id="classLevel" class="wide"></label>
+      <label>Deity <input type="text" id="deity" class="medium"></label>
+      <label>Homeland <input type="text" id="homeland" class="medium"></label>
+    </div>
+    <div class="field-row">
+      <label>Race <input type="text" id="race" class="medium"></label>
+      <label>Size <input type="text" id="size" class="tiny"></label>
+      <label>Gender <input type="text" id="gender" class="tiny"></label>
+      <label>Age <input type="text" id="age" class="tiny"></label>
+      <label>Height <input type="text" id="height" class="tiny"></label>
+      <label>Weight <input type="text" id="weight" class="tiny"></label>
+      <label>Hair <input type="text" id="hair" class="tiny"></label>
+      <label>Eyes <input type="text" id="eyes" class="tiny"></label>
+    </div>
+  </div>
+
+  <!-- MAIN COLUMNS -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- ABILITY SCORES -->
+      <div class="section-box">
+        <div class="section-title">Ability Scores</div>
+        <table class="ability-table">
+          <thead>
+            <tr><th>Ability</th><th>Score</th><th>Mod</th><th>Temp Score</th><th>Temp Mod</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ability-name">STR<br><span class="ability-sub">Strength</span></td>
+              <td><input type="number" id="str_score" class="num" oninput="calcMod('str')"></td>
+              <td><input type="number" id="str_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="str_temp" class="num" oninput="calcMod('str')"></td>
+              <td><input type="number" id="str_temp_mod" class="num small-num" readonly></td>
+            </tr>
+            <tr>
+              <td class="ability-name">DEX<br><span class="ability-sub">Dexterity</span></td>
+              <td><input type="number" id="dex_score" class="num" oninput="calcMod('dex')"></td>
+              <td><input type="number" id="dex_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="dex_temp" class="num" oninput="calcMod('dex')"></td>
+              <td><input type="number" id="dex_temp_mod" class="num small-num" readonly></td>
+            </tr>
+            <tr>
+              <td class="ability-name">CON<br><span class="ability-sub">Constitution</span></td>
+              <td><input type="number" id="con_score" class="num" oninput="calcMod('con')"></td>
+              <td><input type="number" id="con_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="con_temp" class="num" oninput="calcMod('con')"></td>
+              <td><input type="number" id="con_temp_mod" class="num small-num" readonly></td>
+            </tr>
+            <tr>
+              <td class="ability-name">INT<br><span class="ability-sub">Intelligence</span></td>
+              <td><input type="number" id="int_score" class="num" oninput="calcMod('int')"></td>
+              <td><input type="number" id="int_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="int_temp" class="num" oninput="calcMod('int')"></td>
+              <td><input type="number" id="int_temp_mod" class="num small-num" readonly></td>
+            </tr>
+            <tr>
+              <td class="ability-name">WIS<br><span class="ability-sub">Wisdom</span></td>
+              <td><input type="number" id="wis_score" class="num" oninput="calcMod('wis')"></td>
+              <td><input type="number" id="wis_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="wis_temp" class="num" oninput="calcMod('wis')"></td>
+              <td><input type="number" id="wis_temp_mod" class="num small-num" readonly></td>
+            </tr>
+            <tr>
+              <td class="ability-name">CHA<br><span class="ability-sub">Charisma</span></td>
+              <td><input type="number" id="cha_score" class="num" oninput="calcMod('cha')"></td>
+              <td><input type="number" id="cha_mod" class="num small-num" readonly></td>
+              <td><input type="number" id="cha_temp" class="num" oninput="calcMod('cha')"></td>
+              <td><input type="number" id="cha_temp_mod" class="num small-num" readonly></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- HP -->
+      <div class="section-box">
+        <div class="section-title">Hit Points</div>
+        <div class="hp-grid">
+          <label>Max HP <input type="number" id="hp_max" class="num" oninput="updateHP()"></label>
+          <label>Current HP <input type="number" id="hp_current" class="num"></label>
+          <label>Nonlethal Damage <input type="number" id="hp_nonlethal" class="num"></label>
+          <label>DR <input type="text" id="dr" class="short-text"></label>
+        </div>
+      </div>
+
+      <!-- INITIATIVE -->
+      <div class="section-box">
+        <div class="section-title">Initiative</div>
+        <div class="calc-row">
+          <span class="calc-label">Total</span>
+          <input type="number" id="init_total" class="num calc-result" readonly>
+          <span class="calc-op">=</span>
+          <span class="calc-label">Dex Mod</span>
+          <input type="number" id="init_dex" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Misc</span>
+          <input type="number" id="init_misc" class="num small-num" oninput="calcInit()">
+        </div>
+      </div>
+
+      <!-- ARMOR CLASS -->
+      <div class="section-box">
+        <div class="section-title">Armor Class</div>
+        <div class="ac-grid">
+          <div class="ac-main">
+            <label class="ac-label">AC<br><input type="number" id="ac_total" class="num big-num" readonly></label>
+            <label class="ac-label">Touch<br><input type="number" id="ac_touch" class="num big-num" readonly></label>
+            <label class="ac-label">Flat-Footed<br><input type="number" id="ac_ff" class="num big-num" readonly></label>
+          </div>
+          <table class="ac-table">
+            <tr>
+              <td><small>Armor</small><br><input type="number" id="ac_armor" class="num small-num" oninput="calcAC()"></td>
+              <td><small>Shield</small><br><input type="number" id="ac_shield" class="num small-num" oninput="calcAC()"></td>
+              <td><small>Dex</small><br><input type="number" id="ac_dex" class="num small-num" readonly></td>
+              <td><small>Size</small><br><input type="number" id="ac_size" class="num small-num" oninput="calcAC()"></td>
+              <td><small>Natural</small><br><input type="number" id="ac_natural" class="num small-num" oninput="calcAC()"></td>
+              <td><small>Deflect</small><br><input type="number" id="ac_deflect" class="num small-num" oninput="calcAC()"></td>
+              <td><small>Misc</small><br><input type="number" id="ac_misc" class="num small-num" oninput="calcAC()"></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- SAVING THROWS -->
+      <div class="section-box">
+        <div class="section-title">Saving Throws</div>
+        <table class="save-table">
+          <thead>
+            <tr><th></th><th>Total</th><th>Base</th><th>Ability</th><th>Magic</th><th>Misc</th><th>Temp</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="save-name">Fortitude<br><small>(Con)</small></td>
+              <td><input type="number" id="fort_total" class="num" readonly></td>
+              <td><input type="number" id="fort_base" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="fort_ability" class="num small-num" readonly></td>
+              <td><input type="number" id="fort_magic" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="fort_misc" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="fort_temp" class="num small-num" oninput="calcSaves()"></td>
+            </tr>
+            <tr>
+              <td class="save-name">Reflex<br><small>(Dex)</small></td>
+              <td><input type="number" id="ref_total" class="num" readonly></td>
+              <td><input type="number" id="ref_base" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="ref_ability" class="num small-num" readonly></td>
+              <td><input type="number" id="ref_magic" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="ref_misc" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="ref_temp" class="num small-num" oninput="calcSaves()"></td>
+            </tr>
+            <tr>
+              <td class="save-name">Will<br><small>(Wis)</small></td>
+              <td><input type="number" id="will_total" class="num" readonly></td>
+              <td><input type="number" id="will_base" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="will_ability" class="num small-num" readonly></td>
+              <td><input type="number" id="will_magic" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="will_misc" class="num small-num" oninput="calcSaves()"></td>
+              <td><input type="number" id="will_temp" class="num small-num" oninput="calcSaves()"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BAB / CMB / CMD -->
+      <div class="section-box">
+        <div class="section-title">Attack</div>
+        <div class="calc-row">
+          <span class="calc-label">BAB</span>
+          <input type="number" id="bab" class="num" oninput="calcCombat()">
+          <span class="calc-label">Spell Res.</span>
+          <input type="text" id="spell_res" class="short-text">
+        </div>
+        <div class="calc-row mt4">
+          <span class="calc-label">CMB</span>
+          <input type="number" id="cmb_total" class="num calc-result" readonly>
+          <span class="calc-op">=</span>
+          <span class="calc-label">BAB</span>
+          <input type="number" id="cmb_bab" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Str</span>
+          <input type="number" id="cmb_str" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Size</span>
+          <input type="number" id="cmb_size" class="num small-num" oninput="calcCombat()">
+          <span class="calc-op">+</span>
+          <span class="calc-label">Misc</span>
+          <input type="number" id="cmb_misc" class="num small-num" oninput="calcCombat()">
+        </div>
+        <div class="calc-row mt4">
+          <span class="calc-label">CMD</span>
+          <input type="number" id="cmd_total" class="num calc-result" readonly>
+          <span class="calc-op">=</span>
+          <span class="calc-label">BAB</span>
+          <input type="number" id="cmd_bab" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Str</span>
+          <input type="number" id="cmd_str" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Dex</span>
+          <input type="number" id="cmd_dex" class="num small-num" readonly>
+          <span class="calc-op">+</span>
+          <span class="calc-label">Size</span>
+          <input type="number" id="cmd_size" class="num small-num" oninput="calcCombat()">
+          <span class="calc-op">+10</span>
+        </div>
+      </div>
+
+      <!-- SPEED -->
+      <div class="section-box">
+        <div class="section-title">Speed</div>
+        <div class="speed-grid">
+          <label>Land <input type="text" id="speed_land" class="short-text"> ft.</label>
+          <label>Armored <input type="text" id="speed_armor" class="short-text"> ft.</label>
+          <label>Fly <input type="text" id="speed_fly" class="short-text"> ft.</label>
+          <label>Maneuv. <input type="text" id="speed_maneuv" class="short-text"></label>
+          <label>Swim <input type="text" id="speed_swim" class="short-text"> ft.</label>
+          <label>Climb <input type="text" id="speed_climb" class="short-text"> ft.</label>
+          <label>Burrow <input type="text" id="speed_burrow" class="short-text"> ft.</label>
+        </div>
+      </div>
+
+      <!-- WEAPONS -->
+      <div class="section-box">
+        <div class="section-title">Weapons</div>
+        <div id="weapons-container">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- RIGHT COLUMN: SKILLS -->
+    <div class="right-col">
+      <div class="section-box skills-section">
+        <div class="section-title">Skills</div>
+        <table class="skills-table">
+          <thead>
+            <tr>
+              <th class="cs-col">CS</th>
+              <th class="skill-name-col">Skill</th>
+              <th class="num-col">Total</th>
+              <th class="num-col">Abil</th>
+              <th class="num-col">Ranks</th>
+              <th class="num-col">Misc</th>
+            </tr>
+          </thead>
+          <tbody id="skills-tbody">
+            <!-- Generated by JS -->
+          </tbody>
+        </table>
+        <div class="skills-footer">
+          <label>Languages: <input type="text" id="languages" class="full-width-input"></label>
+          <label>Conditional Modifiers: <input type="text" id="skill_conditional" class="full-width-input"></label>
+        </div>
+      </div>
+    </div><!-- /right-col -->
+
+  </div><!-- /main-grid -->
+</div><!-- /page1 -->
+
+<!-- ═══════════════════════════════════════════════ PAGE 2 ═══ -->
+<div class="page" id="page2">
+
+  <div class="sheet-header no-print-header">
+    <div class="header-logo">PATHFINDER</div>
+    <div class="header-sub">Roleplaying Game — Character Sheet (Page 2)</div>
+  </div>
+
+  <div class="page2-grid">
+
+    <!-- LEFT: AC ITEMS + GEAR + MONEY + XP -->
+    <div class="page2-left">
+
+      <!-- AC ITEMS -->
+      <div class="section-box">
+        <div class="section-title">AC Items</div>
+        <table class="ac-items-table">
+          <thead>
+            <tr><th>Item</th><th>Bonus</th><th>Type</th><th>Check Pen.</th><th>Spell Fail</th><th>Weight</th></tr>
+          </thead>
+          <tbody id="ac-items-tbody">
+            <!-- Generated by JS -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Totals</strong></td>
+              <td id="ac_items_bonus_total" class="num-cell">0</td>
+              <td></td>
+              <td id="ac_items_check_total" class="num-cell">0</td>
+              <td id="ac_items_sf_total" class="num-cell">0</td>
+              <td id="ac_items_wt_total" class="num-cell">0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- GEAR -->
+      <div class="section-box">
+        <div class="section-title">Gear</div>
+        <table class="gear-table">
+          <thead><tr><th>Item</th><th>Weight</th></tr></thead>
+          <tbody id="gear-tbody">
+            <!-- Generated by JS -->
+          </tbody>
+          <tfoot>
+            <tr><td><strong>Total Weight</strong></td><td id="gear_total_wt" class="num-cell">0</td></tr>
+          </tfoot>
+        </table>
+        <div class="load-table">
+          <span>Light Load: <input type="text" id="load_light" class="short-text"></span>
+          <span>Medium Load: <input type="text" id="load_medium" class="short-text"></span>
+          <span>Heavy Load: <input type="text" id="load_heavy" class="short-text"></span>
+        </div>
+      </div>
+
+      <!-- MONEY -->
+      <div class="section-box">
+        <div class="section-title">Money</div>
+        <div class="money-grid">
+          <label>PP <input type="number" id="money_pp" class="num"></label>
+          <label>GP <input type="number" id="money_gp" class="num"></label>
+          <label>SP <input type="number" id="money_sp" class="num"></label>
+          <label>CP <input type="number" id="money_cp" class="num"></label>
+        </div>
+      </div>
+
+      <!-- XP -->
+      <div class="section-box">
+        <div class="section-title">Experience Points</div>
+        <div class="xp-grid">
+          <label>XP <input type="number" id="xp_current" class="num wide"></label>
+          <label>Next Level <input type="number" id="xp_next" class="num wide"></label>
+        </div>
+      </div>
+
+    </div><!-- /page2-left -->
+
+    <!-- MIDDLE: FEATS + SPECIAL ABILITIES -->
+    <div class="page2-middle">
+
+      <div class="section-box flex-grow">
+        <div class="section-title">Feats</div>
+        <textarea id="feats" class="big-textarea" placeholder="List feats here..."></textarea>
+      </div>
+
+      <div class="section-box flex-grow">
+        <div class="section-title">Special Abilities</div>
+        <textarea id="special_abilities" class="big-textarea" placeholder="Class features, racial traits, etc..."></textarea>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Notes</div>
+        <textarea id="notes" class="medium-textarea" placeholder="General notes..."></textarea>
+      </div>
+
+    </div><!-- /page2-middle -->
+
+    <!-- RIGHT: SPELLS -->
+    <div class="page2-right">
+      <div class="section-box">
+        <div class="section-title">Spells</div>
+        <div class="spell-placeholder">
+          <p class="spell-note">Spell tracking — coming in a future update.<br>Fill in manually for now.</p>
+        </div>
+        <table class="spell-table">
+          <thead>
+            <tr><th>Level</th><th>Known</th><th>Save DC</th><th>Per Day</th><th>Bonus</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td><input type="number" class="num small-num" id="sp0_known"></td><td>—</td><td><input type="number" class="num small-num" id="sp0_perday"></td><td>—</td></tr>
+            <tr><td>1st</td><td><input type="number" class="num small-num" id="sp1_known"></td><td><input type="number" class="num small-num" id="sp1_dc"></td><td><input type="number" class="num small-num" id="sp1_perday"></td><td><input type="number" class="num small-num" id="sp1_bonus"></td></tr>
+            <tr><td>2nd</td><td><input type="number" class="num small-num" id="sp2_known"></td><td><input type="number" class="num small-num" id="sp2_dc"></td><td><input type="number" class="num small-num" id="sp2_perday"></td><td><input type="number" class="num small-num" id="sp2_bonus"></td></tr>
+            <tr><td>3rd</td><td><input type="number" class="num small-num" id="sp3_known"></td><td><input type="number" class="num small-num" id="sp3_dc"></td><td><input type="number" class="num small-num" id="sp3_perday"></td><td><input type="number" class="num small-num" id="sp3_bonus"></td></tr>
+            <tr><td>4th</td><td><input type="number" class="num small-num" id="sp4_known"></td><td><input type="number" class="num small-num" id="sp4_dc"></td><td><input type="number" class="num small-num" id="sp4_perday"></td><td><input type="number" class="num small-num" id="sp4_bonus"></td></tr>
+            <tr><td>5th</td><td><input type="number" class="num small-num" id="sp5_known"></td><td><input type="number" class="num small-num" id="sp5_dc"></td><td><input type="number" class="num small-num" id="sp5_perday"></td><td><input type="number" class="num small-num" id="sp5_bonus"></td></tr>
+            <tr><td>6th</td><td><input type="number" class="num small-num" id="sp6_known"></td><td><input type="number" class="num small-num" id="sp6_dc"></td><td><input type="number" class="num small-num" id="sp6_perday"></td><td><input type="number" class="num small-num" id="sp6_bonus"></td></tr>
+            <tr><td>7th</td><td><input type="number" class="num small-num" id="sp7_known"></td><td><input type="number" class="num small-num" id="sp7_dc"></td><td><input type="number" class="num small-num" id="sp7_perday"></td><td><input type="number" class="num small-num" id="sp7_bonus"></td></tr>
+            <tr><td>8th</td><td><input type="number" class="num small-num" id="sp8_known"></td><td><input type="number" class="num small-num" id="sp8_dc"></td><td><input type="number" class="num small-num" id="sp8_perday"></td><td><input type="number" class="num small-num" id="sp8_bonus"></td></tr>
+            <tr><td>9th</td><td><input type="number" class="num small-num" id="sp9_known"></td><td><input type="number" class="num small-num" id="sp9_dc"></td><td><input type="number" class="num small-num" id="sp9_perday"></td><td><input type="number" class="num small-num" id="sp9_bonus"></td></tr>
+          </tbody>
+        </table>
+        <div class="section-title mt8">Domain / Specialty School</div>
+        <input type="text" id="domain_school" class="full-width-input">
+        <div class="section-title mt8">Conditional Modifiers (Spells)</div>
+        <textarea id="spell_conditional" class="small-textarea"></textarea>
+        <div class="section-title mt8">Spell List</div>
+        <textarea id="spell_list" class="big-textarea" placeholder="List prepared or known spells here by level..."></textarea>
+      </div>
+    </div><!-- /page2-right -->
+
+  </div><!-- /page2-grid -->
+</div><!-- /page2 -->
+
+<script src="sheet.js"></script>
+</body>
+</html>

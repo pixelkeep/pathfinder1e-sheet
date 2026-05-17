@@ -1,0 +1,553 @@
+/* ══════════════════════════════════════════════════
+   Pathfinder 1e Character Sheet — style.css
+   Aesthetic: parchment-meets-precision, utilitarian
+   Print-optimised, works offline and on GitHub Pages
+   ══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inconsolata:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+/* ── VARIABLES ─────────────────────────────────── */
+:root {
+  --ink:        #1a1209;
+  --ink-light:  #3d2e14;
+  --parchment:  #f5f0e6;
+  --cream:      #faf7f1;
+  --border:     #8b6f3e;
+  --border-light: #c9ab76;
+  --accent:     #8b1a1a;
+  --accent2:    #2a4a6b;
+  --section-bg: #ede8da;
+  --input-bg:   #fffef9;
+  --readonly-bg:#e8e3d6;
+  --toolbar-bg: #2a1f0e;
+  --toolbar-fg: #f0e8d0;
+  --font-heading: 'IM Fell English', serif;
+  --font-body:  'Crimson Pro', serif;
+  --font-mono:  'Inconsolata', monospace;
+  --page-width: 210mm;
+}
+
+/* ── RESET + BASE ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 11px; }
+
+body {
+  background: #3d2e14;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+  font-family: var(--font-body);
+  color: var(--ink);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ── TOOLBAR ───────────────────────────────────── */
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: var(--toolbar-bg);
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+
+.toolbar-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--border-light);
+  letter-spacing: .5px;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-right button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 5px 14px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--toolbar-fg);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  text-transform: uppercase;
+}
+.toolbar-right button:hover {
+  background: var(--border-light);
+  color: var(--toolbar-bg);
+}
+
+/* ── PAGE ──────────────────────────────────────── */
+.page {
+  width: var(--page-width);
+  margin: 20px auto;
+  background: var(--cream);
+  padding: 8mm 9mm;
+  box-shadow: 0 4px 32px rgba(0,0,0,.6);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+/* subtle parchment texture lines */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 24px,
+    rgba(139,111,62,.06) 24px,
+    rgba(139,111,62,.06) 25px
+  );
+  pointer-events: none;
+}
+
+/* ── HEADER ────────────────────────────────────── */
+.sheet-header {
+  text-align: center;
+  margin-bottom: 4mm;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 3mm;
+}
+
+.header-logo {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent);
+  letter-spacing: 4px;
+  text-shadow: 1px 1px 0 rgba(139,111,62,.3);
+}
+
+.header-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-fields {
+  margin-bottom: 4mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
+.field-row label {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+
+/* ── INPUTS ────────────────────────────────────── */
+input[type="text"],
+input[type="number"],
+textarea {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 11px;
+  padding: 1px 2px;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-bottom-color: var(--accent2);
+  background: rgba(42,74,107,.05);
+}
+
+input[readonly] {
+  background: var(--readonly-bg);
+  color: var(--accent2);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  cursor: default;
+}
+
+/* width helpers */
+input.wide       { width: 130px; }
+input.medium     { width: 90px; }
+input.short      { width: 60px; }
+input.short-text { width: 48px; }
+input.tiny       { width: 42px; }
+input.num        { width: 40px; text-align: center; font-family: var(--font-mono); }
+input.small-num  { width: 32px; text-align: center; font-family: var(--font-mono); font-size: 10px; }
+input.big-num    { width: 48px; text-align: center; font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+input.calc-result { background: var(--readonly-bg); color: var(--accent); font-weight: 700; }
+input.full-width-input { width: 100%; }
+
+/* ── SECTION BOXES ─────────────────────────────── */
+.section-box {
+  background: var(--parchment);
+  border: 1px solid var(--border-light);
+  border-radius: 1px;
+  padding: 3px 5px 5px;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 3px;
+  padding-bottom: 1px;
+  text-transform: uppercase;
+}
+
+/* ── MAIN LAYOUT GRID ──────────────────────────── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.left-col, .right-col { display: flex; flex-direction: column; gap: 4px; }
+
+/* ── ABILITY TABLE ─────────────────────────────── */
+.ability-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.ability-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  padding: 1px 2px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-light);
+}
+.ability-table td { padding: 1px 2px; text-align: center; vertical-align: middle; }
+.ability-name {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: left !important;
+  white-space: nowrap;
+}
+.ability-sub { font-size: 8px; color: var(--border); font-family: var(--font-mono); }
+
+/* ── HP GRID ───────────────────────────────────── */
+.hp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.hp-grid label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+/* ── CALC ROW ──────────────────────────────────── */
+.calc-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.calc-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.calc-op {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border);
+}
+.mt4 { margin-top: 4px; }
+.mt8 { margin-top: 8px; }
+
+/* ── ARMOR CLASS ───────────────────────────────── */
+.ac-grid { display: flex; flex-direction: column; gap: 4px; }
+.ac-main { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 4px; }
+.ac-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--border);
+}
+.ac-table { width: 100%; border-collapse: collapse; }
+.ac-table td { text-align: center; font-family: var(--font-mono); font-size: 9px; color: var(--border); padding: 1px; }
+
+/* ── SAVES ─────────────────────────────────────── */
+.save-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.save-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  text-align: center;
+  padding: 1px 2px;
+  border-bottom: 1px solid var(--border-light);
+}
+.save-table td { text-align: center; padding: 1px 2px; vertical-align: middle; }
+.save-name {
+  text-align: left !important;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--ink);
+}
+.save-name small { font-family: var(--font-mono); font-size: 8px; color: var(--border); }
+
+/* ── SPEED ─────────────────────────────────────── */
+.speed-grid { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.speed-grid label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-light);
+}
+
+/* ── WEAPONS ───────────────────────────────────── */
+.weapon-block {
+  border: 1px solid var(--border-light);
+  padding: 3px 4px;
+  margin-bottom: 3px;
+  background: var(--cream);
+}
+.weapon-name-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.weapon-name-row label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.weapon-stats-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.weapon-stats-row label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── SKILLS TABLE ──────────────────────────────── */
+.skills-section { height: 100%; }
+.skills-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5px;
+}
+.skills-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  text-align: center;
+  padding: 1px 2px;
+  border-bottom: 1px solid var(--border-light);
+}
+.skills-table td { padding: 1px 2px; vertical-align: middle; }
+.skill-name-col { text-align: left; width: 120px; }
+.cs-col { width: 16px; text-align: center; }
+.num-col { width: 32px; text-align: center; }
+
+.skill-row td { border-bottom: 1px solid rgba(139,111,62,.1); }
+.skill-row:hover td { background: rgba(42,74,107,.04); }
+
+.skill-name {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.trained-marker { color: var(--border-light); font-size: 8px; }
+.cs-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+}
+.cs-dot.checked { background: var(--accent2); border-color: var(--accent2); }
+
+.skills-footer { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+.skills-footer label { font-family: var(--font-mono); font-size: 9px; color: var(--border); }
+
+/* ── PAGE 2 LAYOUT ─────────────────────────────── */
+.page2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page2-left, .page2-middle, .page2-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.flex-grow { flex: 1; }
+
+/* ── AC ITEMS ──────────────────────────────────── */
+.ac-items-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.ac-items-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+  text-align: center;
+}
+.ac-items-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.ac-items-table tfoot td { font-family: var(--font-mono); border-top: 1px solid var(--border-light); }
+.num-cell { text-align: center; font-family: var(--font-mono); }
+.ac-items-table input { width: 100%; }
+
+/* ── GEAR TABLE ────────────────────────────────── */
+.gear-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.gear-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+}
+.gear-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.gear-table tfoot td { font-family: var(--font-mono); border-top: 1px solid var(--border-light); }
+.gear-table input { width: 100%; }
+.load-table { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; font-family: var(--font-mono); font-size: 9px; color: var(--border); }
+.load-table span { display: flex; align-items: center; gap: 4px; }
+
+/* ── MONEY ─────────────────────────────────────── */
+.money-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.money-grid label { font-family: var(--font-mono); font-size: 10px; display: flex; align-items: center; gap: 4px; }
+
+/* ── XP ────────────────────────────────────────── */
+.xp-grid { display: flex; gap: 8px; }
+.xp-grid label { font-family: var(--font-mono); font-size: 10px; display: flex; align-items: center; gap: 4px; }
+
+/* ── TEXTAREAS ─────────────────────────────────── */
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 3px 4px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+textarea.big-textarea    { min-height: 80px; flex: 1; }
+textarea.medium-textarea { min-height: 50px; }
+textarea.small-textarea  { min-height: 36px; }
+
+/* ── SPELLS ────────────────────────────────────── */
+.spell-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 4px; }
+.spell-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+  text-align: center;
+}
+.spell-table td { padding: 1px 3px; border-bottom: 1px solid rgba(139,111,62,.1); text-align: center; font-family: var(--font-mono); }
+.spell-note { font-size: 9px; color: var(--border); font-style: italic; text-align: center; padding: 4px 0; }
+
+/* ── PRINT ─────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 9mm;
+  }
+
+  body {
+    background: white !important;
+    padding: 0;
+  }
+
+  .no-print, #toolbar { display: none !important; }
+
+  .page {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    page-break-after: always;
+  }
+  .page::before { display: none; }
+  .page:last-child { page-break-after: auto; }
+
+  input, textarea {
+    border: none !important;
+    border-bottom: 1px solid #aaa !important;
+    background: transparent !important;
+  }
+  input[readonly] {
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .section-box {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ── SCROLLBAR ─────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #2a1f0e; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
