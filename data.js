@@ -7,6 +7,9 @@
 
 'use strict';
 
+const SHEET_VERSION = '0.4.0';
+const SHEET_DATE    = '2026-05-17';
+
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
 // full = +1/level, medium = +¾/level, slow = +½/level
 const BAB_TABLE = {
@@ -509,7 +512,60 @@ const DEITIES = [
   ['Magrim',     'LN',  'Death, Earth, Law, Repose',                    'Warhammer',       'ISG'],
   ['Trudd',      'NG',  'Good, Protection, Strength, War',              'Warhammer',       'ISG'],
   // Additional common deities
-  ['Arqueros',   'LG',  'Good, Law, Strength, War',                     'Shortbow',        'Custom'],
+  // Arqueros — Empyreal Lord (archon). Source: Inner Sea Gods / PathfinderWiki
+  // Favored weapon: longspear (the Golden Bulwark wields a longspear with diamond blades)
+  ['Arqueros',   'LG',  'Good, Law, Protection, War',                   'Longspear',       'ISG'],
+
+  // Additional empyreal lords & monitor demigods
+  ['Andoletta',  'LG',  'Good, Law, Protection',                        'Quarterstaff',    'ISG'],
+  ['Ashava',     'CG',  'Chaos, Good, Moon',                            'Falchion',        'ISG'],
+  ['Bharnarol',  'NG',  'Artifice, Good, Knowledge',                    'Heavy pick',      'ISG'],
+  ['Black Butterfly','CN','Chaos, Darkness, Travel, Void',              'Starknife',       'ISG'],
+  ['Eritrice',   'NG',  'Charm, Good, Knowledge',                       'Quarterstaff',    'ISG'],
+  ['Falayna',    'LG',  'Community, Good, Law, Strength',               'Falchion',        'ISG'],
+  ['Ghenshau',   'NG',  'Good, Healing, Repose',                        'Unarmed strike',  'ISG'],
+  ['Halcamora',  'CG',  'Chaos, Good, Plant',                           'Longbow',         'ISG'],
+  ['Irez',       'NG',  'Charm, Good, Magic',                           'Dagger',          'ISG'],
+  ['Jalaijatali','CG',  'Air, Chaos, Good, Weather',                    'Shortspear',      'ISG'],
+  ['Lymnieris',  'LG',  'Good, Law, Liberation',                        'Longspear',       'ISG'],
+  ['Olheon',     'LN',  'Law, Nobility, Travel',                        'Javelin',         'ISG'],
+  ['Ragathiel',  'LG',  'Destruction, Good, Law, War',                  'Bastard sword',   'ISG'],
+  ['Sinashakti', 'CN',  'Chaos, Luck, Travel',                          'Quarterstaff',    'ISG'],
+  ['Tanagaar',   'LG',  'Air, Animal, Good, Law',                       'Longbow',         'ISG'],
+  ['Tolc',       'LN',  'Knowledge, Law, Rune',                         'Morningstar',     'ISG'],
+  ['Winlas',     'NG',  'Good, Healing, Plant',                         'Scythe',          'ISG'],
+  ['Ylimancha',  'CG',  'Air, Animal, Chaos, Good',                     'Shortbow',        'ISG'],
+
+  // Demon lords (for evil-aligned characters / GMs)
+  ['Abraxas',    'CE',  'Chaos, Evil, Knowledge, Magic',                'Whip',            'ISG'],
+  ['Andirifkhu', 'CE',  'Chaos, Evil, Trickery',                        'Scimitar',        'ISG'],
+  ['Cyth-V\'sug','CE',  'Chaos, Evil, Plant, Strength',                 'Falchion',        'ISG'],
+  ['Deskari',    'CE',  'Chaos, Evil, War',                             'Scythe',          'ISG'],
+  ['Gogunta',    'CE',  'Chaos, Death, Evil, Water',                    'Whip',            'ISG'],
+  ['Nocticula',  'CE',  'Chaos, Charm, Darkness, Evil',                 'Kukri',           'ISG'],
+  ['Pazuzu',     'CE',  'Air, Chaos, Evil, Trickery',                   'Shortspear',      'ISG'],
+  ['Xoveron',    'CE',  'Chaos, Earth, Evil, Madness',                  'Greatclub',       'ISG'],
+
+  // Archdevils
+  ['Mephistopheles','LE','Evil, Law, Magic, Trickery',                  'Ranseur',         'ISG'],
+  ['Barbatos',   'LE',  'Animal, Evil, Law, Trickery',                  'Quarterstaff',    'ISG'],
+  ['Dispater',   'LE',  'Evil, Law, Nobility, Trickery',                'Mace, heavy',     'ISG'],
+  ['Mammon',     'LE',  'Earth, Evil, Law, Trickery',                   'Spear',           'ISG'],
+
+  // Outer Gods / Great Old Ones
+  ['Azathoth',   'CN',  'Chaos, Darkness, Destruction, Madness',        'Quarterstaff',    'Bestiary4'],
+  ['Nyarlathotep','CE', 'Chaos, Evil, Knowledge, Trickery',             'Flail',           'Bestiary4'],
+  ['Yhidothrus', 'CE',  'Chaos, Evil, Void',                            'Scythe',          'Bestiary4'],
+
+  // Neutral powers
+  ['Achaekek',   'LE',  'Death, Evil, Law, Trickery, War',              'Sawtooth sabre',  'ISG'],
+  ['Alseta',     'LN',  'Artifice, Law, Nobility, Protection',          'Dagger',          'ISG'],
+  ['Besmara',    'CN',  'Chaos, Trickery, War, Water, Weather',         'Rapier',          'ISG'],
+  ['Brigh',      'N',   'Artifice, Fire, Knowledge, Magic',             'Light hammer',    'ISG'],
+  ['Hanspur',    'CN',  'Chaos, Travel, Water',                         'Trident',         'ISG'],
+  ['Naderi',     'N',   'Chaos, Death, Water',                          'Drowning dart',   'ISG'],
+  ['Nivi Rhombodazzle','N','Charm, Earth, Luck, Trickery',              'Light hammer',    'ISG'],
+  ['Venkelvore', 'NE',  'Death, Earth, Evil',                           'Greatclub',       'ISG'],
 ].sort((a,b) => a[0].localeCompare(b[0]));
 
 // ══════════════════════════════════════════════════

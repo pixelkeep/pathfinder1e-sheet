@@ -985,3 +985,13 @@ textarea.small-textarea  { min-height: 36px; }
   align-items: center;
   gap: 3px;
 }
+
+/* Version badge in toolbar */
+.toolbar-version {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  margin-left: 10px;
+  opacity: .7;
+  letter-spacing: .3px;
+}

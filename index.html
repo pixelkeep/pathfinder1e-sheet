@@ -12,6 +12,7 @@
   <div class="toolbar-left">
     <span class="toolbar-title">⚔ Pathfinder 1e Character Sheet</span>
     <a class="toolbar-link" href="https://aonprd.com/" target="_blank" title="Archives of Nethys — Pathfinder 1e SRD">Archives of Nethys ↗</a>
+    <span class="toolbar-version" id="toolbar-version">v—</span>
   </div>
   <div class="toolbar-right">
     <button onclick="newCharacter()" title="New character">New</button>
@@ -29,7 +30,7 @@
   <div class="sheet-header">
     <div class="header-logo">PATHFINDER</div>
     <div class="header-edition">First Edition</div>
-    <div class="header-sub">Roleplaying Game — Character Sheet</div>
+    <div class="header-sub">Roleplaying Game — Character Sheet &nbsp;·&nbsp; <span id="sheet-version-print"></span></div>
   </div>
 
   <div class="header-fields">
@@ -465,6 +466,15 @@
 <script src="data.js"></script>
 <script src="sheet.js"></script>
 <script>
+  // Show version in toolbar and print header
+  document.addEventListener('DOMContentLoaded', () => {
+    const v = (typeof SHEET_VERSION !== 'undefined') ? `v${SHEET_VERSION} (${SHEET_DATE})` : '';
+    const tv = document.getElementById('toolbar-version');
+    const pv = document.getElementById('sheet-version-print');
+    if (tv) tv.textContent = v;
+    if (pv) pv.textContent = v;
+  });
+
   fetch('pages35.html')
     .then(r => r.text())
     .then(html => {
