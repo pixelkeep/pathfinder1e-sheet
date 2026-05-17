@@ -1,10 +1,11 @@
 # Pathfinder 1e — Digital Character Sheet
 
+[![Version](https://img.shields.io/badge/version-2.3.0-8b1a1a?style=for-the-badge)]()
 [![Pathfinder 1e](https://img.shields.io/badge/Pathfinder-1st%20Edition-8b1a1a?style=for-the-badge)](https://paizo.com/pathfinderRPG)
 [![HTML](https://img.shields.io/badge/HTML%20%2B%20CSS%20%2B%20JS-no%20framework-2a4a6b?style=for-the-badge)]()
 [![License](https://img.shields.io/badge/License-MIT-8b6f3e?style=for-the-badge)](LICENSE)
 
-A clean, printable digital character sheet for Pathfinder 1st Edition. Works for all classes — Fighter, Warpriest, Druid, Alchemist, Bard, Cleric, and everything else. Runs fully offline as a local HTML file or via GitHub Pages — no account, no server, no dependencies.
+A clean, printable, **adaptive** digital character sheet for Pathfinder 1st Edition. Works for all classes — Fighter, Warpriest, Druid, Alchemist, Bard, Cleric, and everything else. Runs fully offline or via GitHub Pages.
 
 **Live:** https://pixelkeep.github.io/pathfinder1e-sheet
 
@@ -12,137 +13,125 @@ A clean, printable digital character sheet for Pathfinder 1st Edition. Works for
 
 ## Features
 
-- **Automatic calculations** — ability modifiers, AC, saving throws, CMB/CMD, initiative, and all 38 skill totals update as you type
-- **Class skill tracking** — click the dot next to a skill to mark it as a class skill; the +3 bonus is applied automatically when ranks are added
-- **Save and load** — export your character as a JSON file and load it back at any time; store JSON files in `characters/` for version history via Git
-- **Print-ready** — `@media print` produces a clean A4 sheet per page; toolbar is hidden automatically
-- **Works offline** — pages 1 and 2 open directly in your browser; pages 3–5 need a local server (see below)
-- **GitHub Pages compatible** — deploy the same files to share a link with your group
+- **Automatic calculations** — ability modifiers, AC, saving throws, CMB/CMD, initiative, all 38 skill totals, weapon attack and damage breakdowns
+- **Adaptive pages** — class abilities, feats, spells, and class-specific blocks change automatically based on your selected class and level
+- **Feat autocomplete** — type 2+ letters to search 80+ feats; auto-fills description and links weapon feats to weapon slots
+- **Deity obedience perks** — shown in setup panel; +4 sacred bonuses auto-applied to relevant skill checks
+- **Weapon breakdown** — BAB + STR/DEX + enhancement + feats + misc, with material modifiers (alchemical silver, cold iron, adamantine) and Sacred Weapon die comparison
+- **Wands & combat magic** — track charges with clickable dots, attack rolls, DCs, and spell effects
+- **Magic items** — wands, staves, rods with charge tracking on page 3
+- **Class features** — proficiencies, spellcasting type, and special rules pulled from aonprd.com for all 14 classes
+- **Class abilities** — auto-populated per level with resource pool calculations (Fervor/day, Bombs/day, etc.)
+- **Language picker** — racial languages pre-selected; bonus languages highlighted
+- **Save and load** — export as JSON; version history via Git commits
+- **Print-ready** — A4, setup panels hidden automatically
 
 ## Pages
 
-| Page | Contents | Required? |
+| Page | Contents | Adaptive? |
 |---|---|---|
-| 1 | Ability scores, AC, saves, BAB, CMB/CMD, initiative, skills, weapons, speed | Core |
-| 2 | AC items, gear, money, XP, feats, special abilities, spell overview | Core |
-| 3 | Class resource pools (generic), daily abilities, Alchemist extracts, full spell slots (levels 0–9) with slot trackers and spell name fields | Optional |
-| 4 | Combat reference — action types, combat modifiers, attacks of opportunity, concentration DCs, all conditions (from aonprd.com) | Optional |
-| 5 | Character cheatsheet — your go-to actions, carry weight (auto from STR), buff/condition tracker, spellcasting quick reference, campaign notes | Optional |
-
-Pages 3–5 are optional. Players who only need the core stats can print pages 1 and 2 and stop there.
+| 1 | Ability scores, AC, saves, BAB/CMB/CMD, skills, initiative, speed | Fixed |
+| 2 | Weapons (with full breakdown), Wands/staves, Feats, Class Abilities + Class Features | ✅ Per class/level |
+| 3 | AC Items, Class-specific block (Blessings, Rage, etc.), Gear, Magic items, Notes, Spell overview | ✅ Per class |
+| 4 | Full spell tracker (0–9) or Alchemist extracts + bombs | ✅ Hidden for non-casters |
+| 5 | Combat reference, cheatsheet, carry weight, campaign notes | Fixed |
 
 ## What is calculated automatically
 
-| Field | Derived from |
+| Field | Source |
 |---|---|
-| Ability modifiers | Ability score (including temp score) |
+| Ability modifiers | Score field (direct, not cached) |
 | Initiative | Dex modifier + misc |
 | AC / Touch / Flat-Footed | 10 + armor + shield + dex + size + natural + deflect + misc |
-| Armor bonus | Pulled from the AC Items table on page 2 |
+| Armor bonus | Pulled from AC Items table on page 3 |
 | Fortitude / Reflex / Will | Base save + ability mod + magic + misc + temp |
-| CMB | BAB + Str + size + misc |
-| CMD | 10 + BAB + Str + Dex + size |
-| Skill totals | Ability mod + ranks + misc + class skill bonus |
+| CMB / CMD | BAB + STR/DEX + size |
+| Skill totals | Ability mod + ranks + misc + class skill bonus + deity bonus |
+| Weapon attack | BAB + STR or DEX + enhancement/MW + feat bonuses + misc |
+| Weapon damage | Dice + STR (×1.5/×0.5 two-handed/off-hand) + enhancement + feats |
+| Material penalty | Alchemical silver: –1 damage |
+| Sacred Weapon die | Compared vs weapon die per level; best shown |
 | Spell save DC | 10 + spell level + casting ability modifier |
 | Concentration | Caster level + casting ability modifier |
 | Carry weight limits | STR score → light / medium / heavy / lift / drag |
+| Class resource pools | Fervor, Bombs, Rage, Ki, Arcane Pool, etc. per level + ability mod |
+| Feat bonuses | Weapon Focus/Specialization auto-applied to linked weapon slot |
 
 ## Files
 
 ```
 pathfinder1e-sheet/
-├── index.html       Pages 1 and 2 — core character sheet
-├── pages35.html     Pages 3–5 — spells, resources, combat reference, cheatsheet
-├── style.css        Layout, print styles, all pages
-├── sheet.js         Calculations, skill table, save/load, pages 3–5 logic
+├── index.html       Pages 1–3 and adaptive page 4
+├── pages35.html     Combat reference pages (4–5)
+├── style.css        All layout and print styles
+├── sheet.js         All calculations, adaptive logic, save/load
+├── data.js          Game data: classes, races, deities, feats, weapons, armor
 ├── README.md        This file (English)
-├── README.nl.md     This file (Dutch)
-└── characters/      Store your saved JSON files here
+├── README.nl.md     Dutch version
+└── characters/      Store your JSON character files here
     └── example.json
 ```
 
 ## Usage
 
-### GitHub Pages (recommended — no setup needed)
+### GitHub Pages (recommended)
 
-Open https://pixelkeep.github.io/pathfinder1e-sheet in your browser. All 5 pages load automatically. Save your character as a JSON file locally.
+Open https://pixelkeep.github.io/pathfinder1e-sheet — all pages load automatically.
 
-### Local with a server (all 5 pages)
-
-Pages 3–5 load via `fetch()` and require a local server. Run one of these in the repo folder:
+### Local (all pages)
 
 ```bash
-# Python (built in on macOS and Linux)
-python3 -m http.server
-
-# Node.js
-npx serve .
+python3 -m http.server   # then open http://localhost:8000
 ```
 
-Then open http://localhost:8000 in your browser.
+### Local (pages 1–3 only)
 
-### Local without a server (pages 1 and 2 only)
+Double-click `index.html`. Pages 1–3 work fully offline.
 
-Open `index.html` directly by double-clicking it. Pages 1 and 2 work fully. A note will appear with a link to open pages 3–5 separately.
+### Character Setup workflow
 
-### Save and load
-
-1. Fill in your character
-2. Click **Save** — downloads `charactername.json` to your computer
-3. Move the file to the `characters/` folder in the repo
-4. Click **Load** at any time to restore it
+1. Select **Race**, **Class**, **Level**, **Size**, **Deity** in the setup panel
+2. Enter your ability scores
+3. Click **Apply Setup** — BAB, saves, class skills, racial traits, spell ability, resource pools, and deity obedience perk all fill in automatically
+4. Use **Weapon Quick-Fill** to populate weapon slots (attack/damage auto-calculated)
+5. Use **Armor Quick-Fill** to fill AC items (flows to page 1 AC automatically)
+6. Use **Feat** fields — type to search, select to auto-fill with weapon slot linking
 
 ### Level up workflow
 
 ```bash
 # After saving your updated JSON
 git add characters/my_character.json
-git commit -m "Level 5 — warpriest, Hammer the Gap feat"
+git commit -m "Level 8 — warpriest, bonus feat: Improved Critical"
 git push
 ```
 
-Each commit is a snapshot of your character at that level. You can always roll back.
+## Supported classes (data.js)
 
-## Sharing with your group
+Full class features, abilities per level, and resource formulas for:
+Alchemist · Barbarian · Bard · Cleric · Druid · Fighter · Gunslinger · Inquisitor · Magus · Monk · Oracle · Paladin · Ranger · Rogue · Shaman · Skald · Sorcerer · Swashbuckler · Warpriest · Witch · Wizard
 
-1. Go to your repo on GitHub → **Settings → Pages**
-2. Under **Source**: select `main` branch, `/ (root)`
-3. Click **Save** — your sheet is now live at `https://pixelkeep.github.io/pathfinder1e-sheet`
-4. Each player saves their own JSON file locally
+## Supported races (data.js)
 
-## Class resources (page 3)
+Core: Dwarf · Elf · Gnome · Half-Elf · Half-Orc · Halfling · Human
 
-The resource pool tracker on page 3 is generic — label each row for your class:
+## Deity obedience perks (data.js)
 
-| Class | Resources to track |
-|---|---|
-| Warpriest | Fervor (pool), Blessings/day, Sacred Weapon enhancement |
-| Alchemist | Bombs/day (pool), Mutagen/day; use Extracts section for formulae |
-| Magus | Arcane Pool (pool), Spell Combat |
-| Barbarian | Rage rounds (pool) |
-| Paladin | Lay on Hands/day, Mercy uses, Smite Evil/day |
-| Oracle / Cleric | Channel Energy/day, Domain powers/day |
-| Monk | Ki pool (pool), Stunning Fist/day |
-| Gunslinger | Grit (pool) |
-| Bard / Skald | Bardic Performance rounds (pool) |
-| Fighter | Stamina points (if using optional rules) |
+Abadar · Andoletta · Angradd · Arqueros · Black Butterfly · Calistria · Cayden Cailean · Desna · Erastil · Gorum · Iomedae · Irori · Lamashtu · Nethys · Pharasma · Ragathiel · Rovagug · Sarenrae · Shelyn · Torag · Urgathoa · Zon-Kuthon
 
-## Browser compatibility
+## Feat database (data.js)
 
-- Chrome / Chromium 110+
-- Firefox 110+
-- Edge 110+
-- Safari 16+
+80+ feats with auto-complete: Power Attack chain · Weapon Focus/Specialization chain · Two-weapon fighting · Ranged feats · Critical hit feats · Maneuver feats · Divine feats (Channel Smite, Extra Fervor) · Metamagic · Item creation · General feats
+
+## Sources
+
+- Rules and data: **Archives of Nethys** — https://aonprd.com
+- Paizo: https://paizo.com/pathfinderRPG
 
 ## Contributing
 
-Pull requests are welcome. If you find a calculation error or a missing field, open an issue with a description of the problem and the expected result according to the Pathfinder 1e rules.
+Pull requests welcome. If you find a rules error, open an issue with the correct rule and the aonprd.com source.
 
 ## License
 
 MIT — free to use, modify, and share. Not affiliated with Paizo Publishing. Pathfinder is a registered trademark of Paizo Inc.
-
-## Sources
-
-- Archives of Nethys (official Pathfinder 1e SRD): https://aonprd.com
-- Paizo: https://paizo.com/pathfinderRPG

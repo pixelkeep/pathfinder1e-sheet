@@ -49,6 +49,7 @@ const SKILLS = [
 ];
 
 const WEAPON_COUNT  = 5;
+const WAND_COUNT    = 4;  // wands/staves/scrolls used in combat
 const AC_ITEM_COUNT = 7;
 const GEAR_COUNT    = 20;
 
@@ -393,6 +394,82 @@ function buildWeapons() {
       </div>`;
   }
 }
+
+function buildWands() {
+  const container = document.getElementById('wands-container');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < WAND_COUNT; i++) {
+    const div = document.createElement('div');
+    div.className = 'wand-block';
+    div.innerHTML = `
+      <div class="wand-name-row">
+        <input type="text" id="wand_name_${i}" class="wand-name-input"
+               placeholder="e.g. Wand of Cure Moderate Wounds (CL3)">
+        <select id="wand_type_${i}" class="wand-type-select">
+          <option value="wand">Wand</option>
+          <option value="staff">Staff</option>
+          <option value="scroll">Scroll</option>
+          <option value="rod">Rod</option>
+        </select>
+        <label class="wand-cl-label">CL
+          <input type="number" id="wand_cl_${i}" class="num small-num" placeholder="3" min="1" max="20">
+        </label>
+      </div>
+      <div class="wand-combat-row">
+        <label class="wand-atk-label" title="Attack roll if wand requires one (ray, etc.)">
+          Atk <input type="number" id="wand_atk_${i}" class="num small-num"
+                     placeholder="—" title="Attack roll (e.g. ranged touch for rays)">
+        </label>
+        <label class="wand-dc-label">
+          DC <input type="number" id="wand_dc_${i}" class="num small-num" placeholder="—">
+        </label>
+        <label class="wand-effect-label">
+          Effect <input type="text" id="wand_effect_${i}" style="width:120px"
+                        placeholder="e.g. 2d8+3 healing, 4d6 fire">
+        </label>
+        <span class="wand-charges-label">Charges:</span>
+        <input type="number" id="wand_charges_max_${i}" class="num small-num"
+               placeholder="50" min="0" max="50" oninput="updateWandDots(${i})">
+        <span class="mi-label">max</span>
+        <input type="number" id="wand_charges_used_${i}" class="num small-num"
+               placeholder="0" min="0" oninput="updateWandDots(${i})">
+        <span class="mi-label">used</span>
+        <span id="wand_remaining_${i}" class="mi-remaining"></span>
+      </div>
+      <div id="wand_dots_${i}" class="wand-dots-row mi-dots"></div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function updateWandDots(i) {
+  const max  = parseInt(val('wand_charges_max_'  + i)) || 0;
+  const used = parseInt(val('wand_charges_used_' + i)) || 0;
+  const remaining = Math.max(0, max - used);
+  const remEl = document.getElementById('wand_remaining_' + i);
+  if (remEl) remEl.textContent = max > 0 ? remaining + '/' + max : '';
+  const dotsEl = document.getElementById('wand_dots_' + i);
+  if (!dotsEl || max === 0) { if (dotsEl) dotsEl.innerHTML = ''; return; }
+  const show = Math.min(max, 25);
+  const usedDots = Math.round((used / max) * show);
+  let html = '';
+  for (let d = 0; d < show; d++) {
+    const cls = d < (show - usedDots) ? 'mi-dot-full' : 'mi-dot-used';
+    html += '<span class="mi-dot ' + cls + '" onclick="useWandCharge(' + i + ')" title="Click to use charge"></span>';
+  }
+  dotsEl.innerHTML = html;
+}
+
+function useWandCharge(i) {
+  const max  = parseInt(val('wand_charges_max_'  + i)) || 0;
+  const used = parseInt(val('wand_charges_used_' + i)) || 0;
+  if (used < max) {
+    set('wand_charges_used_' + i, used + 1);
+    updateWandDots(i);
+  }
+}
+
 
 function buildMaterialOptions() {
   if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
@@ -1821,11 +1898,8 @@ function onFeatTypeChange(i) {
 }
 
 function onFeatWeaponLink(i) {
-  // Update weapon slot's feat dropdown label
-  const slotIdx = parseInt(val(`feat_wpn_${i}`));
-  const featName = val(`feat_name_${i}`);
-  // Trigger weapon recalc — feat bonus in wpn_feat_X is manually entered
-  // Just refresh the weapon slot dropdown labels
+  updateWeaponFeatBonuses();
+  // Refresh feat section to show updated weapon name in dropdowns
   buildFeatsSection(_currentClass, _currentLevel);
 }
 
@@ -1863,19 +1937,52 @@ function selectFeat(i, name) {
   set(`feat_name_${i}`, name);
   if (feat) {
     set(`feat_desc_${i}`, feat.benefit);
-    // Auto-set type
     const typeSel = document.getElementById(`feat_type_${i}`);
-    if (typeSel) typeSel.value = feat.type === 'combat' ? 'combat' : feat.type === 'metamagic' ? 'metamagic' : feat.type === 'item_creation' ? 'item' : 'general';
-    // Auto-show weapon link if needed
+    if (typeSel) typeSel.value = feat.type === 'combat' ? 'combat'
+      : feat.type === 'metamagic' ? 'metamagic'
+      : feat.type === 'item_creation' ? 'item' : 'general';
     if (feat.weaponLinked) {
       const wpnSel = document.getElementById(`feat_wpn_${i}`);
       if (wpnSel) wpnSel.classList.remove('hidden');
     }
     onFeatTypeChange(i);
   }
-  // Hide suggestions
   const suggestions = document.getElementById(`feat_suggestions_${i}`);
   if (suggestions) suggestions.style.display = 'none';
+}
+
+// Called when weapon-linked feat changes its slot selection
+// Accumulates all weapon-linked feat bonuses onto the weapon's feat field
+function updateWeaponFeatBonuses() {
+  // Reset all weapon feat bonuses to 0
+  const atkBonuses = Array(WEAPON_COUNT).fill(0);
+  const dmgBonuses = Array(WEAPON_COUNT).fill(0);
+
+  // Loop through all feats and check for weapon links
+  for (let fi = 0; fi < 30; fi++) {
+    const featName = val(`feat_name_${fi}`);
+    const wpnSlot  = val(`feat_wpn_${fi}`);
+    if (!featName || wpnSlot === '') continue;
+    const slotIdx = parseInt(wpnSlot);
+    if (isNaN(slotIdx)) continue;
+    const feat = (typeof getFeatByName !== 'undefined') ? getFeatByName(featName) : null;
+    if (!feat) continue;
+    if (feat.attackMod) atkBonuses[slotIdx] = (atkBonuses[slotIdx] || 0) + feat.attackMod;
+    if (feat.damageMod) dmgBonuses[slotIdx] = (dmgBonuses[slotIdx] || 0) + feat.damageMod;
+  }
+
+  // Apply to weapon feat fields and recalc
+  for (let wi = 0; wi < WEAPON_COUNT; wi++) {
+    if (atkBonuses[wi] !== 0 || dmgBonuses[wi] !== 0) {
+      // Only set if user hasn't manually overridden
+      const currentAtk = parseInt(val(`wpn_feat_${wi}`)) || 0;
+      const currentDmg = parseInt(val(`wpn_dmg_feat_${wi}`)) || 0;
+      // Set if the auto-value differs — show a tooltip note
+      set(`wpn_feat_${wi}`,     atkBonuses[wi] || currentAtk);
+      set(`wpn_dmg_feat_${wi}`, dmgBonuses[wi] || currentDmg);
+      calcWeapon(wi);
+    }
+  }
 }
 
 // Close suggestions when clicking outside
@@ -2422,12 +2529,27 @@ function useMagicItemCharge(i) {
 // Add to DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
   buildMagicItems();
+  buildWands();
 });
 
 // Extend collectData
 const _collectData_v3 = collectData;
 collectData = function() {
   const data = _collectData_v3();
+  // Wands
+  data.wands = [];
+  for (let i = 0; i < WAND_COUNT; i++) {
+    data.wands.push({
+      name:       val(`wand_name_${i}`),
+      type:       val(`wand_type_${i}`),
+      cl:         val(`wand_cl_${i}`),
+      atk:        val(`wand_atk_${i}`),
+      dc:         val(`wand_dc_${i}`),
+      effect:     val(`wand_effect_${i}`),
+      chargesMax: val(`wand_charges_max_${i}`),
+      chargesUsed:val(`wand_charges_used_${i}`),
+    });
+  }
   data.magicItems = [];
   for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
     data.magicItems.push({
@@ -2443,6 +2565,20 @@ collectData = function() {
 const _populateData_v3 = populateData;
 populateData = function(data) {
   _populateData_v3(data);
+  if (data.wands) {
+    data.wands.forEach((w, i) => {
+      set(`wand_name_${i}`,        w.name        || '');
+      const typeSel = document.getElementById(`wand_type_${i}`);
+      if (typeSel && w.type) typeSel.value = w.type;
+      set(`wand_cl_${i}`,          w.cl          || '');
+      set(`wand_atk_${i}`,         w.atk         || '');
+      set(`wand_dc_${i}`,          w.dc          || '');
+      set(`wand_effect_${i}`,      w.effect      || '');
+      set(`wand_charges_max_${i}`, w.chargesMax  || '');
+      set(`wand_charges_used_${i}`,w.chargesUsed || '');
+      updateWandDots(i);
+    });
+  }
   if (data.magicItems) {
     data.magicItems.forEach((m, i) => {
       set(`mi_name_${i}`,         m.name        || '');
