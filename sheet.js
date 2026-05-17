@@ -175,6 +175,7 @@ function buildSkillsTable() {
       <td><input type="number" id="sk_ability_${id}" class="num small-num" readonly></td>
       <td><input type="number" id="sk_ranks_${id}" class="num small-num" oninput="calcSkill('${id}')"></td>
       <td><input type="number" id="sk_misc_${id}" class="num small-num" oninput="calcSkill('${id}')"></td>
+      <td class="bonus-col"><span id="sk_bonus_${id}" class="skill-bonus-tag"></span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -312,7 +313,18 @@ function calcSkill(id) {
   set(`sk_ability_${id}`, abilMod);
   set(`sk_total_${id}`, abilMod + ranks + misc + csBonus + deityBonus);
 
-  // Visually mark skills that benefit from obedience bonus
+  // Show deity bonus in the Bon. column
+  const bonusTag = document.getElementById(`sk_bonus_${id}`);
+  if (bonusTag) {
+    if (deityBonus > 0) {
+      bonusTag.textContent = `+${deityBonus}`;
+      bonusTag.title = `${_deityBonusLabel} obedience (${_deityBonuses.skill_ability[0]?.bonusType || 'sacred'})`;
+    } else {
+      bonusTag.textContent = '';
+    }
+  }
+
+  // Row highlight
   const row = document.querySelector(`tr[data-skill="${id}"]`);
   if (row) row.classList.toggle('obedience-bonus', deityBonus > 0);
 }
