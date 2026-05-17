@@ -342,6 +342,11 @@ function buildWeapons() {
       <div class="weapon-block">
         <div class="weapon-name-row">
           <label>Weapon <input type="text" id="wpn_name_${i}" class="wide" placeholder="e.g. Lucerne Hammer +1"></label>
+          <label>Material
+            <select id="wpn_material_${i}" class="wpn-material-select" onchange="calcWeapon(${i})" title="Special material affects damage and DR bypass">
+              ${buildMaterialOptions(${i})}
+            </select>
+          </label>
           <label>Crit <input type="text" id="wpn_crit_${i}" style="width:52px" placeholder="×3"></label>
           <label>Type <input type="text" id="wpn_type_${i}" style="width:36px" placeholder="B/P"></label>
           <label>Range <input type="text" id="wpn_range_${i}" style="width:44px" placeholder="melee"></label>
@@ -354,9 +359,9 @@ function buildWeapons() {
           <span class="breakdown-op">+</span>
           <label class="bd-cell">Str/Dex<br><input type="number" id="wpn_abil_${i}" class="num small-num" readonly></label>
           <span class="breakdown-op">+</span>
-          <label class="bd-cell">Enh.<br><input type="number" id="wpn_enh_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
+          <label class="bd-cell" title="Enhancement bonus (+1 MW if no enhancement)">Enh/MW<br><input type="number" id="wpn_enh_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">+</span>
-          <label class="bd-cell">Feats<br><input type="number" id="wpn_feat_${i}" class="num small-num" oninput="calcWeapon(${i})" title="Weapon Focus, Greater WF, etc."></label>
+          <label class="bd-cell">Feats<br><input type="number" id="wpn_feat_${i}" class="num small-num" oninput="calcWeapon(${i})" title="Weapon Focus +1, Greater WF +1, etc."></label>
           <span class="breakdown-op">+</span>
           <label class="bd-cell">Misc<br><input type="number" id="wpn_misc_atk_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">=</span>
@@ -365,9 +370,9 @@ function buildWeapons() {
         <div class="weapon-breakdown-row">
           <span class="breakdown-label">Damage</span>
           <span class="breakdown-eq">=</span>
-          <label class="bd-cell">Dice<br><input type="text" id="wpn_dmg_dice_${i}" style="width:36px" placeholder="1d8" oninput="calcWeapon(${i})"></label>
+          <label class="bd-cell">Weapon die<br><input type="text" id="wpn_dmg_dice_${i}" style="width:36px" placeholder="1d8" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">+</span>
-          <label class="bd-cell">Str<br><input type="number" id="wpn_dmg_str_${i}" class="num small-num" readonly></label>
+          <label class="bd-cell" title="×1.5 two-handed, ×0.5 off-hand">Str(×?)<br><input type="number" id="wpn_dmg_str_${i}" class="num small-num" readonly></label>
           <span class="breakdown-op">+</span>
           <label class="bd-cell">Enh.<br><input type="number" id="wpn_dmg_enh_${i}" class="num small-num" readonly></label>
           <span class="breakdown-op">+</span>
@@ -376,6 +381,8 @@ function buildWeapons() {
           <label class="bd-cell">Misc<br><input type="number" id="wpn_dmg_misc_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">=</span>
           <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_dmg_${i}" style="width:60px" class="atk-total" readonly placeholder="1d8+5"></label>
+          <span id="wpn_sacred_note_${i}" class="wpn-sacred-note"></span>
+          <span id="wpn_material_note_${i}" class="wpn-material-note"></span>
         </div>
         <div class="weapon-flags-row">
           <label title="Auto-set for two-handed weapons"><input type="checkbox" id="wpn_twohanded_${i}" onchange="calcWeapon(${i})"> Two-handed (×1.5 Str)</label>
@@ -385,6 +392,19 @@ function buildWeapons() {
         </div>
       </div>`;
   }
+}
+
+function buildMaterialOptions(slotIdx) {
+  if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
+  return Object.keys(WEAPON_MATERIALS)
+    .map(m => `<option value="${m}">${m}</option>`)
+    .join('');
+}
+
+function getMaterialNote(i) {
+  if (typeof WEAPON_MATERIALS === 'undefined') return { dmgMod: 0, note: '' };
+  const mat = val(`wpn_material_${i}`) || 'Normal';
+  return WEAPON_MATERIALS[mat] || { dmgMod: 0, note: '' };
 }
 
 function calcWeapon(i) {
@@ -417,9 +437,37 @@ function calcWeapon(i) {
   const atkTotal = bab + atkAbil + enh + mwBonus + feat + miscAtk;
   set(`wpn_atk_${i}`, atkTotal >= 0 ? `+${atkTotal}` : `${atkTotal}`);
 
-  const dice   = val(`wpn_dmg_dice_${i}`) || '—';
-  const dmgMod = strDmg + enh + dmgFeat + dmgMisc;
+  const matData  = getMaterialNote(i);
+  const matDmg   = matData.dmgMod || 0;
+  const dice     = val(`wpn_dmg_dice_${i}`) || '—';
+  const dmgMod   = strDmg + enh + dmgFeat + dmgMisc + matDmg;
   set(`wpn_dmg_${i}`, dmgMod !== 0 ? `${dice}${dmgMod >= 0 ? '+' : ''}${dmgMod}` : dice);
+
+  // Material note
+  const matNoteEl = document.getElementById(`wpn_material_note_${i}`);
+  if (matNoteEl) matNoteEl.textContent = matData.note ? `⚠ ${matData.note}` : '';
+
+  // Sacred weapon comparison (Warpriest)
+  const sacredNoteEl = document.getElementById(`wpn_sacred_note_${i}`);
+  if (sacredNoteEl && typeof getSacredWeaponDie === 'function') {
+    const level = parseInt(val('charLevel')) || 1;
+    const sacredDie = getSacredWeaponDie(level);
+    const wpnDice = val(`wpn_dmg_dice_${i}`) || '';
+    if (wpnDice && sacredDie) {
+      const diceRank = {'1d4':1,'1d6':2,'1d8':3,'1d10':4,'2d6':5,'1d12':5,'2d8':6,'2d10':7};
+      const wpnRank    = diceRank[wpnDice]    || 0;
+      const sacredRank = diceRank[sacredDie]  || 0;
+      if (sacredRank > wpnRank) {
+        sacredNoteEl.textContent = `✦ Sacred die ${sacredDie} > weapon die — use sacred`;
+        sacredNoteEl.className = 'wpn-sacred-note sacred-better';
+      } else {
+        sacredNoteEl.textContent = `✦ Weapon die ${wpnDice} ≥ sacred die ${sacredDie} — keep weapon die`;
+        sacredNoteEl.className = 'wpn-sacred-note weapon-better';
+      }
+    } else {
+      sacredNoteEl.textContent = '';
+    }
+  }
 }
 
 function calcAllWeapons() {
@@ -568,6 +616,7 @@ function collectData() {
   for (let i = 0; i < WEAPON_COUNT; i++) {
     data.weapons.push({
       name:       val(`wpn_name_${i}`),
+      material:   val(`wpn_material_${i}`),
       crit:       val(`wpn_crit_${i}`),
       type:       val(`wpn_type_${i}`),
       range:      val(`wpn_range_${i}`),
@@ -656,6 +705,8 @@ function populateData(data) {
   if (data.weapons) {
     data.weapons.forEach((w, i) => {
       set(`wpn_name_${i}`,      w.name     || '');
+      const matEl = document.getElementById(`wpn_material_${i}`);
+      if (matEl && w.material) matEl.value = w.material;
       set(`wpn_crit_${i}`,      w.crit     || '');
       set(`wpn_type_${i}`,      w.type     || '');
       set(`wpn_range_${i}`,     w.range    || '');
@@ -1532,8 +1583,11 @@ function applyWeaponLookup() {
     if (el) { el.checked = !!v; el.disabled = true; } // locked — weapon type forces this
   };
 
-  // Name
-  set(`wpn_name_${slot}`, name + (enhance > 0 ? ` +${enhance}` : (mw ? ' (MW)' : '')));
+  // Name and material
+  set(`wpn_name_${slot}`, name + (enhance > 0 ? ` +${enhance}` : (mw && enhance === 0 ? ' (MW)' : '')));
+  // Set material if it was selected
+  const matSel = document.getElementById(`wpn_material_${slot}`);
+  if (matSel && matSel.value === 'Normal' && mw && enhance === 0) matSel.value = 'Masterwork';
 
   // Stats from data
   set(`wpn_crit_${slot}`,     wpn.crit);
@@ -1786,6 +1840,31 @@ function buildClassAbilitiesSection(classKey, level) {
     return;
   }
 
+  // Build class features header block
+  const features = (typeof getClassFeatures === 'function') ? getClassFeatures(classKey) : null;
+  let featuresHtml = '';
+  if (features) {
+    const sc = features.spellcasting;
+    const prof = features.proficiencies;
+    featuresHtml = `
+      <div class="cf-block">
+        <div class="cf-section-title">Class Features</div>
+        <div class="cf-row"><span class="cf-label">Weapons</span><span class="cf-value">${prof.weapons}</span></div>
+        <div class="cf-row"><span class="cf-label">Armor</span><span class="cf-value">${prof.armor}</span></div>
+        ${prof.note ? `<div class="cf-row"><span class="cf-label"></span><span class="cf-note">${prof.note}</span></div>` : ''}
+        ${sc ? `
+        <div class="cf-row"><span class="cf-label">Spellcasting</span><span class="cf-value">${sc.type} · ${sc.ability} · Max level ${sc.maxLevel} · ${sc.prepared ? 'Prepared' : 'Spontaneous'}</span></div>
+        <div class="cf-row"><span class="cf-label">Spell list</span><span class="cf-note">${sc.list}</span></div>
+        <div class="cf-row"><span class="cf-label">Bonus spells</span><span class="cf-note">${sc.bonusSpells}</span></div>
+        ` : '<div class="cf-row"><span class="cf-label">Spellcasting</span><span class="cf-value">None</span></div>'}
+        ${features.specialRules.map(r =>
+          `<div class="cf-row"><span class="cf-label">${r.name}</span><span class="cf-note">${r.text}</span></div>`
+        ).join('')}
+        ${features.healSpells ? `<div class="cf-row cf-heal"><span class="cf-label">Heal spells</span><span class="cf-note">${features.healSpells.note}</span></div>` : ''}
+      </div>
+      <div class="cf-divider"></div>`;
+  }
+
   // Group by type
   const groups = {
     resource: abilities.filter(a => a.type === 'resource'),
@@ -1886,7 +1965,7 @@ function buildClassAbilitiesSection(classKey, level) {
     html += `</div>`;
   }
 
-  container.innerHTML = html;
+  container.innerHTML = featuresHtml + html;
 
   // Update resource pool displays
   updateResourcePoolDisplays(classKey, level);
