@@ -248,11 +248,12 @@ input.full-width-input { width: 100%; }
 /* ── MAIN LAYOUT GRID ──────────────────────────── */
 .main-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 4px;
+  overflow: hidden;
 }
 
-.left-col, .right-col { display: flex; flex-direction: column; gap: 4px; }
+.left-col, .right-col { display: flex; flex-direction: column; gap: 4px; overflow: hidden; min-width: 0; }
 
 /* ── ABILITY TABLE ─────────────────────────────── */
 .ability-table {
@@ -367,9 +368,14 @@ input.full-width-input { width: 100%; }
 /* ── WEAPONS ───────────────────────────────────── */
 .weapon-block {
   border: 1px solid var(--border-light);
-  padding: 3px 4px;
-  margin-bottom: 3px;
+  padding: 3px 6px 4px;
+  margin-bottom: 4px;
   background: var(--cream);
+}
+.weapons-fullwidth .weapon-block {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
 }
 .weapon-name-row {
   display: flex;
@@ -404,7 +410,8 @@ input.full-width-input { width: 100%; }
 .skills-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9.5px;
+  font-size: 9px;
+  table-layout: fixed;
 }
 .skills-table th {
   font-family: var(--font-mono);
@@ -416,18 +423,21 @@ input.full-width-input { width: 100%; }
   border-bottom: 1px solid var(--border-light);
 }
 .skills-table td { padding: 1px 2px; vertical-align: middle; }
-.skill-name-col { text-align: left; width: 118px; }
+.skill-name-col { text-align: left; width: 108px; max-width: 108px; overflow: hidden; }
 .cs-col { width: 16px; text-align: center; }
-.num-col { width: 28px; text-align: center; }
+.num-col { width: 26px; text-align: center; }
 
 .skill-row td { border-bottom: 1px solid rgba(139,111,62,.1); }
 .skill-row:hover td { background: rgba(42,74,107,.04); }
 
 .skill-name {
   font-family: var(--font-body);
-  font-size: 9.5px;
+  font-size: 9px;
   color: var(--ink);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 108px;
 }
 .trained-marker { color: var(--border-light); font-size: 8px; }
 .cs-dot {
@@ -1254,12 +1264,13 @@ textarea.small-textarea  { min-height: 36px; }
 .skill-abil-tag {
   font-family: var(--font-mono);
   font-size: 7px;
-  color: var(--border-light);
+  color: var(--border);
   letter-spacing: .2px;
   margin-right: 2px;
-  display: inline-block;
-  min-width: 22px;
+  display: inline-block !important;
+  min-width: 20px;
   text-align: right;
+  opacity: .8;
 }
 
 /* ══════════════════════════════════════════════════
@@ -1354,7 +1365,7 @@ textarea.small-textarea  { min-height: 36px; }
 
 /* Bonus column — deity/racial auto-bonus */
 .bonus-col {
-  width: 26px;
+  width: 20px;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 8px;
@@ -1403,8 +1414,7 @@ textarea.small-textarea  { min-height: 36px; }
 }
 .lang-custom-input:focus { border-bottom-color: var(--accent2); }
 
-/* Remove old languages-section styles that conflict */
-.languages-section { display: none; }
+/* languages-section is no longer used — replaced by languages-fullwidth */
 
 @media print {
   .languages-fullwidth { margin-top: 2px; }
