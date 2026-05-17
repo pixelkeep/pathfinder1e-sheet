@@ -344,7 +344,7 @@ function buildWeapons() {
           <label>Weapon <input type="text" id="wpn_name_${i}" class="wide" placeholder="e.g. Lucerne Hammer +1"></label>
           <label>Material
             <select id="wpn_material_${i}" class="wpn-material-select" onchange="calcWeapon(${i})" title="Special material affects damage and DR bypass">
-              ${buildMaterialOptions(${i})}
+              ${buildMaterialOptions()}
             </select>
           </label>
           <label>Crit <input type="text" id="wpn_crit_${i}" style="width:52px" placeholder="×3"></label>
@@ -394,7 +394,7 @@ function buildWeapons() {
   }
 }
 
-function buildMaterialOptions(slotIdx) {
+function buildMaterialOptions() {
   if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
   return Object.keys(WEAPON_MATERIALS)
     .map(m => `<option value="${m}">${m}</option>`)

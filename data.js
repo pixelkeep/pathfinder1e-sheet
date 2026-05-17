@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '2.2.0';
+const SHEET_VERSION = '2.2.1';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -1023,7 +1023,7 @@ const CLASS_FEATURES = {
 
   warpriest: {
     proficiencies: {
-      weapons: 'All simple and martial weapons, plus deity's favored weapon.',
+      weapons: 'All simple and martial weapons, plus deity\'s favored weapon.',
       armor:   'Light, medium, and heavy armor. All shields except tower shields.',
       note:    'Can cast divine spells in any armor without arcane spell failure.',
     },
@@ -1037,7 +1037,7 @@ const CLASS_FEATURES = {
     },
     specialRules: [
       { name: 'Spontaneous Casting', text: 'Can sacrifice any prepared spell to cast a cure wounds (or inflict wounds if evil) spell of the same level or lower. Does not need to prepare these spells.' },
-      { name: 'Aura',                text: 'Possesses a powerful aura corresponding to deity's alignment (detectable by detect evil/good/law/chaos).' },
+      { name: 'Aura',                text: 'Possesses a powerful aura corresponding to deity\'s alignment (detectable by detect evil/good/law/chaos).' },
       { name: 'Orisons',             text: 'Can prepare a number of orisons (0-level spells). These are not expended and can be used again.' },
       { name: 'Bonus Languages',     text: 'May learn Abyssal, Celestial, or Infernal as a bonus language (in addition to racial bonus languages).' },
     ],
@@ -1107,7 +1107,7 @@ const CLASS_FEATURES = {
 
   cleric: {
     proficiencies: {
-      weapons: 'All simple weapons, plus deity's favored weapon.',
+      weapons: 'All simple weapons, plus deity\'s favored weapon.',
       armor:   'Light, medium, and heavy armor. All shields except tower shields.',
       note:    '',
     },
@@ -1144,7 +1144,7 @@ const CLASS_FEATURES = {
       bonusSpells: 'Yes — based on WIS modifier.',
     },
     specialRules: [
-      { name: 'Spontaneous Casting', text: 'Sacrifice any prepared spell to cast summon nature's ally of same level or lower.' },
+      { name: 'Spontaneous Casting', text: 'Sacrifice any prepared spell to cast summon nature\'s ally of same level or lower.' },
       { name: 'Orisons',             text: '0-level spells prepared; not expended.' },
       { name: 'Nature Bond',         text: 'Choose animal companion (as druid of level –3) OR one domain from druid domain list.' },
       { name: 'Wild Empathy',        text: 'Improve animal attitude. d20 + druid level + CHA vs DC.' },
