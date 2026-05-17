@@ -7,7 +7,7 @@
 
 'use strict';
 
-const SHEET_VERSION = '0.7.0';
+const SHEET_VERSION = '0.8.0';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
@@ -514,7 +514,7 @@ const DEITIES = [
   // Additional common deities
   // Arqueros — Empyreal Lord (archon). Source: Inner Sea Gods / PathfinderWiki
   // Favored weapon: longspear (the Golden Bulwark wields a longspear with diamond blades)
-  ['Arqueros',   'LG',  'Good, Law, Protection, War',                   'Longspear',       'ISG'],
+  ['Arqueros',   'LG',  'Good, Law, Protection, War',                   'Longspear',       'ISG', 'Pray 1 hour holding a heavy shield overhead.', '+4 sacred bonus on Strength checks and Strength-based skill checks.'],
 
   // Additional empyreal lords & monitor demigods
   ['Andoletta',  'LG',  'Good, Law, Protection',                        'Quarterstaff',    'ISG'],
@@ -751,6 +751,28 @@ const COMMON_GEAR = {
   'Holy symbol, silver':  { weight:1,  cost:25  },
   'Holy symbol, wooden':  { weight:0,  cost:1   },
   'Spell component pouch':{ weight:2,  cost:5   },
+};
+
+
+// ══════════════════════════════════════════════════
+// DEITY OBEDIENCE PERKS
+// Source: Inner Sea Gods, Chronicle of the Righteous
+// Format: deityName -> { obedience, perk }
+// ══════════════════════════════════════════════════
+const DEITY_PERKS = {
+  'Torag': { obedience: "Spend 1 hour working at a forge, crafting or repairing items while praying.", perk: "+4 sacred bonus on Craft (armor) and Craft (weapons) checks." },
+  'Iomedae': { obedience: "Spend 1 hour in prayer and weapon drill, reciting the Acts of Iomedae.", perk: "+4 sacred bonus on saving throws against fear effects." },
+  'Sarenrae': { obedience: "Spend 1 hour in prayer facing the sunrise or a flame, reciting the Dawnflower's tenets.", perk: "+4 sacred bonus on Diplomacy checks." },
+  'Desna': { obedience: "Spend 1 hour stargazing and singing, tracing constellations on the ground.", perk: "+4 sacred bonus on saves against curses and compulsions." },
+  'Pharasma': { obedience: "Lay bones in a spiral with names of the newborn and recently deceased; chant hymns.", perk: "+2 sacred bonus on attack rolls made with daggers." },
+  'Nethys': { obedience: "Inscribe blessings and arcane notations on parchment (not complete spells); cast a spell.", perk: "+4 sacred bonus on concentration checks." },
+  'Cayden Cailean': { obedience: "Drink a tankard of ale and sing a song of freedom; share a drink with a stranger.", perk: "+4 sacred bonus on saves against poison." },
+  'Erastil': { obedience: "Spend 1 hour in prayer while tending crops, livestock, or hunting.", perk: "+4 sacred bonus on Survival checks." },
+  'Abadar': { obedience: "Spend 1 hour in meditation on the principles of fair trade; balance your accounts.", perk: "+4 sacred bonus on Appraise checks and Sense Motive checks to detect lies." },
+  'Irori': { obedience: "Spend 1 hour in meditation and physical training, working through a prescribed regimen.", perk: "+4 sacred bonus on Knowledge (history) checks." },
+  'Gorum': { obedience: "Spend 1 hour in combat practice, reciting prayers of battle while sparring.", perk: "+4 sacred bonus on saves against fear and mind-affecting effects while raging." },
+  'Shelyn': { obedience: "Spend 1 hour creating art (painting, music, poetry, sculpture) dedicated to Shelyn.", perk: "+4 sacred bonus on Perform checks." },
+  'Arqueros': { obedience: "Pray for 1 hour while holding a heavy shield overhead.", perk: "+4 sacred bonus on Strength checks and Strength-based skill checks." },
 };
 
 // ══════════════════════════════════════════════════

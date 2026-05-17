@@ -371,9 +371,17 @@ function set(id, value) {
 }
 
 function getEffectiveMod(ability) {
-  const tempMod = val(`${ability}_temp_mod`);
-  if (tempMod !== '') return parseInt(tempMod) || 0;
-  return parseInt(val(`${ability}_mod`)) || 0;
+  // Always compute from score directly — never rely on readonly display fields
+  // This ensures calcWeapon/calcSaves/etc always see current values
+  const tempScore = val(`${ability}_temp`);
+  if (tempScore !== '') {
+    const ts = parseInt(tempScore);
+    if (!isNaN(ts)) return abilityMod(ts);
+  }
+  const score = val(`${ability}_score`);
+  if (score === '' || score === null) return 0;
+  const s = parseInt(score);
+  return isNaN(s) ? 0 : abilityMod(s);
 }
 
 // ── COLLECT ALL DATA ───────────────────────────────────────────────
@@ -1121,12 +1129,16 @@ function onDeityChange() {
   const sel = document.getElementById('setup_deity');
   const opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value) return;
+  const deityName = opt.value;
+  const perk = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityName];
   const info = document.getElementById('setup-info');
   if (info) {
-    const existing = info.innerHTML;
-    const deityHtml = `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
+    let html = `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
       <span class="setup-info-tag">🏛 Domains: ${opt.dataset.domains}</span>`;
-    info.innerHTML = deityHtml;
+    if (perk) {
+      html += `<span class="setup-info-tag deity-perk" title="${perk.obedience}">🙏 Obedience perk: ${perk.perk}</span>`;
+    }
+    info.innerHTML = html;
   }
 }
 
@@ -1273,6 +1285,19 @@ function applySetup() {
   calcAll();
   calcSaves();
   calcCombat();
+
+  // Write deity perk to notes if deity has one
+  const deityEl2 = document.getElementById('setup_deity');
+  if (deityEl2 && deityEl2.value) {
+    const perkData = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityEl2.value];
+    if (perkData) {
+      const perkText = `--- Deity Obedience (${deityEl2.value}) ---\nObedience: ${perkData.obedience}\nPerk: ${perkData.perk}`;
+      const existingNotes = val('notes');
+      if (!existingNotes.includes('Deity Obedience')) {
+        set('notes', existingNotes ? existingNotes + '\n\n' + perkText : perkText);
+      }
+    }
+  }
 
   alert(`Setup applied!\n\nCheck:\n• Ability scores (racial mods added to existing values)\n• Special Abilities tab (racial traits added)\n• Class Skills (dots marked)\n• BAB, Saves, Size updated\n\nTip: If this is a new character, set ability scores to 10 first, then apply setup.`);
 }

@@ -1238,3 +1238,14 @@ textarea.small-textarea  { min-height: 36px; }
   color: var(--accent2);
   font-style: italic;
 }
+
+/* Deity perk tag in setup panel */
+.setup-info-tag.deity-perk {
+  background: #f0ece0;
+  border-color: var(--accent);
+  color: var(--accent);
+  cursor: help;
+  max-width: 400px;
+  white-space: normal;
+  line-height: 1.3;
+}
