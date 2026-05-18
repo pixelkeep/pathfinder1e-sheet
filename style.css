@@ -939,10 +939,11 @@ textarea.small-textarea  { min-height: 36px; }
    ══════════════════════════════════════════════════ */
 .setup-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 4px;
+  overflow-x: auto;
 }
 
 .setup-field {
@@ -977,21 +978,29 @@ textarea.small-textarea  { min-height: 36px; }
   outline: none;
 }
 
-.setup-info {
+.setup-info,
+.setup-info-row {
   margin-top: 5px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
   min-height: 20px;
+  align-items: center;
 }
 
 .setup-info-tag {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8px;
   background: var(--cream);
   border: 1px solid var(--border-light);
-  padding: 2px 6px;
+  padding: 1px 5px;
   color: var(--ink-light);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.setup-info-tag strong {
+  color: var(--ink);
 }
 
 /* Lookup rows */
@@ -1296,13 +1305,14 @@ textarea.small-textarea  { min-height: 36px; }
 
 /* Deity perk tag in setup panel */
 .setup-info-tag.deity-perk {
-  background: #f0ece0;
+  background: rgba(139,26,26,.06);
   border-color: var(--accent);
   color: var(--accent);
   cursor: help;
-  max-width: 400px;
   white-space: normal;
-  line-height: 1.3;
+  line-height: 1.4;
+  max-width: 100%;
+  font-weight: 600;
 }
 
 /* Ability tag before skill name */
