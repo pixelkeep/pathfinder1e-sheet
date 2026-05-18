@@ -190,3 +190,18 @@ const COMMON_GEAR = {
 //              skill ids, save names, etc.)
 //   condition: optional string — shown as tooltip/note
 // ══════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════
+// WEAPON MATERIALS
+// Source: aonprd.com
+// ══════════════════════════════════════════════════
+const WEAPON_MATERIALS = {
+  'Normal':            { dmgMod: 0,  note: '' },
+  'Masterwork':        { dmgMod: 0,  note: '+1 attack (does not stack with enhancement bonus)' },
+  'Alchemical Silver': { dmgMod: -1, note: '–1 damage. Bypasses DR/silver.' },
+  'Cold Iron':         { dmgMod: 0,  note: 'Bypasses DR/cold iron. Costs double.' },
+  'Adamantine':        { dmgMod: 0,  note: 'Bypasses DR/adamantine and hardness <20.' },
+  'Mithral':           { dmgMod: 0,  note: 'Counts as silver. Half weight.' },
+  'Darkwood':          { dmgMod: 0,  note: 'Wooden weapons only. Half weight.' },
+  'Bone':              { dmgMod: 0,  note: 'Fragile. Break DC 20 on attack roll of 1.' },
+};
