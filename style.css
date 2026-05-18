@@ -918,17 +918,19 @@ textarea.small-textarea  { min-height: 36px; }
 
 .setup-apply-btn {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
-  padding: 5px 14px;
+  padding: 4px 10px;
   background: var(--accent);
   color: #fff;
   border: none;
   cursor: pointer;
   transition: background .15s;
   align-self: flex-end;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .setup-apply-btn:hover { background: var(--accent2); }
 
