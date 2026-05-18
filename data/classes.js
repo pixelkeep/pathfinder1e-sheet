@@ -1,0 +1,298 @@
+/* Pathfinder 1e Sheet — Classes
+   Source: aonprd.com */
+'use strict';
+
+const CLASSES = {
+
+  alchemist: {
+    name: 'Alchemist', source: 'APG',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'good', will: 'poor',
+    skillsPerLevel: 4, spellAbility: 'int',
+    classSkills: ['appraise','craft1','craft2','disable_device','fly','heal',
+                  'k_arcana','k_nature','perception','profession1','sleight_of_hand',
+                  'spellcraft','survival','use_magic_device'],
+    proficiencies: 'Simple weapons, bombs. Light armor.',
+    resources: [
+      { label: 'Bombs/day', formula: 'level + INT mod' },
+      { label: 'Mutagen/day', formula: '1' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Alchemist',
+  },
+
+  barbarian: {
+    name: 'Barbarian', source: 'CRB',
+    hd: 12, bab: 'full', fort: 'good', ref: 'poor', will: 'poor',
+    skillsPerLevel: 4,
+    classSkills: ['acrobatics','climb','craft1','handle_animal','intimidate',
+                  'k_nature','perception','ride','survival','swim'],
+    proficiencies: 'Simple and martial weapons. Light and medium armor, shields (not tower).',
+    resources: [
+      { label: 'Rage rounds/day', formula: '4 + CON mod (+ 2/level after 1st)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Barbarian',
+  },
+
+  bard: {
+    name: 'Bard', source: 'CRB',
+    hd: 8, bab: 'medium', fort: 'poor', ref: 'good', will: 'good',
+    skillsPerLevel: 6, spellAbility: 'cha',
+    classSkills: ['acrobatics','appraise','bluff','climb','craft1','diplomacy',
+                  'disguise','escape_artist','intimidate','k_arcana','k_dungeoneering',
+                  'k_engineering','k_geography','k_history','k_local','k_nature',
+                  'k_nobility','k_planes','k_religion','linguistics','perception',
+                  'perform1','perform2','profession1','sense_motive','sleight_of_hand',
+                  'spellcraft','stealth','use_magic_device'],
+    proficiencies: 'Simple weapons + longsword, rapier, sap, short sword, shortbow, whip. Light armor and shields (not tower, not while casting).',
+    resources: [
+      { label: 'Bardic Performance/day', formula: '4 + CHA mod (+ 2/level after 1st)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Bard',
+  },
+
+  cleric: {
+    name: 'Cleric', source: 'CRB',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'wis',
+    classSkills: ['appraise','craft1','diplomacy','heal','k_arcana','k_history',
+                  'k_nobility','k_planes','k_religion','linguistics','profession1',
+                  'sense_motive','spellcraft'],
+    proficiencies: 'Simple weapons + deity\'s favored weapon. Light and medium armor, shields (not tower).',
+    resources: [
+      { label: 'Channel Energy/day', formula: '3 + CHA mod' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Cleric',
+  },
+
+  druid: {
+    name: 'Druid', source: 'CRB',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 4, spellAbility: 'wis',
+    classSkills: ['climb','craft1','fly','handle_animal','heal','k_geography',
+                  'k_nature','perception','profession1','ride','spellcraft',
+                  'survival','swim'],
+    proficiencies: 'Simple weapons + club, dagger, dart, quarterstaff, scimitar, scythe, sickle, shortspear, sling, spear. Light and medium non-metal armor, wooden shields.',
+    resources: [
+      { label: 'Wild Shape/day', formula: 'See level table (starts level 4)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Druid',
+  },
+
+  fighter: {
+    name: 'Fighter', source: 'CRB',
+    hd: 10, bab: 'full', fort: 'good', ref: 'poor', will: 'poor',
+    skillsPerLevel: 2,
+    classSkills: ['climb','craft1','handle_animal','intimidate','k_dungeoneering',
+                  'k_engineering','profession1','ride','survival','swim'],
+    proficiencies: 'All simple and martial weapons. All armor. All shields (including tower).',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Fighter',
+  },
+
+  gunslinger: {
+    name: 'Gunslinger', source: 'UC',
+    hd: 10, bab: 'full', fort: 'good', ref: 'good', will: 'poor',
+    skillsPerLevel: 4,
+    classSkills: ['acrobatics','bluff','climb','craft1','heal','intimidate',
+                  'k_engineering','k_local','perception','profession1','ride',
+                  'sleight_of_hand','survival','swim'],
+    proficiencies: 'Simple and martial weapons, all firearms. Light and medium armor, shields (not tower).',
+    resources: [
+      { label: 'Grit/day', formula: 'WIS mod (min 1)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Gunslinger',
+  },
+
+  inquisitor: {
+    name: 'Inquisitor', source: 'APG',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 6, spellAbility: 'wis',
+    classSkills: ['bluff','climb','craft1','diplomacy','disguise','heal',
+                  'intimidate','k_arcana','k_dungeoneering','k_local','k_nature',
+                  'k_planes','k_religion','perception','profession1','ride',
+                  'sense_motive','spellcraft','stealth','survival','swim'],
+    proficiencies: 'Simple weapons + hand crossbow, longbow, repeating crossbow, shortbow, deity\'s favored weapon. Light and medium armor, shields (not tower).',
+    resources: [
+      { label: 'Judgment/day', formula: '1 + 1 per 3 levels after 1st' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Inquisitor',
+  },
+
+  magus: {
+    name: 'Magus', source: 'UM',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'int',
+    classSkills: ['climb','craft1','fly','intimidate','k_arcana','k_dungeoneering',
+                  'k_planes','profession1','ride','spellcraft','swim','use_magic_device'],
+    proficiencies: 'Simple and martial weapons. Light armor (can cast in it at level 7+).',
+    resources: [
+      { label: 'Arcane Pool', formula: '½ level + INT mod (min 1)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Magus',
+  },
+
+  monk: {
+    name: 'Monk', source: 'CRB',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'good', will: 'good',
+    skillsPerLevel: 4,
+    classSkills: ['acrobatics','climb','craft1','escape_artist','intimidate',
+                  'k_history','k_religion','perception','perform1','profession1',
+                  'ride','sense_motive','stealth','swim'],
+    proficiencies: 'Club, crossbow (light or heavy), dagger, handaxe, javelin, kama, nunchaku, quarterstaff, sai, shortspear, short sword, shuriken, siangham, sling, spear. No armor, no shields.',
+    resources: [
+      { label: 'Ki Pool', formula: '½ level + WIS mod' },
+      { label: 'Stunning Fist/day', formula: 'Level' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Monk',
+  },
+
+  oracle: {
+    name: 'Oracle', source: 'APG',
+    hd: 8, bab: 'medium', fort: 'poor', ref: 'poor', will: 'good',
+    skillsPerLevel: 4, spellAbility: 'cha',
+    classSkills: ['craft1','diplomacy','heal','k_history','k_planes','k_religion',
+                  'profession1','sense_motive','spellcraft'],
+    proficiencies: 'Simple weapons. Light and medium armor, shields (not tower).',
+    resources: [
+      { label: 'Revelation uses/day', formula: 'Varies by revelation' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Oracle',
+  },
+
+  paladin: {
+    name: 'Paladin', source: 'CRB',
+    hd: 10, bab: 'full', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'cha',
+    classSkills: ['craft1','diplomacy','handle_animal','heal','k_nobility',
+                  'k_religion','profession1','ride','sense_motive','spellcraft'],
+    proficiencies: 'All simple and martial weapons. All armor. All shields (including tower).',
+    resources: [
+      { label: 'Lay on Hands/day', formula: '½ level + CHA mod' },
+      { label: 'Smite Evil/day', formula: '1 + 1 per 3 levels after 1st' },
+      { label: 'Mercy uses/day', formula: 'Same as Lay on Hands' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Paladin',
+  },
+
+  ranger: {
+    name: 'Ranger', source: 'CRB',
+    hd: 10, bab: 'full', fort: 'good', ref: 'good', will: 'poor',
+    skillsPerLevel: 6, spellAbility: 'wis',
+    classSkills: ['climb','craft1','handle_animal','heal','intimidate',
+                  'k_dungeoneering','k_geography','k_nature','perception',
+                  'profession1','ride','spellcraft','stealth','survival','swim'],
+    proficiencies: 'All simple and martial weapons. Light and medium armor, shields (not tower).',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Ranger',
+  },
+
+  rogue: {
+    name: 'Rogue', source: 'CRB',
+    hd: 8, bab: 'medium', fort: 'poor', ref: 'good', will: 'poor',
+    skillsPerLevel: 8,
+    classSkills: ['acrobatics','appraise','bluff','climb','craft1','diplomacy',
+                  'disable_device','disguise','escape_artist','intimidate',
+                  'k_dungeoneering','k_local','linguistics','perception','perform1',
+                  'profession1','sense_motive','sleight_of_hand','stealth',
+                  'swim','use_magic_device'],
+    proficiencies: 'All simple weapons + hand crossbow, rapier, sap, short sword, shortbow. Light armor (no shields).',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Rogue',
+  },
+
+  shaman: {
+    name: 'Shaman', source: 'ACG',
+    hd: 8, bab: 'medium', fort: 'poor', ref: 'poor', will: 'good',
+    skillsPerLevel: 4, spellAbility: 'wis',
+    classSkills: ['craft1','diplomacy','fly','handle_animal','heal','k_arcana',
+                  'k_history','k_nature','k_planes','k_religion','profession1',
+                  'ride','spellcraft','survival'],
+    proficiencies: 'Simple weapons. Light and medium armor, shields (not tower).',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Shaman',
+  },
+
+  skald: {
+    name: 'Skald', source: 'ACG',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 4, spellAbility: 'cha',
+    classSkills: ['acrobatics','bluff','climb','craft1','diplomacy','escape_artist',
+                  'intimidate','k_arcana','k_engineering','k_geography','k_history',
+                  'k_local','k_nature','k_nobility','k_planes','k_religion',
+                  'linguistics','perception','perform1','profession1','sense_motive',
+                  'spellcraft'],
+    proficiencies: 'Simple and martial weapons. Light and medium armor, shields (not tower). Can cast in light/medium armor and with shields at level 1.',
+    resources: [
+      { label: 'Raging Song/day', formula: '4 + CHA mod (+ 2/level after 1st)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Skald',
+  },
+
+  sorcerer: {
+    name: 'Sorcerer', source: 'CRB',
+    hd: 6, bab: 'slow', fort: 'poor', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'cha',
+    classSkills: ['appraise','bluff','craft1','fly','intimidate','k_arcana',
+                  'k_planes','profession1','spellcraft','use_magic_device'],
+    proficiencies: 'Simple weapons. No armor.',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Sorcerer',
+  },
+
+  swashbuckler: {
+    name: 'Swashbuckler', source: 'ACG',
+    hd: 10, bab: 'full', fort: 'poor', ref: 'good', will: 'poor',
+    skillsPerLevel: 4,
+    classSkills: ['acrobatics','bluff','craft1','diplomacy','escape_artist',
+                  'intimidate','k_local','k_nobility','perception','perform1',
+                  'profession1','ride','sense_motive','sleight_of_hand','swim'],
+    proficiencies: 'Simple and martial weapons. Light armor.',
+    resources: [
+      { label: 'Panache', formula: 'CHA mod (min 1)' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Swashbuckler',
+  },
+
+  warpriest: {
+    name: 'Warpriest', source: 'ACG',
+    hd: 8, bab: 'medium', fort: 'good', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'wis',
+    classSkills: ['climb','craft1','diplomacy','heal','intimidate','k_religion',
+                  'profession1','ride','sense_motive','spellcraft','survival','swim'],
+    proficiencies: 'Simple and martial weapons + deity\'s favored weapon. Light and medium armor, shields (not tower). Can cast divine spells in armor without arcane spell failure.',
+    resources: [
+      { label: 'Fervor/day', formula: '½ level + WIS mod' },
+      { label: 'Blessings/day', formula: '3 + ½ level (max 13)' },
+      { label: 'Sacred Weapon bonus', formula: '+1 per 4 levels' },
+    ],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Warpriest',
+  },
+
+  witch: {
+    name: 'Witch', source: 'APG',
+    hd: 6, bab: 'slow', fort: 'poor', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'int',
+    classSkills: ['craft1','fly','heal','intimidate','k_arcana','k_history',
+                  'k_nature','k_planes','profession1','spellcraft','use_magic_device'],
+    proficiencies: 'Simple weapons. No armor.',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Witch',
+  },
+
+  wizard: {
+    name: 'Wizard', source: 'CRB',
+    hd: 6, bab: 'slow', fort: 'poor', ref: 'poor', will: 'good',
+    skillsPerLevel: 2, spellAbility: 'int',
+    classSkills: ['appraise','craft1','fly','k_arcana','k_dungeoneering',
+                  'k_engineering','k_geography','k_history','k_local','k_nature',
+                  'k_nobility','k_planes','k_religion','linguistics','profession1',
+                  'spellcraft'],
+    proficiencies: 'Club, dagger, heavy crossbow, light crossbow, quarterstaff. No armor.',
+    resources: [],
+    aonUrl: 'https://aonprd.com/ClassDisplay.aspx?ItemName=Wizard',
+  },
+};
+
+// ══════════════════════════════════════════════════
+// RACES
+// Source: aonprd.com CRB + ARG
+// ══════════════════════════════════════════════════
