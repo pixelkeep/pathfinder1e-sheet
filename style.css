@@ -2173,3 +2173,55 @@ input[id^="wand_dc_"][id$="_3"] {
   color: var(--border);
   font-style: italic;
 }
+
+/* ══════════════════════════════════════════════════
+   SETUP BAR TOGGLE
+   ══════════════════════════════════════════════════ */
+.setup-toggle-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 12px;
+  background: rgba(139,26,26,.06);
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+}
+.setup-toggle-bar:hover { background: rgba(139,26,26,.1); }
+.setup-toggle-arrow {
+  font-size: 9px;
+  color: var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL PREPARED CHECKBOXES
+   ══════════════════════════════════════════════════ */
+.spell-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.spell-name-wrap input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+.spell-prep-cb {
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0;
+  accent-color: var(--effect-color);
+  cursor: pointer;
+}
+/* Prepared spell — visually distinct */
+.spell-prepared {
+  color: var(--effect-color) !important;
+  font-weight: 600 !important;
+}
+
+@media print {
+  .setup-toggle-bar { display: none; }
+  #setup-panels-content { display: none !important; }
+}

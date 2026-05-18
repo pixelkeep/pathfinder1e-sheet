@@ -1009,10 +1009,28 @@ function handleFileLoad(event) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const data = JSON.parse(e.target.result);
-      populateData(data);
+      const raw = e.target.result;
+      // Validate it parses
+      let data;
+      try { data = JSON.parse(raw); } catch(parseErr) {
+        alert('Could not parse file as JSON. Make sure it is a .json file saved from this sheet.');
+        return;
+      }
+      if (typeof data !== 'object' || Array.isArray(data)) {
+        alert('Invalid character file format.');
+        return;
+      }
+      // Try to populate, show specific errors if any
+      try {
+        populateData(data);
+        calcAll();
+      } catch(popErr) {
+        console.error('populateData error:', popErr);
+        alert('File loaded but some fields could not be restored: ' + popErr.message + '\nCheck the browser console for details.');
+      }
     } catch (err) {
-      alert('Could not load character file. Make sure it is a valid JSON file saved from this sheet.');
+      console.error('Load error:', err);
+      alert('Could not load character file: ' + err.message);
     }
   };
   reader.readAsText(file);
@@ -1553,42 +1571,66 @@ function onDeityChange() {
 function showSetupInfo() {
   const info = document.getElementById('setup-info');
   if (!info) return;
-  const raceKey  = document.getElementById('setup_race') ? document.getElementById('setup_race').value : '';
-  const classKey = document.getElementById('setup_class') ? document.getElementById('setup_class').value : '';
-  const level    = parseInt(document.getElementById('setup_level') && document.getElementById('setup_level').value) || 1;
-  const race  = RACES[raceKey];
-  const cls   = CLASSES[classKey];
+  const raceEl  = document.getElementById('setup_race');
+  const classEl = document.getElementById('setup_class');
+  const levelEl = document.getElementById('setup_level');
+  const deityEl = document.getElementById('setup_deity');
+  const raceKey  = raceEl  ? raceEl.value  : '';
+  const classKey = classEl ? classEl.value : '';
+  const level    = parseInt(levelEl ? levelEl.value : '1') || 1;
+  const race = (typeof RACES   !== 'undefined') ? RACES[raceKey]   : null;
+  const cls  = (typeof CLASSES !== 'undefined') ? CLASSES[classKey]: null;
   let html = '';
 
+  // ── RACE ──────────────────────────────────────────
   if (race) {
-    html += `<span class="setup-info-tag">👁 ${race.vision}</span>
-             <span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
-  }
-  if (cls) {
-    const bab   = getBAB(classKey, level);
-    const saves = getClassSaves(classKey, level);
-    html += `<span class="setup-info-tag">⚔ BAB +${bab}</span>
-             <span class="setup-info-tag">Fort +${saves.fort} / Ref +${saves.ref} / Will +${saves.will}</span>
-             <span class="setup-info-tag">HD d${cls.hd} · ${cls.skillsPerLevel} skills/level</span>`;
-    const xpNext = getXPForLevel(level);
-    if (xpNext) html += `<span class="setup-info-tag">XP to next: ${xpNext.toLocaleString()}</span>`;
+    const modStr = Object.entries(race.abilityMods)
+      .filter(([,v]) => v !== 0)
+      .map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
+      .join(', ');
+    if (modStr) html += `<span class="setup-info-tag">📊 ${modStr}</span>`;
+    html += `<span class="setup-info-tag">👁 ${race.vision}</span>`;
+    html += `<span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
+    if (race.bonusLanguages && race.bonusLanguages.length)
+      html += `<span class="setup-info-tag" style="opacity:.8">+ bonus: ${race.bonusLanguages.slice(0,5).join(', ')}${race.bonusLanguages.length > 5 ? '…' : ''}</span>`;
   }
 
-  // Always include deity perk if a deity is selected
-  const deityEl = document.getElementById('setup_deity');
+  // ── CLASS ──────────────────────────────────────────
+  if (cls) {
+    const bab   = (typeof getBAB       !== 'undefined') ? getBAB(classKey, level)        : '?';
+    const saves = (typeof getClassSaves!== 'undefined') ? getClassSaves(classKey, level) : {fort:'?',ref:'?',will:'?'};
+    html += `<span class="setup-info-tag">⚔ BAB +${bab}</span>`;
+    html += `<span class="setup-info-tag">💛 Fort +${saves.fort} / Ref +${saves.ref} / Will +${saves.will}</span>`;
+    html += `<span class="setup-info-tag">🎲 HD d${cls.hd} · ${cls.skillsPerLevel} skills/lvl</span>`;
+    if (cls.spellAbility)
+      html += `<span class="setup-info-tag">✨ Spells: ${(cls.spellAbility||'').toUpperCase()}</span>`;
+    if (cls.proficiencies)
+      html += `<span class="setup-info-tag" title="${cls.proficiencies}">🛡 ${cls.proficiencies.substring(0,50)}${cls.proficiencies.length>50?'…':''}</span>`;
+    const xpNext = (typeof getXPForLevel !== 'undefined') ? getXPForLevel(level) : 0;
+    if (xpNext) html += `<span class="setup-info-tag">📈 XP to next: ${xpNext.toLocaleString()}</span>`;
+    // Bonus feat count
+    const bonusFeatCnt = (typeof getBonusFeatCount !== 'undefined') ? getBonusFeatCount(classKey, level) : 0;
+    if (bonusFeatCnt > 0)
+      html += `<span class="setup-info-tag">🏅 ${bonusFeatCnt} bonus feat${bonusFeatCnt>1?'s':''}</span>`;
+  }
+
+  // ── DEITY ──────────────────────────────────────────
   if (deityEl && deityEl.value) {
-    const opt = deityEl.options[deityEl.selectedIndex];
-    if (opt && opt.dataset.weapon) {
-      html += `<span class="setup-info-tag">⚔ Favored weapon: <strong>${opt.dataset.weapon}</strong></span>
-               <span class="setup-info-tag">🏛 ${opt.dataset.domains}</span>`;
+    const deityName = deityEl.value;
+    // Find deity data
+    const deityRow = (typeof DEITIES !== 'undefined') ?
+      DEITIES.find(d => d[0] === deityName) : null;
+    if (deityRow) {
+      html += `<span class="setup-info-tag">⚔ Favored weapon: <strong>${deityRow[4]}</strong></span>`;
+      html += `<span class="setup-info-tag">🏛 ${deityRow[2]}</span>`;
     }
-    const perk = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityEl.value];
+    const perk = (typeof DEITY_PERKS !== 'undefined') ? DEITY_PERKS[deityName] : null;
     if (perk) {
       html += `<span class="setup-info-tag deity-perk" title="Obedience: ${perk.obedience}">🙏 ${perk.perk}</span>`;
     }
   }
 
-  info.innerHTML = html;
+  info.innerHTML = html || '<span class="setup-info-tag" style="opacity:.5">Select race, class, and deity above to see details</span>';
 }
 
 function previewClassStats(classKey, level) {
@@ -1689,14 +1731,18 @@ function applySetup() {
     // Languages — build picker with racial defaults pre-checked
     buildLanguagePicker(race.languages, race.bonusLanguages);
 
-    // Racial traits — only add if not already present
+    // Racial traits — clear old and re-add cleanly
     const traitText = race.traits.join('\n');
-    const existingFeatures = val('special_abilities');
-    if (!existingFeatures.includes('--- Racial Traits ---')) {
-      set('special_abilities', existingFeatures
-        ? existingFeatures + '\n\n--- Racial Traits ---\n' + traitText
-        : '--- Racial Traits ---\n' + traitText);
+    let existingFeatures = val('special_abilities');
+    // Remove any previous racial traits block
+    const racialMarker = '--- Racial Traits ---';
+    if (existingFeatures.includes(racialMarker)) {
+      const idx = existingFeatures.indexOf(racialMarker);
+      existingFeatures = existingFeatures.substring(0, idx).trim();
     }
+    set('special_abilities', existingFeatures
+      ? existingFeatures + '\n\n' + racialMarker + '\n' + traitText
+      : racialMarker + '\n' + traitText);
 
     // Racial bonus languages note
     if (race.bonusLanguages && race.bonusLanguages.length) {
@@ -2020,9 +2066,10 @@ function buildFeatsSection(classKey, level) {
         <select id="feat_wpn_${i}" class="feat-wpn-select ${isWeaponFeat ? '' : 'hidden'}"
                 title="Link to weapon slot" onchange="onFeatWeaponLink(${i})">
           <option value="">— weapon slot —</option>
-          ${Array.from({length: WEAPON_COUNT}, (_,w) =>
-            `<option value="${w}" ${existing_i.wpn==w?'selected':''}>Slot ${w+1}: ${val(`wpn_name_${w}`) || '(empty)'}</option>`
-          ).join('')}
+          ${Array.from({length: WEAPON_COUNT}, (_,w) => {
+            const wname = val(`wpn_name_${w}`) || '(empty)';
+            return `<option value="${w}" ${existing_i.wpn==w?'selected':''}>Weapon ${w+1}: ${wname}</option>`;
+          }).join('')}
         </select>
       </div>
       <input type="text" id="feat_desc_${i}" class="feat-desc-input"
@@ -2219,7 +2266,7 @@ function buildClassAbilitiesSection(classKey, level) {
         <div class="ca-row ca-weapon">
           <span class="ca-badge ca-badge-weapon">Wpn</span>
           <span class="ca-name">${a.name}</span>
-          ${a.weaponLinked ? `<select class="ca-wpn-link" title="Link to weapon slot"><option value="">— slot —</option>${Array.from({length:WEAPON_COUNT},(_,w)=>`<option value="${w}">Slot ${w+1}</option>`).join('')}</select>` : ''}
+          ${a.weaponLinked ? `<select class="ca-wpn-link" title="Link to weapon slot"><option value="">— slot —</option>${Array.from({length:WEAPON_COUNT},(_,w)=>`<option value="${w}">Weapon ${w+1}</option>`).join('')}</select>` : ''}
           <span class="ca-desc">${a.description}</span>
         </div>`;
     });
@@ -3093,4 +3140,87 @@ populateData = function(data) {
   _populateData_traits(data);
   if (data.trait1_name) set('trait1_name', data.trait1_name);
   if (data.trait2_name) set('trait2_name', data.trait2_name);
+};
+
+/* ══════════════════════════════════════════════════
+   SETUP BAR TOGGLE
+   ══════════════════════════════════════════════════ */
+function toggleSetupBar() {
+  const content = document.getElementById('setup-panels-content');
+  const arrow   = document.getElementById('setup-toggle-arrow');
+  if (!content) return;
+  const hidden = content.style.display === 'none';
+  content.style.display = hidden ? '' : 'none';
+  if (arrow) arrow.textContent = hidden ? '▲ hide' : '▼ show';
+  try { localStorage.setItem('pf1_setup_hidden', hidden ? '0' : '1'); } catch(e) {}
+}
+
+// Restore setup bar state on load
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const hidden = localStorage.getItem('pf1_setup_hidden');
+    if (hidden === '1') {
+      const content = document.getElementById('setup-panels-content');
+      const arrow   = document.getElementById('setup-toggle-arrow');
+      if (content) content.style.display = 'none';
+      if (arrow)   arrow.textContent = '▼ show';
+    }
+  } catch(e) {}
+});
+
+/* ══════════════════════════════════════════════════
+   SPELL PREPARED CHECKBOXES
+   Adds a ✓ checkbox per spell name on page 4
+   ══════════════════════════════════════════════════ */
+// Override the spell name inputs with prepared checkbox version
+// Done by patching buildSpellsPage after-the-fact via CSS and DOM
+
+// After page 4 content is injected, wrap spell names with prepared toggle
+function addPreparedCheckboxes() {
+  document.querySelectorAll('[id^="spl_name_"]').forEach(input => {
+    if (input.dataset.prepWrapped) return;
+    input.dataset.prepWrapped = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'spell-name-wrap';
+    input.parentNode.insertBefore(wrap, input);
+
+    const cb = document.createElement('input');
+    cb.type  = 'checkbox';
+    cb.className = 'spell-prep-cb';
+    cb.title = 'Prepared';
+    cb.id    = input.id + '_prep';
+    cb.onchange = () => {
+      input.classList.toggle('spell-prepared', cb.checked);
+    };
+
+    wrap.appendChild(cb);
+    wrap.appendChild(input);
+  });
+}
+
+// Patch buildPage4Spells to call addPreparedCheckboxes after render
+const _buildPage4SpellsOrig = buildPage4Spells;
+buildPage4Spells = function(classKey, level) {
+  _buildPage4SpellsOrig(classKey, level);
+  setTimeout(addPreparedCheckboxes, 100);
+};
+
+/* ══════════════════════════════════════════════════
+   MATERIAL CHANGE AFTER QUICK-FILL
+   Weapon material select is not disabled — but
+   applyWeaponLookup must not overwrite material
+   if user already changed it
+   ══════════════════════════════════════════════════ */
+// Fix: material select should always be enabled
+// The issue was calcWeapon re-reading material but select might be missing
+// Ensure material selects are always enabled after buildWeapons
+const _buildWeaponsOrig2 = buildWeapons;
+buildWeapons = function() {
+  _buildWeaponsOrig2();
+  // Ensure all material selects are enabled
+  document.querySelectorAll('[id^="wpn_material_"]').forEach(sel => {
+    sel.disabled = false;
+  });
+  updateSlotCountDisplay();
 };
