@@ -48,8 +48,31 @@ const SKILLS = [
   ['use_magic_device', 'Use Magic Device',           'cha', false, true ],
 ];
 
-const WEAPON_COUNT  = 5;
-const WAND_COUNT    = 4;  // wands/staves/scrolls used in combat
+// Slot counts — user can change via the +/- buttons in the UI
+let WEAPON_COUNT = parseInt(localStorage.getItem('pf1_weapon_count') || '4');
+let WAND_COUNT   = parseInt(localStorage.getItem('pf1_wand_count')   || '3');
+
+function setSlotCount(type, delta) {
+  if (type === 'weapon') {
+    WEAPON_COUNT = Math.max(1, Math.min(8, WEAPON_COUNT + delta));
+    try { localStorage.setItem('pf1_weapon_count', WEAPON_COUNT); } catch(e) {}
+    buildWeapons(); calcAllWeapons();
+    // Re-render feats section to update weapon slot dropdowns
+    if (_currentClass) buildFeatsSection(_currentClass, _currentLevel);
+  } else {
+    WAND_COUNT = Math.max(1, Math.min(8, WAND_COUNT + delta));
+    try { localStorage.setItem('pf1_wand_count', WAND_COUNT); } catch(e) {}
+    buildWands();
+  }
+  updateSlotCountDisplay();
+}
+
+function updateSlotCountDisplay() {
+  const wc = document.getElementById('weapon-count-display');
+  const vc = document.getElementById('wand-count-display');
+  if (wc) wc.textContent = WEAPON_COUNT;
+  if (vc) vc.textContent = WAND_COUNT;
+}
 const AC_ITEM_COUNT = 7;
 const GEAR_COUNT    = 20;
 
@@ -61,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildACItems();
   buildGear();
   calcAll();
+  updateSlotCountDisplay();
 });
 
 // ── ABILITY MODIFIER ───────────────────────────────────────────────
@@ -360,7 +384,7 @@ function buildWeapons() {
           <span class="breakdown-op">+</span>
           <label class="bd-cell">Str/Dex<br><input type="number" id="wpn_abil_${i}" class="num small-num" readonly></label>
           <span class="breakdown-op">+</span>
-          <label class="bd-cell" title="Enhancement bonus (+1 MW if no enhancement)">Enh/MW<br><input type="number" id="wpn_enh_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
+          <label class="bd-cell" title="Type +1 for MW, +2/+3 etc for magic enhancement. This adds to BOTH attack and damage.">Enh/MW<br><input type="number" id="wpn_enh_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">+</span>
           <label class="bd-cell">Feats<br><input type="number" id="wpn_feat_${i}" class="num small-num" oninput="calcWeapon(${i})" title="Weapon Focus +1, Greater WF +1, etc."></label>
           <span class="breakdown-op">+</span>
@@ -399,35 +423,83 @@ function buildWands() {
   const container = document.getElementById('wands-container');
   if (!container) return;
   container.innerHTML = '';
+
   for (let i = 0; i < WAND_COUNT; i++) {
     const div = document.createElement('div');
     div.className = 'wand-block';
     div.innerHTML = `
       <div class="wand-name-row">
         <input type="text" id="wand_name_${i}" class="wand-name-input"
-               placeholder="e.g. Wand of Cure Moderate Wounds (CL3)">
-        <select id="wand_type_${i}" class="wand-type-select">
+               placeholder="e.g. Wand of Cure Moderate Wounds">
+        <select id="wand_type_${i}" class="wand-type-select" onchange="onWandTypeChange(${i})">
           <option value="wand">Wand</option>
           <option value="staff">Staff</option>
           <option value="scroll">Scroll</option>
           <option value="rod">Rod</option>
+          <option value="other">Other</option>
         </select>
         <label class="wand-cl-label">CL
-          <input type="number" id="wand_cl_${i}" class="num small-num" placeholder="3" min="1" max="20">
+          <input type="number" id="wand_cl_${i}" class="num small-num"
+                 placeholder="3" min="1" max="20" oninput="calcWand(${i})">
         </label>
+        <label class="wand-cl-label">Spell lvl
+          <input type="number" id="wand_spelllvl_${i}" class="num small-num"
+                 placeholder="1" min="0" max="9" oninput="calcWand(${i})">
+        </label>
+        <select id="wand_attack_type_${i}" class="wand-type-select" onchange="calcWand(${i})"
+                title="Does this item require an attack roll?">
+          <option value="none">No attack roll</option>
+          <option value="ranged_touch">Ranged touch (ray)</option>
+          <option value="melee_touch">Melee touch</option>
+          <option value="ranged">Ranged attack</option>
+        </select>
       </div>
-      <div class="wand-combat-row">
-        <label class="wand-atk-label" title="Attack roll if wand requires one (ray, etc.)">
-          Atk <input type="number" id="wand_atk_${i}" class="num small-num"
-                     placeholder="—" title="Attack roll (e.g. ranged touch for rays)">
-        </label>
-        <label class="wand-dc-label">
-          DC <input type="number" id="wand_dc_${i}" class="num small-num" placeholder="—">
-        </label>
-        <label class="wand-effect-label">
-          Effect <input type="text" id="wand_effect_${i}" style="width:120px"
-                        placeholder="e.g. 2d8+3 healing, 4d6 fire">
-        </label>
+
+      <div class="weapon-breakdown-row">
+        <span class="breakdown-label">Attack</span>
+        <span class="breakdown-eq">=</span>
+        <label class="bd-cell">BAB<br>
+          <input type="number" id="wand_bab_${i}" class="num small-num" readonly></label>
+        <span class="breakdown-op">+</span>
+        <label class="bd-cell" title="DEX for ranged touch/ranged, STR for melee touch">Str/Dex<br>
+          <input type="number" id="wand_abil_${i}" class="num small-num" readonly></label>
+        <span class="breakdown-op">+</span>
+        <label class="bd-cell">Misc<br>
+          <input type="number" id="wand_misc_atk_${i}" class="num small-num"
+                 oninput="calcWand(${i})"></label>
+        <span class="breakdown-op">=</span>
+        <label class="bd-cell total-cell">Total<br>
+          <input type="text" id="wand_atk_total_${i}" class="num small-num atk-total" readonly></label>
+        <span id="wand_no_atk_note_${i}" class="wand-no-atk-note">— no attack roll required</span>
+      </div>
+
+      <div class="weapon-breakdown-row">
+        <span class="breakdown-label">Save DC</span>
+        <span class="breakdown-eq">=</span>
+        <label class="bd-cell">10<br><span class="bd-fixed">10</span></label>
+        <span class="breakdown-op">+</span>
+        <label class="bd-cell">Spell lvl<br>
+          <input type="number" id="wand_dc_spelllvl_${i}" class="num small-num" readonly></label>
+        <span class="breakdown-op">+</span>
+        <label class="bd-cell" title="Casting ability modifier of the original caster (usually in item description)">Cast.Abil<br>
+          <input type="number" id="wand_dc_abil_${i}" class="num small-num"
+                 oninput="calcWand(${i})" placeholder="0"></label>
+        <span class="breakdown-op">+</span>
+        <label class="bd-cell">Misc<br>
+          <input type="number" id="wand_dc_misc_${i}" class="num small-num"
+                 oninput="calcWand(${i})"></label>
+        <span class="breakdown-op">=</span>
+        <label class="bd-cell total-cell">DC<br>
+          <input type="text" id="wand_dc_${i}" class="num small-num atk-total" readonly></label>
+        <label class="bd-cell" style="margin-left:8px">Effect / Damage<br>
+          <input type="text" id="wand_effect_${i}" style="width:100px"
+                 placeholder="2d8+3, 4d6 fire…"></label>
+        <label class="bd-cell">Duration<br>
+          <input type="text" id="wand_duration_${i}" style="width:60px"
+                 placeholder="1 min/CL…"></label>
+      </div>
+
+      <div class="wand-charges-row">
         <span class="wand-charges-label">Charges:</span>
         <input type="number" id="wand_charges_max_${i}" class="num small-num"
                placeholder="50" min="0" max="50" oninput="updateWandDots(${i})">
@@ -436,11 +508,65 @@ function buildWands() {
                placeholder="0" min="0" oninput="updateWandDots(${i})">
         <span class="mi-label">used</span>
         <span id="wand_remaining_${i}" class="mi-remaining"></span>
+        <div id="wand_dots_${i}" class="wand-dots-inline mi-dots"></div>
       </div>
-      <div id="wand_dots_${i}" class="wand-dots-row mi-dots"></div>
+
+      <input type="text" id="wand_notes_${i}" class="wand-notes-input"
+             placeholder="Notes: save type, duration details, when to use…">
     `;
     container.appendChild(div);
+    calcWand(i);
   }
+}
+
+function onWandTypeChange(i) {
+  calcWand(i);
+}
+
+function calcWand(i) {
+  const attackType = val('wand_attack_type_' + i) || 'none';
+  const bab    = parseInt(val('bab')) || 0;
+  const strMod = getEffectiveMod('str');
+  const dexMod = getEffectiveMod('dex');
+  const misc   = parseInt(val('wand_misc_atk_' + i)) || 0;
+  const spellLvl = parseInt(val('wand_spelllvl_' + i)) || 0;
+  const dcAbil   = parseInt(val('wand_dc_abil_'  + i)) || 0;
+  const dcMisc   = parseInt(val('wand_dc_misc_'  + i)) || 0;
+
+  // Attack breakdown
+  const noAtkEl   = document.getElementById('wand_no_atk_note_' + i);
+  const atkTotEl  = document.getElementById('wand_atk_total_'   + i);
+  const babEl     = document.getElementById('wand_bab_'         + i);
+  const abilEl    = document.getElementById('wand_abil_'        + i);
+
+  if (attackType === 'none') {
+    if (noAtkEl)  noAtkEl.style.display  = '';
+    if (atkTotEl) atkTotEl.closest('label').style.display = 'none';
+    if (babEl)    babEl.closest('label').style.display    = 'none';
+    if (abilEl)   abilEl.closest('label').style.display   = 'none';
+  } else {
+    if (noAtkEl)  noAtkEl.style.display  = 'none';
+    if (atkTotEl) atkTotEl.closest('label').style.display = '';
+    if (babEl)    babEl.closest('label').style.display    = '';
+    if (abilEl)   abilEl.closest('label').style.display   = '';
+
+    const abilMod = (attackType === 'melee_touch') ? strMod : dexMod;
+    if (babEl)    babEl.value  = bab;
+    if (abilEl)   abilEl.value = abilMod;
+    const total = bab + abilMod + misc;
+    if (atkTotEl) atkTotEl.value = total >= 0 ? '+' + total : '' + total;
+  }
+
+  // DC breakdown
+  const dcSpellEl = document.getElementById('wand_dc_spelllvl_' + i);
+  const dcTotEl   = document.getElementById('wand_dc_'          + i);
+  if (dcSpellEl) dcSpellEl.value = spellLvl;
+  const dc = 10 + spellLvl + dcAbil + dcMisc;
+  if (dcTotEl) dcTotEl.value = dc > 10 ? dc : '—';
+}
+
+function calcAllWands() {
+  for (let i = 0; i < WAND_COUNT; i++) calcWand(i);
 }
 
 function updateWandDots(i) {
@@ -613,6 +739,7 @@ function updateHP() {
 function calcAll() {
   ['str','dex','con','int','wis','cha'].forEach(a => calcMod(a));
   calcAllWeapons();
+  calcAllWands();
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -751,6 +878,9 @@ function collectData() {
   }
 
   data.feats_structured = collectFeatData();
+  // Save deity obedience bonus state
+  data._deityBonusKey   = (typeof _deityBonusLabel !== 'undefined') ? _deityBonusLabel : '';
+  data._deityBonuses    = (typeof _deityBonuses    !== 'undefined') ? JSON.stringify(_deityBonuses) : '';
   data._version = '1.0';
   data._timestamp = new Date().toISOString();
   return data;
@@ -799,6 +929,7 @@ function populateData(data) {
       setCheck(`wpn_offhand_${i}`,   w.offHand);
       setCheck(`wpn_ranged_${i}`,    w.ranged);
       setCheck(`wpn_mw_${i}`,        w.mw);
+      set(`wpn_notes_${i}`, w.notes || '');
       calcWeapon(i);
     });
   }
@@ -1281,6 +1412,15 @@ populateData = function(data) {
     restoreLanguagePicker(data.languages);
   }
 
+  // Restore deity bonus
+  if (data._deityBonusKey && data._deityBonuses) {
+    try {
+      _deityBonusLabel = data._deityBonusKey;
+      _deityBonuses    = JSON.parse(data._deityBonuses);
+      calcSkills();
+    } catch(e) {}
+  }
+
   // Restore structured feats
   if (data.feats_structured) {
     buildAdaptivePage2(data._applied_race ? (data.charClass || '').toLowerCase() : '', parseInt(data.charLevel) || 1);
@@ -1549,12 +1689,14 @@ function applySetup() {
     // Languages — build picker with racial defaults pre-checked
     buildLanguagePicker(race.languages, race.bonusLanguages);
 
-    // Racial skill bonuses + traits as notes
+    // Racial traits — only add if not already present
     const traitText = race.traits.join('\n');
     const existingFeatures = val('special_abilities');
-    set('special_abilities', existingFeatures
-      ? existingFeatures + '\n\n--- Racial Traits ---\n' + traitText
-      : '--- Racial Traits ---\n' + traitText);
+    if (!existingFeatures.includes('--- Racial Traits ---')) {
+      set('special_abilities', existingFeatures
+        ? existingFeatures + '\n\n--- Racial Traits ---\n' + traitText
+        : '--- Racial Traits ---\n' + traitText);
+    }
 
     // Racial bonus languages note
     if (race.bonusLanguages && race.bonusLanguages.length) {
@@ -1580,7 +1722,7 @@ function applySetup() {
       // Add to special abilities as a permanent reference (once)
       const existingSA = val('special_abilities');
       const perkNote = `[Deity Obedience — ${deityEl2.value}]\n${perkData.perk}\n⚠ Requires: ${perkData.obedience}`;
-      if (!existingSA.includes('Deity Obedience')) {
+      if (!existingSA.includes('Deity Obedience') && !existingSA.includes(deityEl2.value)) {
         set('special_abilities', existingSA ? existingSA + '\n\n' + perkNote : perkNote);
       }
       // Add to buff tracker slot 0 (page 5) as reminder
@@ -2052,11 +2194,14 @@ function buildClassAbilitiesSection(classKey, level) {
       if (seen.has(a.name)) return;
       seen.add(a.name);
       const poolId = a.resource || '';
+      // Bold the calcValue parts (dice, numbers) in descriptions
+      const highlightCalc = txt => txt.replace(/(\d+d\d+[+\d/levelmax]*|\+\d+\/\w+|\d+ uses?\/day)/gi,
+        '<strong>$1</strong>');
       html += `
         <div class="ca-row ca-resource">
           <span class="ca-badge ca-badge-resource">Pool</span>
           <span class="ca-name">${a.name}</span>
-          <span class="ca-desc">${a.description}</span>
+          <span class="ca-desc">${highlightCalc(a.description)}</span>
           ${poolId ? `<span class="ca-pool-display" id="ca_pool_${poolId}"></span>` : ''}
         </div>`;
     });
@@ -2349,13 +2494,15 @@ function buildSpellsPage(classKey, level) {
     : classKey === 'ranger' || classKey === 'paladin' ? 4
     : classKey === 'bard' || classKey === 'skald' ? 6
     : 9;
+  // Set grid columns based on spell levels
+  const cols = maxSpellLevel <= 4 ? 2 : maxSpellLevel <= 6 ? 2 : 3;
 
   const mods = { wis: getEffectiveMod('wis'), int: getEffectiveMod('int'), cha: getEffectiveMod('cha') };
   const cls = CLASSES[classKey];
   const abilKey = cls?.spellAbility || 'wis';
   const abilMod = mods[abilKey] || 0;
 
-  let html = `<div class="spells-page-grid">`;
+  let html = `<div class="spells-page-grid" style="grid-template-columns: repeat(${cols}, 1fr)">`;
 
   for (let lvl = 0; lvl <= maxSpellLevel; lvl++) {
     const dc = lvl === 0 ? '—' : 10 + lvl + abilMod;
@@ -2443,6 +2590,26 @@ function buildExtractsPage(level) {
 // Called from applySetup in the existing code
 function afterApplySetup(classKey, level) {
   buildAdaptivePage2(classKey, level);
+  updateHPLevelupInfo(classKey, level);
+}
+
+function updateHPLevelupInfo(classKey, level) {
+  const info = document.getElementById('hp-levelup-info');
+  const hint = document.getElementById('hp-levelup-hint');
+  const cls  = CLASSES[classKey];
+  if (!cls || !info) return;
+  const conMod = getEffectiveMod('con');
+  const hd     = cls.hd;
+  const avgHP  = Math.floor(hd / 2) + 1 + conMod;
+  const maxHP  = hd + conMod;
+  info.style.display = '';
+  info.innerHTML = `
+    <span class="hp-info-tag">HD: d${hd}</span>
+    <span class="hp-info-tag">CON mod: ${conMod >= 0 ? '+' : ''}${conMod}</span>
+    <span class="hp-info-tag">Per level: max ${maxHP} · avg ${avgHP} · min ${1 + conMod}</span>
+    <span class="hp-info-tag" style="color:var(--accent)">Level 1: d${hd} + CON = ${hd + conMod} (max) or ${Math.ceil(hd/2) + conMod} (avg)</span>
+  `;
+  if (hint) hint.textContent = `d${hd} + CON mod per level`;
 }
 
 // ── Save/load feat data ────────────────────────────
@@ -2530,6 +2697,7 @@ function useMagicItemCharge(i) {
 document.addEventListener('DOMContentLoaded', () => {
   buildMagicItems();
   buildWands();
+  updateSlotCountDisplay();
 });
 
 // Extend collectData
@@ -2540,14 +2708,19 @@ collectData = function() {
   data.wands = [];
   for (let i = 0; i < WAND_COUNT; i++) {
     data.wands.push({
-      name:       val(`wand_name_${i}`),
-      type:       val(`wand_type_${i}`),
-      cl:         val(`wand_cl_${i}`),
-      atk:        val(`wand_atk_${i}`),
-      dc:         val(`wand_dc_${i}`),
-      effect:     val(`wand_effect_${i}`),
-      chargesMax: val(`wand_charges_max_${i}`),
-      chargesUsed:val(`wand_charges_used_${i}`),
+      name:        val(`wand_name_${i}`),
+      type:        val(`wand_type_${i}`),
+      cl:          val(`wand_cl_${i}`),
+      spelllvl:    val(`wand_spelllvl_${i}`),
+      attackType:  val(`wand_attack_type_${i}`),
+      miscAtk:     val(`wand_misc_atk_${i}`),
+      dcAbil:      val(`wand_dc_abil_${i}`),
+      dcMisc:      val(`wand_dc_misc_${i}`),
+      effect:      val(`wand_effect_${i}`),
+      duration:    val(`wand_duration_${i}`),
+      chargesMax:  val(`wand_charges_max_${i}`),
+      chargesUsed: val(`wand_charges_used_${i}`),
+      notes:       val(`wand_notes_${i}`),
     });
   }
   data.magicItems = [];
@@ -2576,6 +2749,7 @@ populateData = function(data) {
       set(`wand_effect_${i}`,      w.effect      || '');
       set(`wand_charges_max_${i}`, w.chargesMax  || '');
       set(`wand_charges_used_${i}`,w.chargesUsed || '');
+      set(`wand_notes_${i}`,         w.notes      || '');
       updateWandDots(i);
     });
   }
@@ -2588,3 +2762,238 @@ populateData = function(data) {
     });
   }
 };
+
+/* ══════════════════════════════════════════════════
+   SPELL AUTOCOMPLETE
+   Works in: wand name fields, spell list fields,
+   and page 4 spell name inputs
+   ══════════════════════════════════════════════════ */
+
+function buildSpellAutocomplete(inputId, onSelect) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  // Create suggestion dropdown
+  const wrap = document.createElement('div');
+  wrap.style.position = 'relative';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+
+  const suggestions = document.createElement('div');
+  suggestions.className = 'spell-suggestions';
+  suggestions.style.display = 'none';
+  wrap.appendChild(suggestions);
+
+  input.addEventListener('input', () => {
+    const q = input.value;
+    if (typeof searchSpells === 'undefined' || q.length < 2) {
+      suggestions.style.display = 'none';
+      return;
+    }
+    const results = searchSpells(q);
+    if (!results.length) { suggestions.style.display = 'none'; return; }
+
+    suggestions.innerHTML = results.map(s => {
+      const lvlStr = Object.entries(s.level).map(([k,v]) => `${k} ${v}`).join(', ');
+      const safeCalc = s.calcValue ? `<span class="spell-sug-calc">${s.calcValue}</span>` : '';
+      return `<div class="spell-suggestion-item" onclick="selectSpellInto('${inputId}', '${s.name.replace(/'/g,"\\'")}')">
+        <span class="feat-sug-name">${s.name}</span>
+        <span class="feat-sug-type">${s.school.split(' ')[0]}</span>
+        ${safeCalc}
+        <span class="feat-sug-benefit">${lvlStr}</span>
+      </div>`;
+    }).join('');
+    suggestions.style.display = 'block';
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { suggestions.style.display = 'none'; }, 200);
+  });
+}
+
+function selectSpellInto(inputId, name) {
+  set(inputId, name);
+  const spell = (typeof getSpellByName !== 'undefined') ? getSpellByName(name) : null;
+
+  // Find parent context — are we in a wand block?
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const wandBlock = input.closest('.wand-block');
+  if (wandBlock && spell) {
+    // Auto-fill wand fields from spell data
+    const idx = wandBlock.querySelector('[id^="wand_name_"]')?.id?.replace('wand_name_','');
+    if (idx !== undefined) {
+      // Spell level for this wand — find lowest level
+      const minLevel = Math.min(...Object.values(spell.level));
+      set(`wand_spelllvl_${idx}`, minLevel);
+
+      // Effect / calcValue
+      if (spell.calcValue) set(`wand_effect_${idx}`, spell.calcValue);
+      if (spell.duration)  set(`wand_duration_${idx}`, spell.duration);
+
+      // DC — if has save DC
+      if (spell.saveDC && !spell.saveDC.includes('None') && !spell.saveDC.includes('harmless')) {
+        // DC needs caster ability — leave dcAbil for user to fill
+      }
+
+      // Attack type
+      const atkSel = document.getElementById(`wand_attack_type_${idx}`);
+      if (atkSel) {
+        if (spell.description.toLowerCase().includes('ranged touch')) atkSel.value = 'ranged_touch';
+        else if (spell.description.toLowerCase().includes('melee touch')) atkSel.value = 'melee_touch';
+        else atkSel.value = 'none';
+      }
+      calcWand(parseInt(idx));
+    }
+  }
+
+  // Close suggestions
+  const wrap = input.closest('div[style*="relative"]');
+  if (wrap) {
+    const sug = wrap.querySelector('.spell-suggestions');
+    if (sug) sug.style.display = 'none';
+  }
+}
+
+// Attach spell autocomplete to wand name fields after build
+const _buildWandsOrig = buildWands;
+buildWands = function() {
+  _buildWandsOrig();
+  for (let i = 0; i < WAND_COUNT; i++) {
+    buildSpellAutocomplete(`wand_name_${i}`, null);
+  }
+};
+
+// Also attach to spell name inputs on page 4 when built
+const _buildSpellsPageOrig = buildSpellsPage;
+buildSpellsPage = function(classKey, level) {
+  const html = _buildSpellsPageOrig(classKey, level);
+  // After rendering, attach autocomplete
+  setTimeout(() => {
+    const maxLevel = classKey === 'warpriest' ? 6 : classKey === 'ranger' || classKey === 'paladin' ? 4 : 9;
+    for (let lvl = 0; lvl <= maxLevel; lvl++) {
+      for (let i = 0; i < 12; i++) {
+        const id = `spl_name_${lvl}_${i}`;
+        if (document.getElementById(id)) buildSpellAutocomplete(id, null);
+      }
+    }
+  }, 100);
+  return html;
+};
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEMS QUICK-FILL
+   Sources items from data/items.js MAGIC_ITEMS
+   ══════════════════════════════════════════════════ */
+
+function buildMagicItemLookup() {
+  const container = document.getElementById('magic-item-lookup');
+  if (!container) return;
+
+  const slotOpts = ['', 'Belt','Body','Chest','Eyes','Feet','Hands',
+    'Head','Headband','Neck','Ring','Shoulders','Slotless','Wrist','Armor','Shield']
+    .map(s => `<option value="${s}">${s || '— all slots —'}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="gear-lookup-row" style="flex-wrap:wrap;gap:6px">
+      <input type="text" id="mi_lookup_search" style="width:200px;font-family:var(--font-body);font-size:10px;border:1px solid var(--border-light);padding:2px 4px"
+             placeholder="Search: dusty rose, belt of giant…" oninput="searchMagicItemUI()">
+      <select id="mi_lookup_slot" onchange="searchMagicItemUI()" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
+        ${slotOpts}
+      </select>
+      <label style="font-family:var(--font-mono);font-size:9px;display:flex;align-items:center;gap:3px">
+        Target
+        <select id="mi_lookup_target" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
+          <option value="ac">AC Items (p.3)</option>
+          <option value="gear">Gear list</option>
+        </select>
+        Slot
+        <select id="mi_lookup_acslot" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
+          ${Array.from({length: AC_ITEM_COUNT}, (_,i) => `<option value="${i}">Slot ${i+1}</option>`).join('')}
+        </select>
+        <button onclick="applyMagicItemLookup()" class="slot-btn" style="width:auto;padding:2px 8px">Fill</button>
+      </label>
+    </div>
+    <div id="mi_search_results" style="margin-top:4px;max-height:150px;overflow-y:auto"></div>
+  `;
+
+  searchMagicItemUI(); // Show initial items
+}
+
+let _selectedMagicItem = null;
+
+function searchMagicItemUI() {
+  const query    = document.getElementById('mi_lookup_search')?.value || '';
+  const slotFilt = document.getElementById('mi_lookup_slot')?.value || '';
+  const results  = document.getElementById('mi_search_results');
+  if (!results || typeof searchMagicItems === 'undefined') return;
+
+  const items = searchMagicItems(query, slotFilt || null);
+  results.innerHTML = items.map(([name, item]) => `
+    <div class="mi-search-row ${_selectedMagicItem === name ? 'mi-selected' : ''}"
+         onclick="selectMagicItem('${name.replace(/'/g, "\\'")}')">
+      <span class="mi-item-name">${name}</span>
+      <span class="mi-item-slot">${item.slot}</span>
+      <span class="mi-item-cost">${item.cost ? item.cost.toLocaleString() + ' gp' : ''}</span>
+      <span class="mi-item-note">${(item.note || '').substring(0, 60)}${(item.note||'').length > 60 ? '…' : ''}</span>
+    </div>
+  `).join('') || '<p class="helper-text" style="padding:4px">No items found. Try a different search.</p>';
+}
+
+function selectMagicItem(name) {
+  _selectedMagicItem = name;
+  searchMagicItemUI(); // Re-render to highlight selected
+}
+
+function applyMagicItemLookup() {
+  if (!_selectedMagicItem) { alert('Select an item first.'); return; }
+  const item = (typeof getMagicItem !== 'undefined') ? getMagicItem(_selectedMagicItem) : null;
+  if (!item) return;
+
+  const target  = document.getElementById('mi_lookup_target')?.value || 'ac';
+  const acSlot  = parseInt(document.getElementById('mi_lookup_acslot')?.value || '0');
+
+  if (target === 'ac') {
+    // Fill AC Items row
+    set(`aci_name_${acSlot}`,   _selectedMagicItem);
+    set(`aci_bonus_${acSlot}`,  item.acBonus  || '');
+    set(`aci_type_${acSlot}`,   item.acType   || item.slot || '');
+    set(`aci_maxdex_${acSlot}`, item.maxDex !== undefined && item.maxDex < 99 ? item.maxDex : '');
+    set(`aci_check_${acSlot}`,  item.checkPen !== undefined ? item.checkPen : '');
+    set(`aci_sf_${acSlot}`,     item.spellFail || '');
+    set(`aci_wt_${acSlot}`,     item.weight   || '');
+    set(`aci_props_${acSlot}`,  item.note     || '');
+    calcACItems();
+
+    // Also apply stat bonuses if item provides them
+    if (item.statBonus) {
+      const bonusNote = Object.entries(item.statBonus)
+        .map(([ab, v]) => `+${v} ${ab.toUpperCase()}`)
+        .join(', ');
+      const existSA = val('special_abilities');
+      const itemNote = `[${_selectedMagicItem}] ${bonusNote} (${item.bonusType || 'enhancement'})`;
+      if (!existSA.includes(_selectedMagicItem)) {
+        set('special_abilities', existSA ? existSA + '\n' + itemNote : itemNote);
+      }
+    }
+  } else {
+    // Fill Gear row
+    for (let i = 0; i < GEAR_COUNT; i++) {
+      if (!val(`gear_name_${i}`)) {
+        set(`gear_name_${i}`, _selectedMagicItem);
+        set(`gear_wt_${i}`,   item.weight || 0);
+        calcGear();
+        return;
+      }
+    }
+    alert('No empty gear slots. Clear one first.');
+  }
+
+  _selectedMagicItem = null;
+  searchMagicItemUI();
+}
+
+// Add to DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  buildMagicItemLookup();
+});

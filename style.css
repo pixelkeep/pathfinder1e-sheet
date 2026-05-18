@@ -1880,3 +1880,296 @@ textarea.small-textarea  { min-height: 36px; }
   margin-top: 2px;
   gap: 2px;
 }
+
+/* ══════════════════════════════════════════════════
+   HP LEVELUP INFO + WEAPON NOTES + MISC FIXES
+   ══════════════════════════════════════════════════ */
+
+.hp-levelup-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(139,111,62,.15);
+}
+.hp-info-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  padding: 1px 5px;
+  color: var(--ink-light);
+}
+
+/* Weapon notes row */
+.weapon-notes-row {
+  margin-top: 2px;
+}
+.weapon-notes-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  border-bottom: 1px dashed var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+  font-style: italic;
+}
+.weapon-notes-input:focus { outline: none; color: var(--ink); border-bottom-color: var(--accent2); }
+.weapon-notes-input::placeholder { color: var(--border-light); }
+
+/* Wand notes */
+.wand-notes-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  border-bottom: 1px dashed var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+  font-style: italic;
+  margin-top: 2px;
+}
+.wand-notes-input:focus { outline: none; color: var(--ink); }
+
+/* Special abilities textarea — much taller */
+.special-abilities-textarea {
+  min-height: 200px !important;
+  flex: 1 !important;
+}
+@media print {
+  .special-abilities-textarea {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Spell page — prevent overflow */
+.spells-page-grid {
+  width: 100%;
+  box-sizing: border-box;
+}
+.spell-level-block {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════
+   SLOT COUNT CONTROLS + WAND BREAKDOWN
+   ══════════════════════════════════════════════════ */
+
+.slot-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.slot-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 18px; height: 18px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  color: var(--accent2);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  border-radius: 2px;
+  transition: background .1s;
+}
+.slot-btn:hover { background: var(--accent2); color: #fff; }
+.slot-count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  min-width: 8px;
+  text-align: center;
+}
+
+/* Wand breakdown rows */
+.wand-charges-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.wand-dots-inline {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.wand-no-atk-note {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border-light);
+  font-style: italic;
+  margin-left: 6px;
+}
+.bd-fixed {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border);
+  display: block;
+  text-align: center;
+  margin-top: 2px;
+}
+
+@media print {
+  .slot-controls { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   CONSISTENT COLOR SYSTEM FOR CALCULATED VALUES
+   ══════════════════════════════════════════════════ */
+
+/* Principle:
+   --accent  (dark red)  = auto-calculated totals, read-only results
+   --accent2 (dark blue) = manually entered bonuses that feed calculations
+   #6b8c3a (olive green) = spell/ability effects the player needs to know
+                           (damage dice, healing, DC values)
+*/
+:root {
+  --effect-color: #4a6e1a;  /* olive green — spell/ability effects */
+}
+
+/* Spell calc values — highlighted in olive green */
+.calc-effect,
+.spell-sug-calc {
+  color: var(--effect-color);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+/* In spell list inputs — auto-complete suggestion */
+.spell-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.spell-suggestion-item {
+  padding: 3px 6px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  display: grid;
+  grid-template-columns: auto 60px 1fr auto;
+  gap: 4px;
+  align-items: baseline;
+}
+.spell-suggestion-item:hover { background: rgba(74,110,26,.08); }
+
+.spell-sug-calc {
+  font-size: 8.5px;
+  padding: 1px 3px;
+  background: rgba(74,110,26,.1);
+  border-radius: 2px;
+}
+
+/* Wand effect fields — olive green when filled */
+#wands-container input[id^="wand_effect_"] {
+  color: var(--effect-color);
+  font-weight: 600;
+}
+#wands-container input[id^="wand_effect_"]:placeholder-shown {
+  color: var(--border-light);
+  font-weight: normal;
+}
+
+/* Weapon damage total — red (auto-calculated) */
+.atk-total {
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+}
+
+/* Skill totals that have a deity bonus — subtly highlighted */
+.skill-row.obedience-bonus td input[id^="sk_total_"] {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+/* Wand DC total */
+input[id^="wand_dc_"][id$="_0"],
+input[id^="wand_dc_"][id$="_1"],
+input[id^="wand_dc_"][id$="_2"],
+input[id^="wand_dc_"][id$="_3"] {
+  color: var(--effect-color);
+  font-weight: 700;
+}
+
+/* Feat calc values in descriptions */
+.feat-desc-input[value*="d6"],
+.feat-desc-input[value*="d8"],
+.feat-desc-input[value*="d10"],
+.feat-desc-input[value*="d12"] {
+  /* Can't do this in CSS alone — needs JS — but placeholder for future */
+}
+
+/* Class ability descriptions with calc values */
+.ca-desc strong {
+  color: var(--effect-color);
+  font-style: normal;
+}
+
+/* Sacred weapon note colors already defined */
+
+@media print {
+  /* Keep effect colors in print */
+  .calc-effect, .spell-sug-calc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEM QUICK-FILL UI
+   ══════════════════════════════════════════════════ */
+.mi-search-row {
+  display: grid;
+  grid-template-columns: 2fr 70px 70px 1fr;
+  gap: 6px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.08);
+  align-items: baseline;
+  font-size: 9px;
+}
+.mi-search-row:hover { background: rgba(42,74,107,.06); }
+.mi-search-row.mi-selected { background: rgba(42,74,107,.12); }
+
+.mi-item-name {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.mi-item-slot {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  text-align: center;
+}
+.mi-item-cost {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--accent2);
+  text-align: right;
+}
+.mi-item-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  font-style: italic;
+}

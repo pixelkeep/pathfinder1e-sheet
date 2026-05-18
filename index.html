@@ -58,6 +58,14 @@
     <div id="gear-lookup"></div>
   </div>
 
+  <!-- MAGIC ITEMS QUICK-FILL -->
+  <div class="setup-panel-block">
+    <div class="setup-panel-title">✨ Magic Items Quick-Fill
+      <span class="setup-panel-hint">Rings, amulets, ioun stones, wondrous items → fills AC Items table or Gear</span>
+    </div>
+    <div id="magic-item-lookup"></div>
+  </div>
+
 </div><!-- /setup-panels-wrapper -->
 
 <!-- ═══════════════════════════════════════════════ PAGE 1 ═══ -->
@@ -167,12 +175,17 @@
 
       <!-- HP -->
       <div class="section-box">
-        <div class="section-title">Hit Points</div>
+        <div class="section-title">Hit Points
+          <span id="hp-levelup-hint" class="section-note" style="color:var(--accent2)"></span>
+        </div>
         <div class="hp-grid">
           <label>Max HP <input type="number" id="hp_max" class="num" oninput="updateHP()"></label>
           <label>Current HP <input type="number" id="hp_current" class="num"></label>
           <label>Nonlethal Damage <input type="number" id="hp_nonlethal" class="num"></label>
           <label>DR <input type="text" id="dr" class="short-text"></label>
+        </div>
+        <div id="hp-levelup-info" class="hp-levelup-info" style="display:none">
+          <!-- Populated by JS on Apply Setup -->
         </div>
       </div>
 
@@ -316,7 +329,7 @@
     <!-- RIGHT COLUMN: SKILLS -->
     <div class="right-col">
       <div class="section-box skills-section">
-        <div class="section-title">Skills</div>
+        <div class="section-title">Skills <span class="section-note">1st rank in a class skill (CS) gives +3 bonus</span></div>
         <table class="skills-table">
           <thead>
             <tr>
@@ -372,6 +385,11 @@
   <div class="section-box">
     <div class="section-title">Weapons
       <span class="section-note">Fill via Quick-Fill above · Attack and damage auto-calculate from BAB and ability scores</span>
+      <span class="slot-controls no-print">
+        <button class="slot-btn" onclick="setSlotCount('weapon',-1)" title="Fewer weapon slots">−</button>
+        <span id="weapon-count-display" class="slot-count"></span> slots
+        <button class="slot-btn" onclick="setSlotCount('weapon',+1)" title="More weapon slots">+</button>
+      </span>
     </div>
     <div id="weapons-container"></div>
   </div>
@@ -379,7 +397,12 @@
   <!-- WANDS / STAVES / SCROLLS — combat magic items -->
   <div class="section-box">
     <div class="section-title">Wands, Staves &amp; Combat Magic
-      <span class="section-note">Items used in combat — track charges, attack rolls, DCs, and effects</span>
+      <span class="section-note">Track charges · Attack rolls auto-calculate (ray = DEX to hit, touch = STR)</span>
+      <span class="slot-controls no-print">
+        <button class="slot-btn" onclick="setSlotCount('wand',-1)" title="Fewer wand slots">−</button>
+        <span id="wand-count-display" class="slot-count"></span> slots
+        <button class="slot-btn" onclick="setSlotCount('wand',+1)" title="More wand slots">+</button>
+      </span>
     </div>
     <div id="wands-container"></div>
   </div>
@@ -486,7 +509,7 @@
     <div class="p3-notes-col">
       <div class="section-box flex-grow">
         <div class="section-title">Special Abilities &amp; Traits</div>
-        <textarea id="special_abilities" class="big-textarea" placeholder="Class features, racial traits, deity obedience..."></textarea>
+        <textarea id="special_abilities" class="big-textarea special-abilities-textarea" placeholder="Class features, racial traits, deity obedience..."></textarea>
       </div>
       <div class="section-box">
         <div class="section-title">Notes</div>
@@ -551,9 +574,329 @@
 
 </div><!-- /page4-spells -->
 
-<div id="pages35-container"></div>
+<!-- Pages 3-5 inlined for offline support -->
+<div id="pages35-container">
+<!-- ═══════════════════════════════════════════════ PAGE 3 ═══ -->
+<div class="page" id="page3">
+  <div class="sheet-header">
+    <div class="header-logo">PATHFINDER</div>
+    <div class="header-edition">First Edition</div>
+    <div class="header-sub">Spells &amp; Class Resources — Page 3 (optional)</div>
+  </div>
 
-<script src="data.js"></script>
+  <div class="page3-grid">
+
+    <!-- LEFT: CLASS RESOURCES -->
+    <div class="page3-left">
+
+      <div class="section-box">
+        <div class="section-title">Class Resources</div>
+        <p class="helper-text">Label each pool for your class: Fervor, Bombs/day, Arcane Pool, Rage rounds, Ki points, Grit, Panache, Luck, Channel Energy, etc.</p>
+        <div id="class-resources-container"></div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Daily Abilities / Charges</div>
+        <p class="helper-text">Per-day abilities, wand charges, scrolls, potions used</p>
+        <table class="resource-table">
+          <thead><tr><th>Ability / Item</th><th>Max</th><th>Used</th></tr></thead>
+          <tbody id="daily-abilities-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Extracts (Alchemist) <span class="source-tag">APG</span></div>
+        <p class="helper-text">Extracts work like spells but are brewed separately. Leave blank if not an Alchemist.</p>
+        <table class="spell-slots-table">
+          <thead>
+            <tr><th>Level</th><th>Per Day</th><th>INT bonus</th><th>Slots</th></tr>
+          </thead>
+          <tbody id="extracts-tbody"></tbody>
+        </table>
+        <div class="section-title mt8">Formulae Book</div>
+        <textarea id="formulae_book" class="big-textarea" placeholder="List known formulae by level..."></textarea>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: SPELLS -->
+    <div class="page3-right">
+
+      <div class="section-box">
+        <div class="section-title">Spellcasting</div>
+        <div class="spell-meta-row">
+          <label>Casting ability <input type="text" id="spell_ability" style="width:56px" placeholder="WIS"></label>
+          <label>Caster level <input type="number" id="caster_level" class="num small-num" oninput="calcSpellMeta()"></label>
+          <label>Spell save DC (base) <input type="number" id="spell_dc_base" class="num small-num" readonly title="10 + spell level + ability mod"></label>
+          <label>Concentration <input type="number" id="concentration" class="num small-num" readonly title="Caster level + ability mod"></label>
+        </div>
+        <p class="helper-text">DC = 10 + spell level + ability modifier &nbsp;|&nbsp; Concentration = caster level + ability modifier</p>
+      </div>
+
+      <div id="spell-levels-container"></div>
+
+    </div>
+
+  </div>
+</div><!-- /page3 -->
+
+<!-- ═══════════════════════════════════════════════ PAGE 4 ═══ -->
+<div class="page" id="page4">
+  <div class="sheet-header">
+    <div class="header-logo">PATHFINDER</div>
+    <div class="header-edition">First Edition</div>
+    <div class="header-sub">Combat Reference — Page 4 (optional) &nbsp;·&nbsp; Source: <a href="https://aonprd.com/Rules.aspx?ID=44" target="_blank">aonprd.com</a></div>
+  </div>
+
+  <div class="page4-grid">
+
+    <!-- COL 1: ACTION TYPES -->
+    <div class="ref-col">
+      <div class="section-box">
+        <div class="section-title">Action Types <span class="source-tag">CRB p.181</span></div>
+        <p class="ref-note">Normal round: <strong>1 standard + 1 move</strong>, OR <strong>1 full-round</strong>. Plus <strong>1 swift</strong> and any free actions. A move action can always replace a standard action.</p>
+
+        <div class="action-block">
+          <div class="action-type standard">Standard</div>
+          <ul class="action-list">
+            <li>Attack (melee or ranged)</li>
+            <li>Cast a spell (standard casting time)</li>
+            <li>Use a spell-like / supernatural ability</li>
+            <li>Fight defensively (–4 atk / +2 dodge AC)</li>
+            <li>Total defense (no attacks / +4 dodge AC)</li>
+            <li>Use a magic item (wands, staves)</li>
+            <li>Aid another (+2 to ally atk or AC)</li>
+            <li>Activate a feat (if specified)</li>
+          </ul>
+        </div>
+
+        <div class="action-block">
+          <div class="action-type move">Move</div>
+          <ul class="action-list">
+            <li>Move up to your speed</li>
+            <li>Draw or sheathe a weapon</li>
+            <li>Pick up / retrieve a stored item</li>
+            <li>Open or close a door</li>
+            <li>Stand up from prone (provokes AoO)</li>
+            <li>Mount or dismount</li>
+            <li><em>5-foot step: free, does not provoke AoO</em></li>
+          </ul>
+        </div>
+
+        <div class="action-block">
+          <div class="action-type full">Full-Round</div>
+          <ul class="action-list">
+            <li>Full attack (all iterative attacks)</li>
+            <li>Cast a spell with full-round casting time</li>
+            <li>Run (×4 speed; ×3 in heavy armor)</li>
+            <li>Withdraw (move ×2 speed; first square not AoO)</li>
+          </ul>
+        </div>
+
+        <div class="action-block">
+          <div class="action-type swift">Swift &nbsp;<span class="action-limit">max 1/turn</span></div>
+          <ul class="action-list">
+            <li>Cast a quickened spell</li>
+            <li>Activate certain class abilities (Fervor, Judgment…)</li>
+            <li>Using an immediate on your turn = uses your swift</li>
+          </ul>
+        </div>
+
+        <div class="action-block">
+          <div class="action-type immediate">Immediate &nbsp;<span class="action-limit">any time, off-turn</span></div>
+          <ul class="action-list">
+            <li>Used off your turn → costs <em>next turn's</em> swift</li>
+            <li>Cannot be used while flat-footed</li>
+            <li>Examples: feather fall, certain feats &amp; spells</li>
+          </ul>
+        </div>
+
+        <div class="action-block">
+          <div class="action-type free">Free</div>
+          <ul class="action-list">
+            <li>Drop an item · Speak briefly · Draw ammunition</li>
+            <li>Cease concentration · Minor interactions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: MODIFIERS + AoO + CONCENTRATION -->
+    <div class="ref-col">
+      <div class="section-box">
+        <div class="section-title">Common Combat Modifiers <span class="source-tag">CRB p.178</span></div>
+        <table class="ref-table">
+          <thead><tr><th>Situation</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Flanking</td><td>+2 attack rolls</td></tr>
+            <tr><td>Charge</td><td>+2 atk, –2 AC; straight line ≥10 ft</td></tr>
+            <tr><td>Fighting defensively</td><td>–4 atk / +2 dodge AC</td></tr>
+            <tr><td>Total defense</td><td>No attacks / +4 dodge AC</td></tr>
+            <tr><td>Cover</td><td>+4 AC, +2 Reflex saves</td></tr>
+            <tr><td>Concealment (20%)</td><td>20% miss chance</td></tr>
+            <tr><td>Total concealment (50%)</td><td>50% miss; must guess square</td></tr>
+            <tr><td>Prone vs melee</td><td>–4 AC vs melee</td></tr>
+            <tr><td>Prone vs ranged</td><td>+4 AC vs ranged</td></tr>
+            <tr><td>TWF (no feat)</td><td>–6 main / –10 off-hand</td></tr>
+            <tr><td>TWF (feat, light off)</td><td>–4 main / –4 off-hand</td></tr>
+            <tr><td>Power Attack (BAB +1)</td><td>–1 atk / +2 dmg (+3 two-handed); scales every 4 BAB</td></tr>
+            <tr><td>Shoot into melee</td><td>–4 ranged (negated by Precise Shot)</td></tr>
+            <tr><td>Aid Another</td><td>+2 to ally's atk or AC (standard, hit AC 10)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Attacks of Opportunity <span class="source-tag">CRB p.180</span></div>
+        <p class="ref-note"><strong>1 AoO per round</strong> (more with Combat Reflexes). Resolves before triggering action.</p>
+        <p class="ref-note mt4"><strong>Triggers:</strong> moving through a threatened square · casting a spell · using a ranged weapon in melee · standing up from prone · retrieving an item · using most skills while threatened.</p>
+        <p class="ref-note mt4"><strong>Does NOT trigger:</strong> 5-foot step · withdraw action (first square only) · total defense · swift/free actions (usually) · spells with no somatic component (usually).</p>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Concentration Checks <span class="source-tag">CRB p.206</span></div>
+        <table class="ref-table">
+          <thead><tr><th>Situation</th><th>DC</th></tr></thead>
+          <tbody>
+            <tr><td>Damaged while casting</td><td>10 + damage + spell level</td></tr>
+            <tr><td>Continuous damage</td><td>10 + ½ damage + spell level</td></tr>
+            <tr><td>Cast defensively (no AoO)</td><td>15 + 2× spell level</td></tr>
+            <tr><td>Grappled / pinned</td><td>10 + grappler CMB + spell level</td></tr>
+            <tr><td>Entangled</td><td>15 + spell level</td></tr>
+            <tr><td>Vigorous motion</td><td>10 + spell level</td></tr>
+            <tr><td>Violent motion</td><td>15 + spell level</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 3: CONDITIONS -->
+    <div class="ref-col">
+      <div class="section-box">
+        <div class="section-title">Conditions <span class="source-tag"><a href="https://aonprd.com/Rules.aspx?ID=413" target="_blank">aonprd.com</a></span></div>
+        <table class="conditions-table">
+          <tbody>
+            <tr class="cond-row"><td class="cond-name">Blinded</td><td>–2 AC, lose Dex to AC, –4 Str/Dex skills. Total concealment on all opponents (50% miss). DC 10 Acrobatics to move &gt;half speed.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Confused</td><td>Roll d% each turn: 01–25 normal, 26–50 do nothing, 51–75 attack nearest, 76–100 attack self. No AoO.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Dazed</td><td>No actions. AC unchanged. Still threatens area.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Entangled</td><td>–2 atk, –4 Dex, cannot move (usually). Casting: DC 15 + spell level Concentration.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Exhausted</td><td>–6 Str &amp; Dex. Cannot run or charge. After 1 h rest → Fatigued.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Fatigued</td><td>–2 Str &amp; Dex. Cannot run or charge. After 8 h rest → recovered.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Frightened</td><td>–2 atk, saves, skills, ability checks. Must flee if possible.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Grappled</td><td>Cannot move. –2 atk, –4 Dex. No AoO, no two-handed actions. Casting: DC 10 + grappler CMB + spell level.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Nauseated</td><td>Cannot attack, cast, or concentrate. Only 1 move action/turn.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Paralyzed</td><td>Str &amp; Dex = 0. Helpless — melee attacks auto-crit. Flying creatures fall.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Pinned</td><td>Helpless (–4 AC, lose Dex to AC). Verbal/mental only. Somatic spells need Concentration DC 10 + CMB + spell level.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Prone</td><td>–4 melee atk. No ranged (except crossbow). –4 AC vs melee / +4 AC vs ranged. Standing up provokes AoO.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Shaken</td><td>–2 atk, saves, skill checks, ability checks.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Sickened</td><td>–2 atk, damage, saves, skill checks, ability checks.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Staggered</td><td>Only 1 move OR standard/turn (not both, not full-round). Free/swift/immediate still ok.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Stunned</td><td>Drop all held items. No actions. –2 AC, lose Dex to AC.</td></tr>
+            <tr class="cond-row"><td class="cond-name">Unconscious</td><td>Helpless. 0 HP = disabled (1 action/turn; strenuous = 1 damage). Below 0 = dying (–1 HP/round). –CON = dead.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /page4 -->
+
+<!-- ═══════════════════════════════════════════════ PAGE 5 ═══ -->
+<div class="page" id="page5">
+  <div class="sheet-header">
+    <div class="header-logo">PATHFINDER</div>
+    <div class="header-edition">First Edition</div>
+    <div class="header-sub">Character Cheatsheet — Page 5 (optional)</div>
+  </div>
+
+  <div class="page5-grid">
+
+    <div class="page5-col">
+
+      <div class="section-box">
+        <div class="section-title">My Go-To Actions</div>
+        <p class="helper-text">Your most-used moves in one place. Fill in once, reference every round.</p>
+        <table class="my-actions-table">
+          <thead><tr><th>Action / Ability</th><th>Type</th><th>Roll / DC / Damage</th><th>Notes</th></tr></thead>
+          <tbody id="my-actions-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Active Buffs &amp; Conditions Tracker</div>
+        <p class="helper-text">Track temporary effects during a session. Erase between sessions.</p>
+        <table class="buff-table">
+          <thead><tr><th>Effect / Spell</th><th>Bonus / Penalty</th><th>Duration / Source</th></tr></thead>
+          <tbody id="buff-tracker-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="page5-col">
+
+      <div class="section-box">
+        <div class="section-title">Carrying Capacity <span class="source-tag">CRB p.170</span></div>
+        <p class="ref-note">Calculated from STR score on page 1. Medium load: –3 AC, max Dex +3, –3 check penalty, ×4 run. Heavy load: –6 AC, max Dex +1, –6 check penalty, ×3 run.</p>
+        <div id="carry-weight-display" class="carry-table"></div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Spellcasting Quick Reference <span class="source-tag">CRB p.205</span></div>
+        <table class="ref-table">
+          <thead><tr><th>Casting time</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>1 standard action</td><td>Standard action; provokes AoO</td></tr>
+            <tr><td>1 full round</td><td>Full-round; effect at start of next turn</td></tr>
+            <tr><td>Swift / immediate</td><td>Swift or immediate; does not provoke AoO</td></tr>
+            <tr><td>1 minute+</td><td>Cannot be used in combat</td></tr>
+          </tbody>
+        </table>
+        <p class="ref-note mt4"><strong>Cast defensively:</strong> Concentration DC 15 + 2× spell level → no AoO. Failure wastes action; slot not lost.</p>
+        <p class="ref-note mt4"><strong>Dismiss a spell:</strong> Standard action. <strong>Counterspell:</strong> Readied standard; same spell or Dispel Magic.</p>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Common Skill DCs</div>
+        <table class="ref-table">
+          <thead><tr><th>Skill</th><th>DC / Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Heal — stabilise</td><td>DC 15; stops dying</td></tr>
+            <tr><td>Heal — long rest</td><td>DC 15; 2×HP/level per 8 h</td></tr>
+            <tr><td>Perception</td><td>Opposed by Stealth</td></tr>
+            <tr><td>Stealth</td><td>–5 at full speed; opposed by Perception</td></tr>
+            <tr><td>Bluff — feint</td><td>Opposed Sense Motive; success = target loses Dex to AC</td></tr>
+            <tr><td>Disable Device</td><td>Simple lock DC 20 · Good lock DC 30</td></tr>
+            <tr><td>Diplomacy</td><td>Varies by starting attitude; 1 minute minimum</td></tr>
+            <tr><td>Knowledge (recall)</td><td>DC 10 basic; DC 15 uncommon; +5 per rarity tier</td></tr>
+            <tr><td>Climb (rope/ladder)</td><td>DC 5; handholds DC 15; smooth wall DC 25</td></tr>
+            <tr><td>Swim (rough water)</td><td>DC 15/round; stormy DC 20; fail by 5 = goes under</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Campaign Notes / House Rules</div>
+        <textarea id="campaign_notes" class="big-textarea" placeholder="House rules, recurring NPCs, locations, loot to identify..."></textarea>
+      </div>
+
+    </div>
+
+  </div>
+</div><!-- /page5 -->
+
+</div>
+
+<!-- Game data — split by category for maintainability -->
+<script src="data/tables.js"></script>
+<script src="data/classes.js"></script>
+<script src="data/races.js"></script>
+<script src="data/deities.js"></script>
+<script src="data/equipment.js"></script>
+<script src="data/items.js"></script>
+<script src="data/feats.js"></script>
+<script src="data/class_features.js"></script>
+<script src="data/spells.js"></script>
 <script src="sheet.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -562,18 +905,8 @@
     const pv = document.getElementById('sheet-version-print');
     if (tv) tv.textContent = v;
     if (pv) pv.textContent = v;
+    if (typeof initPages35 === 'function') initPages35();
   });
-
-  fetch('pages35.html')
-    .then(r => r.text())
-    .then(html => {
-      document.getElementById('pages35-container').innerHTML = html;
-      if (typeof initPages35 === 'function') initPages35();
-    })
-    .catch(() => {
-      const d = document.getElementById('pages35-container');
-      d.innerHTML = '<p class="offline-note no-print" style="color:#8b6f3e;text-align:center;padding:12px;font-family:monospace;font-size:11px;">💡 Pages 3–5 load via GitHub Pages or run: <code>python3 -m http.server</code> · then <a href="http://localhost:8000">localhost:8000</a></p>';
-    });
 </script>
 </body>
 </html>
