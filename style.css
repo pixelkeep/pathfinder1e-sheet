@@ -980,24 +980,24 @@ textarea.small-textarea  { min-height: 36px; }
 
 .setup-info,
 .setup-info-row {
-  margin-top: 5px;
+  margin-top: 6px;
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  min-height: 20px;
+  gap: 3px 3px;
   align-items: flex-start;
+  line-height: normal;
 }
 
 .setup-info-tag {
+  display: inline-block;
   font-family: var(--font-mono);
   font-size: 8px;
   background: var(--cream);
   border: 1px solid var(--border-light);
-  padding: 1px 5px;
+  padding: 2px 6px;
   color: var(--ink-light);
   white-space: nowrap;
-  line-height: 1.8;
-  flex-shrink: 0;
+  border-radius: 2px;
 }
 
 .setup-info-tag strong {
@@ -1309,12 +1309,9 @@ textarea.small-textarea  { min-height: 36px; }
   background: rgba(139,26,26,.06);
   border-color: var(--accent);
   color: var(--accent);
+  font-weight: 600;
   cursor: help;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 420px;
-  font-weight: 600;
 }
 
 /* Ability tag before skill name */

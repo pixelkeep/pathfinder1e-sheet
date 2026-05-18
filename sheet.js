@@ -1601,7 +1601,11 @@ function showSetupInfo() {
       html += `<span class="setup-info-tag">🏛 ${row[2]}</span>`;
     }
     const perk = typeof DEITY_PERKS !== 'undefined' ? DEITY_PERKS[dn] : null;
-    if (perk) html += `<span class="setup-info-tag deity-perk" title="${perk.obedience}">🙏 ${perk.perk}</span>`;
+    if (perk) {
+      // Show shortened perk — extract the key bonus (e.g. "+4 sacred bonus on STR checks")
+      const shortPerk = perk.perk.length > 45 ? perk.perk.substring(0, 45) + '…' : perk.perk;
+      html += `<span class="setup-info-tag deity-perk" title="Perk: ${perk.perk}&#10;Obedience: ${perk.obedience}">🙏 ${shortPerk}</span>`;
+    }
   }
   info.innerHTML = html || '<span class="setup-info-tag" style="opacity:.5">Select race, class and deity to see details</span>';
 }
