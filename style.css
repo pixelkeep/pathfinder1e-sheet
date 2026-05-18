@@ -932,6 +932,49 @@ textarea.small-textarea  { min-height: 36px; }
 }
 .setup-apply-btn:hover { background: var(--accent2); }
 
+/* ══════════════════════════════════════════════════
+   CHARACTER SETUP ROW — horizontal compact layout
+   ══════════════════════════════════════════════════ */
+.setup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 100px;
+}
+
+.setup-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.setup-field select,
+.setup-field input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 3px 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.setup-field select:focus,
+.setup-field input:focus {
+  border-color: var(--accent2);
+  outline: none;
+}
+
 .setup-info {
   margin-top: 5px;
   display: flex;

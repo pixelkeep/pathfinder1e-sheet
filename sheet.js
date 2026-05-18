@@ -109,40 +109,79 @@ function buildSetupPanel() {
     .join('');
 
   container.innerHTML = `
-    <div class="setup-grid">
-      <label class="setup-label">RACE
+    <div class="setup-row">
+      <div class="setup-field">
+        <span class="setup-field-label">RACE</span>
         <select id="setup_race" onchange="onRaceChange()">
           <option value="">— select —</option>
           ${raceOpts}
         </select>
-      </label>
-      <label class="setup-label">CLASS
+      </div>
+      <div class="setup-field">
+        <span class="setup-field-label">CLASS</span>
         <select id="setup_class" onchange="onClassChange()">
           <option value="">— select —</option>
           ${classOpts}
         </select>
-      </label>
-      <label class="setup-label">LEVEL
+      </div>
+      <div class="setup-field" style="flex:0 0 auto">
+        <span class="setup-field-label">LEVEL</span>
         <input type="number" id="setup_level" min="1" max="20" value="1"
-               style="width:42px" oninput="onLevelChange()">
-      </label>
-      <label class="setup-label">SIZE
-        <select id="setup_size" onchange="onSizeChange()">
+               style="width:46px" oninput="onLevelChange()">
+      </div>
+      <div class="setup-field" style="flex:0 0 auto">
+        <span class="setup-field-label">SIZE</span>
+        <select id="setup_size" onchange="onSizeChange()" style="width:90px">
           <option>Fine</option><option>Diminutive</option><option>Tiny</option>
           <option>Small</option><option value="Medium" selected>Medium</option>
           <option>Large</option><option>Huge</option><option>Gargantuan</option><option>Colossal</option>
         </select>
-      </label>
-      <label class="setup-label">DEITY
-        <select id="setup_deity" onchange="onDeityChange()" style="max-width:220px">
+      </div>
+      <div class="setup-field">
+        <span class="setup-field-label">DEITY</span>
+        <select id="setup_deity" onchange="onDeityChange()">
           <option value="">— none —</option>
           ${deityOpts}
         </select>
-      </label>
-      <button onclick="applySetup()" class="apply-btn">APPLY SETUP</button>
+      </div>
+      <button onclick="applySetup()" class="setup-apply-btn">APPLY SETUP</button>
     </div>
     <div id="setup-info" class="setup-info-row"></div>
   `;
+}
+
+function buildMagicItemLookup() {
+  const container = document.getElementById('magic-item-lookup');
+  if (!container) return;
+
+  const slotOpts = ['','Belt','Body','Chest','Eyes','Feet','Hands',
+    'Head','Headband','Neck','Ring','Shoulders','Slotless','Wrist','Armor','Shield']
+    .map(s => `<option value="${s}">${s || '— all slots —'}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="gear-lookup-row" style="flex-wrap:wrap;gap:6px;align-items:center">
+      <input type="text" id="mi_lookup_search" style="width:200px;font-family:var(--font-mono);font-size:10px;border:1px solid var(--border-light);padding:2px 6px;background:var(--cream)"
+             placeholder="Search: dusty rose, belt of giant…" oninput="searchMagicItemUI()">
+      <select id="mi_lookup_slot" onchange="searchMagicItemUI()" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px 4px">
+        ${slotOpts}
+      </select>
+      <label style="font-family:var(--font-mono);font-size:9px;display:flex;align-items:center;gap:3px">
+        Fill to
+        <select id="mi_lookup_target" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px 4px">
+          <option value="ac">AC Items table</option>
+          <option value="gear">Gear list</option>
+        </select>
+        Slot
+        <select id="mi_lookup_acslot" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px 4px">
+          ${Array.from({length: AC_ITEM_COUNT}, (_,i) => `<option value="${i}">Slot ${i+1}</option>`).join('')}
+        </select>
+        <button onclick="applyMagicItemLookup()" style="background:var(--accent2);color:#fff;border:none;padding:3px 10px;font-family:var(--font-mono);font-size:9px;cursor:pointer">FILL</button>
+      </label>
+    </div>
+    <div id="mi_search_results" style="margin-top:4px;max-height:140px;overflow-y:auto;font-size:9px"></div>
+  `;
+
+  searchMagicItemUI();
 }
 
 function buildWeaponLookup() {
