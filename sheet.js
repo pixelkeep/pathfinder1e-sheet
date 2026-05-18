@@ -105,7 +105,7 @@ function buildSetupPanel() {
 
   // Deity options
   const deityOpts = (typeof DEITIES !== 'undefined' ? DEITIES : [])
-    .map(d => `<option value="${d[0]}" data-align="${d[1]}" data-domains="${d[2]}" data-weapon="${d[4]}">${d[0]} (${d[1]}) — ${d[4]}</option>`)
+    .map(d => `<option value="${d[0]}" data-align="${d[1]}" data-domains="${d[2]}" data-weapon="${d[3]}">${d[0]} (${d[1]}) — ${d[3]}</option>`)
     .join('');
 
   container.innerHTML = `
@@ -1546,3 +1546,714 @@ buildWeapons = function() {
   });
   updateSlotCountDisplay();
 };
+
+/* ══════════════════════════════════════════════════
+   SETUP EVENT HANDLERS + APPLY SETUP
+   ══════════════════════════════════════════════════ */
+
+function onRaceChange()  { showSetupInfo(); }
+function onClassChange() { showSetupInfo(); }
+function onLevelChange() { showSetupInfo(); }
+function onSizeChange()  {}
+
+function onDeityChange() {
+  const el = document.getElementById('setup_deity');
+  if (el && el.value) set('deity', el.value);
+  showSetupInfo();
+}
+
+function showSetupInfo() {
+  const info = document.getElementById('setup-info');
+  if (!info) return;
+  const raceKey  = (document.getElementById('setup_race')  || {}).value || '';
+  const classKey = (document.getElementById('setup_class') || {}).value || '';
+  const level    = parseInt((document.getElementById('setup_level') || {}).value || '1') || 1;
+  const deityEl  = document.getElementById('setup_deity');
+  const race = (typeof RACES   !== 'undefined') ? RACES[raceKey]   : null;
+  const cls  = (typeof CLASSES !== 'undefined') ? CLASSES[classKey] : null;
+  let html = '';
+
+  if (race) {
+    const modStr = Object.entries(race.abilityMods)
+      .filter(([,v]) => v !== 0)
+      .map(([k,v]) => (v>0?'+':'')+v+' '+k.toUpperCase()).join(', ');
+    if (modStr) html += `<span class="setup-info-tag">📊 ${modStr}</span>`;
+    html += `<span class="setup-info-tag">👁 ${race.vision}</span>`;
+    html += `<span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
+  }
+  if (cls) {
+    const bab   = typeof getBAB        !== 'undefined' ? getBAB(classKey,level)        : '?';
+    const saves = typeof getClassSaves !== 'undefined' ? getClassSaves(classKey,level) : {fort:'?',ref:'?',will:'?'};
+    html += `<span class="setup-info-tag">⚔ BAB +${bab}</span>`;
+    html += `<span class="setup-info-tag">💛 Fort +${saves.fort} / Ref +${saves.ref} / Will +${saves.will}</span>`;
+    html += `<span class="setup-info-tag">🎲 HD d${cls.hd} · ${cls.skillsPerLevel} skills/lvl</span>`;
+    if (cls.spellAbility) html += `<span class="setup-info-tag">✨ Spells: ${cls.spellAbility.toUpperCase()}</span>`;
+    const xp = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level) : 0;
+    if (xp) html += `<span class="setup-info-tag">📈 XP to next: ${xp.toLocaleString()}</span>`;
+    const bf = typeof getBonusFeatCount !== 'undefined' ? getBonusFeatCount(classKey,level) : 0;
+    if (bf>0) html += `<span class="setup-info-tag">🏅 ${bf} bonus feat${bf>1?'s':''}</span>`;
+  }
+  if (deityEl && deityEl.value) {
+    const dn  = deityEl.value;
+    const row = typeof DEITIES !== 'undefined' ? DEITIES.find(d=>d[0]===dn) : null;
+    if (row) {
+      html += `<span class="setup-info-tag">⚔ Favored weapon: <strong>${row[3]}</strong></span>`;
+      html += `<span class="setup-info-tag">🏛 ${row[2]}</span>`;
+    }
+    const perk = typeof DEITY_PERKS !== 'undefined' ? DEITY_PERKS[dn] : null;
+    if (perk) html += `<span class="setup-info-tag deity-perk" title="${perk.obedience}">🙏 ${perk.perk}</span>`;
+  }
+  info.innerHTML = html || '<span class="setup-info-tag" style="opacity:.5">Select race, class and deity to see details</span>';
+}
+
+function applySetup() {
+  const raceKey  = (document.getElementById('setup_race')  || {}).value || '';
+  const classKey = (document.getElementById('setup_class') || {}).value || '';
+  const level    = parseInt((document.getElementById('setup_level') || {}).value) || 1;
+  const deityEl  = document.getElementById('setup_deity');
+  const race = typeof RACES   !== 'undefined' ? RACES[raceKey]   : null;
+  const cls  = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+
+  if (!race && !cls) { alert('Select at least a race or class first.'); return; }
+
+  // Deity
+  if (deityEl && deityEl.value) set('deity', deityEl.value);
+
+  // Class
+  if (cls) {
+    set('charClass', cls.name);
+    set('charLevel', level);
+    set('bab', typeof getBAB !== 'undefined' ? getBAB(classKey,level) : 0);
+    const saves = typeof getClassSaves !== 'undefined' ? getClassSaves(classKey,level) : {fort:0,ref:0,will:0};
+    set('fort_base', saves.fort);
+    set('ref_base',  saves.ref);
+    set('will_base', saves.will);
+    if (cls.spellAbility) set('spell_ability', cls.spellAbility.toUpperCase());
+    set('caster_level', level);
+    const xp = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level) : 0;
+    if (xp) set('xp_next', xp);
+    if (cls.classSkills) markClassSkills(cls.classSkills);
+  }
+
+  // Race
+  if (race) {
+    set('race', race.name);
+
+    // Idempotent ability mods
+    const prevKey  = val('_applied_race');
+    const prevRace = prevKey && typeof RACES !== 'undefined' ? RACES[prevKey] : null;
+    ['str','dex','con','int','wis','cha'].forEach(ab => {
+      const raw = val(ab+'_score');
+      if (raw === '') return;
+      let score = parseInt(raw) || 0;
+      if (prevRace && prevKey !== raceKey) score -= (prevRace.abilityMods[ab] || 0);
+      const mod = race.abilityMods[ab] || 0;
+      if (prevKey !== raceKey && mod !== 0) { score += mod; set(ab+'_score', score); }
+    });
+    set('_applied_race', raceKey);
+
+    // Size + speed
+    set('size', race.size);
+    const sizeEl = document.getElementById('setup_size');
+    if (sizeEl) sizeEl.value = race.size;
+    set('speed_land',  race.speed);
+    set('speed_armor', race.size === 'Small' ? race.speed : Math.max(0, race.speed - 10));
+
+    // Languages
+    if (typeof buildLanguagePicker === 'function')
+      buildLanguagePicker(race.languages, race.bonusLanguages || []);
+
+    // Racial traits
+    const traitText = (race.traits || []).join('\n');
+    let sa = val('special_abilities');
+    const marker = '--- Racial Traits ---';
+    if (sa.includes(marker)) sa = sa.substring(0, sa.indexOf(marker)).trim();
+    set('special_abilities', (sa ? sa + '\n\n' : '') + marker + '\n' + traitText);
+  }
+
+  // Deity perk
+  if (deityEl && deityEl.value) {
+    const perk = typeof DEITY_PERKS !== 'undefined' ? DEITY_PERKS[deityEl.value] : null;
+    if (perk) {
+      const sa = val('special_abilities');
+      const note = `[Deity Obedience — ${deityEl.value}]\n${perk.perk}\n⚠ Requires: ${perk.obedience}`;
+      if (!sa.includes('Deity Obedience')) set('special_abilities', sa ? sa+'\n\n'+note : note);
+      applyDeityBonuses(perk, deityEl.value);
+    }
+  }
+
+  // Recalculate
+  calcAll(); calcSaves(); calcCombat();
+
+  // Re-affirm fields that page rebuild might clobber
+  if (race)  { set('race', race.name); set('speed_land', race.speed); }
+  if (cls)   { set('charClass', cls.name); set('charLevel', level); }
+  if (deityEl && deityEl.value) set('deity', deityEl.value);
+
+  // Adaptive pages
+  if (typeof afterApplySetup === 'function') afterApplySetup(classKey, level);
+
+  alert('Setup applied! Check ability scores, class skills (dots), BAB and saves.');
+}
+
+function markClassSkills(classSkillIds) {
+  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
+  (classSkillIds || []).forEach(id => {
+    const dot = document.getElementById('cs_'+id);
+    if (dot) dot.classList.add('checked');
+  });
+  calcSkills();
+}
+
+function updateHPLevelupInfo(classKey, level) {
+  const info = document.getElementById('hp-levelup-info');
+  const hint = document.getElementById('hp-levelup-hint');
+  const cls  = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  if (!cls || !info) return;
+  const conMod = getEffectiveMod('con');
+  const hd = cls.hd;
+  info.style.display = '';
+  info.innerHTML = `
+    <span class="hp-info-tag">HD: d${hd}</span>
+    <span class="hp-info-tag">CON mod: ${conMod>=0?'+':''}${conMod}</span>
+    <span class="hp-info-tag">Per level: max ${hd+conMod} · avg ${Math.floor(hd/2)+1+conMod}</span>
+  `;
+  if (hint) hint.textContent = `d${hd} + CON mod per level`;
+}
+
+/* ══════════════════════════════════════════════════
+   ADAPTIVE PAGE 2 — Class Abilities + Feats
+   ══════════════════════════════════════════════════ */
+
+let _currentClass = '';
+let _currentLevel = 1;
+
+function getRegularFeatCount(level) {
+  let count = 1;
+  for (let l = 3; l <= level; l += 2) count++;
+  return count;
+}
+
+function afterApplySetup(classKey, level) {
+  _currentClass = classKey;
+  _currentLevel = level;
+  updateHPLevelupInfo(classKey, level);
+  buildFeatsSection(classKey, level);
+  buildClassAbilitiesSection(classKey, level);
+  buildClassSpecificBlock(classKey, level);
+  buildPage4Spells(classKey, level);
+}
+
+function buildAdaptivePage2(classKey, level) {
+  afterApplySetup(classKey, level);
+}
+
+function buildFeatsSection(classKey, level) {
+  const container = document.getElementById('feats-container');
+  if (!container) return;
+  const regularFeats   = getRegularFeatCount(level);
+  const bonusFeats     = typeof getBonusFeatCount !== 'undefined' ? getBonusFeatCount(classKey, level) : 0;
+  const totalFeatSlots = regularFeats + bonusFeats;
+  const label = document.getElementById('feat-count-label');
+  if (label) label.textContent = `${regularFeats} regular + ${bonusFeats} bonus = ${totalFeatSlots} total at level ${level}`;
+
+  const bonusFeatAbilities = typeof CLASS_ABILITIES !== 'undefined' ?
+    (CLASS_ABILITIES[classKey] || []).filter(a => a.type==='bonus_feat' && a.level<=level).sort((a,b)=>a.level-b.level) : [];
+
+  container.innerHTML = '';
+  for (let i = 0; i < totalFeatSlots; i++) {
+    const isBonus  = i >= regularFeats;
+    const bonusIdx = i - regularFeats;
+    const bonusAbil = isBonus ? bonusFeatAbilities[bonusIdx] : null;
+    const gainedLevel = isBonus ? (bonusAbil ? bonusAbil.level : '?') : (i===0 ? 1 : 1+(i*2)-1);
+    const existing = { name: val(`feat_name_${i}`), desc: val(`feat_desc_${i}`), type: val(`feat_type_${i}`), wpn: val(`feat_wpn_${i}`) };
+    const isWeapon = existing.type === 'weapon';
+    const div = document.createElement('div');
+    div.className = 'feat-row' + (isBonus ? ' feat-bonus' : '');
+    div.innerHTML = `
+      <div class="feat-row-header">
+        <span class="feat-level-badge ${isBonus?'feat-badge-bonus':'feat-badge-regular'}"
+              title="${isBonus?(bonusAbil?.description||'Bonus feat'):`Regular feat (level ${gainedLevel})`}">
+          ${isBonus?`B${bonusIdx+1}`:`L${gainedLevel}`}
+        </span>
+        <div class="feat-search-wrap" style="position:relative;flex:1;min-width:80px">
+          <input type="text" id="feat_name_${i}" class="feat-name-input"
+                 value="${(existing.name||'').replace(/"/g,'&quot;')}"
+                 placeholder="${isBonus?'Bonus feat…':'Type to search feats…'}"
+                 oninput="onFeatSearch(${i})" autocomplete="off">
+          <div id="feat_suggestions_${i}" class="feat-suggestions" style="display:none"></div>
+        </div>
+        <select id="feat_type_${i}" class="feat-type-select" onchange="onFeatTypeChange(${i})">
+          <option value=""       ${!existing.type?'selected':''}>—</option>
+          <option value="combat" ${existing.type==='combat'?'selected':''}>Combat</option>
+          <option value="weapon" ${existing.type==='weapon'?'selected':''}>Weapon</option>
+          <option value="metamagic" ${existing.type==='metamagic'?'selected':''}>Metamagic</option>
+          <option value="general"   ${existing.type==='general'?'selected':''}>General</option>
+          <option value="item"      ${existing.type==='item'?'selected':''}>Item Creation</option>
+        </select>
+        <select id="feat_wpn_${i}" class="feat-wpn-select ${isWeapon?'':'hidden'}"
+                title="Link to weapon slot" onchange="onFeatWeaponLink(${i})">
+          <option value="">— weapon slot —</option>
+          ${Array.from({length:WEAPON_COUNT},(_,w)=>`<option value="${w}" ${existing.wpn==w?'selected':''}>Weapon ${w+1}: ${val('wpn_name_'+w)||'(empty)'}</option>`).join('')}
+        </select>
+      </div>
+      <input type="text" id="feat_desc_${i}" class="feat-desc-input"
+             value="${(existing.desc||'').replace(/"/g,'&quot;')}"
+             placeholder="Brief effect…">
+    `;
+    container.appendChild(div);
+  }
+}
+
+function onFeatTypeChange(i) {
+  const type = val('feat_type_'+i);
+  const sel  = document.getElementById('feat_wpn_'+i);
+  if (sel) sel.classList.toggle('hidden', type !== 'weapon');
+}
+
+function onFeatWeaponLink(i) { updateWeaponFeatBonuses(); }
+
+function onFeatSearch(i) {
+  const query = val('feat_name_'+i);
+  const sug   = document.getElementById('feat_suggestions_'+i);
+  if (!sug || typeof searchFeats === 'undefined' || query.length < 2) {
+    if (sug) sug.style.display = 'none'; return;
+  }
+  const results = searchFeats(query);
+  if (!results.length) { sug.style.display = 'none'; return; }
+  sug.innerHTML = results.map(f => {
+    const sn = f.name.replace(/'/g,"&#39;");
+    return `<div class="feat-suggestion-item" onclick="selectFeat(${i},'${sn}')">
+      <span class="feat-sug-name">${f.name}</span>
+      <span class="feat-sug-type">${f.type}</span>
+      <span class="feat-sug-benefit">${f.benefit.substring(0,60)}${f.benefit.length>60?'…':''}</span>
+    </div>`;
+  }).join('');
+  sug.style.display = 'block';
+}
+
+function selectFeat(i, name) {
+  name = name.replace(/&#39;/g,"'");
+  set('feat_name_'+i, name);
+  const feat = typeof getFeatByName !== 'undefined' ? getFeatByName(name) : null;
+  if (feat) {
+    set('feat_desc_'+i, feat.benefit);
+    const ts = document.getElementById('feat_type_'+i);
+    if (ts) ts.value = feat.type==='combat'?'combat':feat.type==='metamagic'?'metamagic':feat.type==='item_creation'?'item':'general';
+    if (feat.weaponLinked) { const ws=document.getElementById('feat_wpn_'+i); if(ws) ws.classList.remove('hidden'); }
+    onFeatTypeChange(i);
+  }
+  const sug = document.getElementById('feat_suggestions_'+i);
+  if (sug) sug.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.feat-search-wrap'))
+    document.querySelectorAll('.feat-suggestions').forEach(el => el.style.display='none');
+  if (!e.target.closest('.trait-search-wrap'))
+    document.querySelectorAll('[id$="_suggestions"]').forEach(el => {
+      if (el.id.startsWith('trait')) el.style.display='none';
+    });
+});
+
+function updateWeaponFeatBonuses() {
+  const atkBonuses = Array(WEAPON_COUNT).fill(0);
+  const dmgBonuses = Array(WEAPON_COUNT).fill(0);
+  for (let fi = 0; fi < 30; fi++) {
+    const featName = val('feat_name_'+fi);
+    const wpnSlot  = val('feat_wpn_'+fi);
+    if (!featName || wpnSlot==='') continue;
+    const si = parseInt(wpnSlot);
+    if (isNaN(si)) continue;
+    const feat = typeof getFeatByName!=='undefined' ? getFeatByName(featName) : null;
+    if (!feat) continue;
+    if (feat.attackMod) atkBonuses[si] += feat.attackMod;
+    if (feat.damageMod) dmgBonuses[si] += feat.damageMod;
+  }
+  for (let wi = 0; wi < WEAPON_COUNT; wi++) {
+    if (atkBonuses[wi]) { set('wpn_feat_'+wi, atkBonuses[wi]); calcWeapon(wi); }
+    if (dmgBonuses[wi]) { set('wpn_dmg_feat_'+wi, dmgBonuses[wi]); calcWeapon(wi); }
+  }
+}
+
+function restoreFeatData(feats) {
+  if (!feats) return;
+  feats.forEach((f,i) => {
+    set('feat_name_'+i, f.name||'');
+    set('feat_desc_'+i, f.desc||'');
+    set('feat_type_'+i, f.type||'');
+    set('feat_wpn_'+i,  f.wpn ||'');
+    onFeatTypeChange(i);
+  });
+}
+
+function buildClassAbilitiesSection(classKey, level) {
+  const container = document.getElementById('class-abilities-container');
+  if (!container) return;
+  const label = document.getElementById('class-abilities-label');
+  const cls   = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  if (label && cls) label.textContent = cls.name + ' level ' + level;
+
+  const abilities = typeof getClassAbilitiesForLevel !== 'undefined' ?
+    getClassAbilitiesForLevel(classKey, level) : [];
+  if (!abilities.length) {
+    container.innerHTML = '<p class="helper-text">Apply Setup to populate class abilities.</p>';
+    return;
+  }
+
+  const features = typeof getClassFeatures !== 'undefined' ? getClassFeatures(classKey) : null;
+  let html = '';
+  if (features) {
+    const sc = features.spellcasting, prof = features.proficiencies;
+    html += `<div class="cf-block">
+      <div class="cf-section-title">Class Features</div>
+      <div class="cf-row"><span class="cf-label">Weapons</span><span class="cf-value">${prof.weapons}</span></div>
+      <div class="cf-row"><span class="cf-label">Armor</span><span class="cf-value">${prof.armor}</span></div>
+      ${sc ? `<div class="cf-row"><span class="cf-label">Spellcasting</span><span class="cf-value">${sc.type} · ${sc.ability} · max lvl ${sc.maxLevel}</span></div>` : ''}
+      ${features.specialRules.slice(0,3).map(r=>`<div class="cf-row"><span class="cf-label">${r.name}</span><span class="cf-note">${r.text}</span></div>`).join('')}
+    </div><div class="cf-divider"></div>`;
+  }
+
+  const groups = { resource:[], weapon:[], armor:[], active:[], passive:[] };
+  abilities.forEach(a => { if (groups[a.type]) groups[a.type].push(a); });
+  const seen = new Set();
+  const addGroup = (list, cls, badge, label) => {
+    if (!list.length) return '';
+    let g = '<div class="ca-group">';
+    list.forEach(a => {
+      if (seen.has(a.name)) return; seen.add(a.name);
+      const mods = {wis:getEffectiveMod('wis'),int:getEffectiveMod('int'),cha:getEffectiveMod('cha'),con:getEffectiveMod('con')};
+      const pools = typeof getResourcePools!=='undefined' ? getResourcePools(classKey,level,mods) : [];
+      const pool  = a.resource ? pools.find(p=>p.id===a.resource) : null;
+      g += `<div class="ca-row ca-${cls}">
+        <span class="ca-badge ca-badge-${cls}">${badge}</span>
+        <span class="ca-name">${a.name}</span>
+        <span class="ca-desc">${a.description}</span>
+        ${pool ? `<span class="ca-pool-display">${pool.max}/day</span>` : ''}
+      </div>`;
+    });
+    return g + '</div>';
+  };
+  html += addGroup(groups.resource, 'resource', 'Pool', 'Pool');
+  html += addGroup(groups.weapon,   'weapon',   'Wpn',  'Weapon');
+  html += addGroup(groups.armor,    'armor',    'Arm',  'Armor');
+  html += addGroup(groups.active,   'active',   'Act',  'Active');
+  html += addGroup(groups.passive,  'passive',  '—',    'Passive');
+  container.innerHTML = html;
+}
+
+function buildClassSpecificBlock(classKey, level) {
+  const container = document.getElementById('class-specific-block');
+  if (!container) return;
+  container.innerHTML = '';  // simplified — full warpriest block omitted for brevity
+}
+
+function buildPage4Spells(classKey, level) {
+  const page = document.getElementById('page4-spells');
+  if (!page) return;
+  const nonCasters = ['fighter','barbarian','rogue','monk','gunslinger','swashbuckler','slayer','cavalier','samurai'];
+  page.style.display = nonCasters.includes(classKey) ? 'none' : '';
+}
+
+function buildSpellAutocomplete(inputId, onSelect) {
+  const input = document.getElementById(inputId);
+  if (!input || input.dataset.spellWrapped) return;
+  input.dataset.spellWrapped = '1';
+  const wrap = document.createElement('div');
+  wrap.style.position = 'relative';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  const sug = document.createElement('div');
+  sug.className = 'spell-suggestions';
+  sug.style.display = 'none';
+  wrap.appendChild(sug);
+  input.addEventListener('input', () => {
+    const q = input.value;
+    if (typeof searchSpells==='undefined' || q.length<2) { sug.style.display='none'; return; }
+    const results = searchSpells(q);
+    if (!results.length) { sug.style.display='none'; return; }
+    sug.innerHTML = results.map(s => {
+      const lvlStr = Object.entries(s.level).map(([k,v])=>`${k} ${v}`).join(', ');
+      return `<div class="feat-suggestion-item" onclick="selectSpellInto('${inputId}','${s.name.replace(/'/g,"\\'")}')" >
+        <span class="feat-sug-name">${s.name}</span>
+        <span class="feat-sug-type">${s.school.split(' ')[0]}</span>
+        ${s.calcValue?`<span class="spell-sug-calc">${s.calcValue}</span>`:''}
+        <span class="feat-sug-benefit">${lvlStr}</span>
+      </div>`;
+    }).join('');
+    sug.style.display = 'block';
+  });
+  input.addEventListener('blur', () => setTimeout(()=>{ sug.style.display='none'; }, 200));
+}
+
+function selectSpellInto(inputId, name) {
+  set(inputId, name);
+  const spell = typeof getSpellByName!=='undefined' ? getSpellByName(name) : null;
+  if (!spell) return;
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const wandBlock = input.closest('.wand-block');
+  if (wandBlock && spell) {
+    const idx = (wandBlock.querySelector('[id^="wand_name_"]')||{}).id?.replace('wand_name_','');
+    if (idx !== undefined) {
+      const minLevel = Math.min(...Object.values(spell.level));
+      set('wand_spelllvl_'+idx, minLevel);
+      if (spell.calcValue) set('wand_effect_'+idx, spell.calcValue);
+      if (spell.duration)  set('wand_duration_'+idx, spell.duration);
+      const atkSel = document.getElementById('wand_attack_type_'+idx);
+      if (atkSel) {
+        if (spell.description.toLowerCase().includes('ranged touch')) atkSel.value='ranged_touch';
+        else if (spell.description.toLowerCase().includes('melee touch')) atkSel.value='melee_touch';
+        else atkSel.value='none';
+      }
+      calcWand(parseInt(idx));
+    }
+  }
+}
+
+function onTraitSearch(slot) {
+  const inputId = 'trait'+slot+'_name';
+  const sugId   = 'trait'+slot+'_suggestions';
+  const query   = val(inputId);
+  const sug     = document.getElementById(sugId);
+  if (!sug || typeof searchTraits==='undefined') return;
+  if (query.length < 2) { sug.style.display='none'; return; }
+  const results = searchTraits(query, null);
+  if (!results.length) { sug.style.display='none'; return; }
+  sug.innerHTML = results.map(t => {
+    const sn = t.name.replace(/'/g,"&#39;");
+    return `<div class="feat-suggestion-item" onclick="selectTrait(${slot},'${sn}')">
+      <span class="feat-sug-name">${t.name}</span>
+      <span class="feat-sug-type">${t.type}</span>
+      <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
+    </div>`;
+  }).join('');
+  sug.style.display = 'block';
+}
+
+function selectTrait(slot, name) {
+  name = name.replace(/&#39;/g,"'");
+  set('trait'+slot+'_name', name);
+  const trait = typeof getTraitByName!=='undefined' ? getTraitByName(name) : null;
+  const descEl = document.getElementById('trait'+slot+'_desc');
+  if (descEl && trait) {
+    const calc = trait.calcValue ? `<span class="trait-calc-badge">${trait.calcValue}</span>` : '';
+    descEl.innerHTML = `<span class="trait-type-badge">${trait.type} · ${trait.source}</span>${calc}<span class="trait-benefit-text">${trait.benefit}</span>`;
+  }
+  if (trait) {
+    if (trait.skillBonus && !trait.saveCondition) {
+      Object.entries(trait.skillBonus).forEach(([skillId,amt]) => {
+        const cur = parseInt(val('sk_misc_'+skillId))||0;
+        set('sk_misc_'+skillId, cur+amt);
+        calcSkill(skillId);
+      });
+    }
+    if (trait.saveBonus && !trait.saveCondition) {
+      ['fort','ref','will'].forEach(s => {
+        if (trait.saveBonus[s]) { const cur=parseInt(val(s+'_misc'))||0; set(s+'_misc',cur+trait.saveBonus[s]); }
+      });
+      calcSaves();
+    }
+    if ((trait.saveBonus && trait.saveCondition) || trait.calcValue) {
+      const note = trait.calcValue
+        ? `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`
+        : `[Trait: ${name}] ${trait.benefit}`;
+      const sa = val('special_abilities');
+      if (!sa.includes('[Trait: '+name+']')) set('special_abilities', sa ? sa+'\n'+note : note);
+    }
+  }
+  const sug = document.getElementById('trait'+slot+'_suggestions');
+  if (sug) sug.style.display='none';
+}
+
+function restoreTraitDescriptions() {
+  [1,2].forEach(slot => {
+    const name = val('trait'+slot+'_name');
+    if (name) selectTrait(slot, name);
+  });
+}
+
+function applyMagicItemLookup() {
+  if (!_selectedMagicItem) { alert('Select an item first.'); return; }
+  const item = typeof getMagicItem!=='undefined' ? getMagicItem(_selectedMagicItem) : null;
+  if (!item) return;
+  const target = (document.getElementById('mi_lookup_target')||{}).value || 'ac';
+  const acSlot = parseInt((document.getElementById('mi_lookup_acslot')||{}).value||'0');
+  if (target === 'ac') {
+    set('aci_name_'+acSlot,   _selectedMagicItem);
+    set('aci_bonus_'+acSlot,  item.acBonus  || '');
+    set('aci_type_'+acSlot,   item.acType   || item.slot || '');
+    set('aci_maxdex_'+acSlot, item.maxDex !== undefined && item.maxDex < 99 ? item.maxDex : '');
+    set('aci_check_'+acSlot,  item.checkPen !== undefined ? item.checkPen : '');
+    set('aci_sf_'+acSlot,     item.spellFail || '');
+    set('aci_wt_'+acSlot,     item.weight || '');
+    set('aci_props_'+acSlot,  item.note || '');
+    calcACItems();
+    if (item.statBonus) {
+      const bn = Object.entries(item.statBonus).map(([ab,v])=>`+${v} ${ab.toUpperCase()}`).join(', ');
+      const sa = val('special_abilities');
+      const note = `[${_selectedMagicItem}] ${bn} (${item.bonusType||'enhancement'})`;
+      if (!sa.includes(_selectedMagicItem)) set('special_abilities', sa ? sa+'\n'+note : note);
+    }
+  } else {
+    for (let i=0; i<GEAR_COUNT; i++) {
+      if (!val('gear_name_'+i)) { set('gear_name_'+i,_selectedMagicItem); set('gear_wt_'+i,item.weight||0); calcGear(); return; }
+    }
+    alert('No empty gear slots.');
+  }
+  _selectedMagicItem = null;
+  searchMagicItemUI();
+}
+
+let _selectedMagicItem = null;
+function searchMagicItemUI() {
+  const query   = val('mi_lookup_search');
+  const slotFil = (document.getElementById('mi_lookup_slot')||{}).value || '';
+  const results = document.getElementById('mi_search_results');
+  if (!results || typeof searchMagicItems==='undefined') return;
+  const items = searchMagicItems(query, slotFil||null);
+  results.innerHTML = items.map(([name,item]) => `
+    <div class="mi-search-row ${_selectedMagicItem===name?'mi-selected':''}"
+         onclick="selectMagicItem('${name.replace(/'/g,"\\'")}')">
+      <span class="mi-item-name">${name}</span>
+      <span class="mi-item-slot">${item.slot}</span>
+      <span class="mi-item-cost">${item.cost?item.cost.toLocaleString()+' gp':''}</span>
+      <span class="mi-item-note">${(item.note||'').substring(0,60)}${(item.note||'').length>60?'…':''}</span>
+    </div>`).join('') || '<p class="helper-text" style="padding:4px">No items found.</p>';
+}
+
+function selectMagicItem(name) {
+  _selectedMagicItem = name;
+  searchMagicItemUI();
+}
+
+function updateMagicItemDots(i) {
+  const max  = parseInt(val('mi_charges_max_'+i))||0;
+  const used = parseInt(val('mi_charges_used_'+i))||0;
+  const rem  = Math.max(0, max-used);
+  const remEl = document.getElementById('mi_remaining_'+i);
+  if (remEl) remEl.textContent = max>0 ? rem+'/'+max : '';
+  const dotsEl = document.getElementById('mi_dots_'+i);
+  if (!dotsEl||max===0) { if(dotsEl) dotsEl.innerHTML=''; return; }
+  const show = Math.min(max,20);
+  const usedD = Math.round((used/max)*show);
+  let html='';
+  for(let d=0;d<show;d++){
+    const cls = d<(show-usedD)?'mi-dot-full':'mi-dot-used';
+    html+=`<span class="mi-dot ${cls}" onclick="useMagicItemCharge(${i})"></span>`;
+  }
+  dotsEl.innerHTML = html;
+}
+
+function useMagicItemCharge(i) {
+  const max=parseInt(val('mi_charges_max_'+i))||0;
+  const used=parseInt(val('mi_charges_used_'+i))||0;
+  if(used<max){set('mi_charges_used_'+i,used+1);updateMagicItemDots(i);}
+}
+
+function buildMagicItems() {
+  const container = document.getElementById('magic-items-container');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i=0; i<MAGIC_ITEM_COUNT; i++) {
+    const row = document.createElement('div');
+    row.className = 'magic-item-row';
+    row.innerHTML = `
+      <input type="text" id="mi_name_${i}" class="mi-name-input" placeholder="e.g. Wand of Cure Moderate Wounds">
+      <div class="mi-charges-wrap">
+        <input type="number" id="mi_charges_max_${i}" class="num small-num" placeholder="50" oninput="updateMagicItemDots(${i})" min="0" max="50">
+        <span class="mi-label">max</span>
+        <input type="number" id="mi_charges_used_${i}" class="num small-num" placeholder="0" oninput="updateMagicItemDots(${i})" min="0">
+        <span class="mi-label">used</span>
+        <span id="mi_dots_${i}" class="mi-dots"></span>
+        <span id="mi_remaining_${i}" class="mi-remaining"></span>
+      </div>`;
+    container.appendChild(row);
+  }
+}
+
+function toggleSetupBar() {
+  const content = document.getElementById('setup-panels-content');
+  const arrow   = document.getElementById('setup-toggle-arrow');
+  if (!content) return;
+  const hidden = content.style.display === 'none';
+  content.style.display = hidden ? '' : 'none';
+  if (arrow) arrow.textContent = hidden ? '▲ hide' : '▼ show';
+  try { localStorage.setItem('pf1_setup_hidden', hidden?'0':'1'); } catch(e){}
+}
+
+function newCharacter() {
+  if (!confirm('Start a new character? All unsaved changes will be lost.')) return;
+  document.querySelectorAll('input:not([readonly]), textarea').forEach(el => el.value='');
+  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
+  document.querySelectorAll('.lang-checkbox').forEach(cb => cb.checked=false);
+  calcAll(); calcACItems(); calcGear();
+}
+
+function saveCharacter() {
+  const data = collectData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (val('charName')||'character').replace(/[^a-z0-9]/gi,'_')+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadCharacter() {
+  document.getElementById('fileInput').click();
+}
+
+function handleFileLoad(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      populateData(data);
+    } catch(err) {
+      console.error('Load error:', err);
+      alert('Could not load file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function calcSpellMeta() {
+  const ab    = val('spell_ability') || 'WIS';
+  const clvl  = parseInt(val('caster_level')) || 0;
+  const abKey = ab.toLowerCase().substring(0,3);
+  const abMod = getEffectiveMod(abKey);
+  set('spell_dc_base',    10 + abMod);
+  set('concentration_mod', clvl + abMod);
+}
+
+function initPages35() {
+  // Pool dots, daily tracker, buff tracker init
+  for (let i=0; i<RESOURCE_POOL_COUNT; i++) updatePoolDots(i);
+}
+
+function updatePoolDots(i) {
+  const max    = parseInt(val('pool_max_'+i))||0;
+  const dotsEl = document.getElementById('pool_dots_'+i);
+  if (!dotsEl) return;
+  dotsEl.innerHTML = '';
+  for (let d=0; d<Math.min(max,20); d++) {
+    const span = document.createElement('span');
+    span.className = 'pool-dot';
+    span.onclick   = () => { span.classList.toggle('filled'); };
+    dotsEl.appendChild(span);
+  }
+}
+
+function updateCarryWeight() {
+  const str = parseInt(val('str_score'))||10;
+  if (typeof getCarryCapacity === 'undefined') return;
+  const cap = getCarryCapacity(str, val('size')||'Medium');
+  set('load_light',  cap.light);
+  set('load_medium', cap.medium);
+  set('load_heavy',  cap.heavy);
+}
