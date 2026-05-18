@@ -2225,3 +2225,70 @@ input[id^="wand_dc_"][id$="_3"] {
   .setup-toggle-bar { display: none; }
   #setup-panels-content { display: none !important; }
 }
+
+/* ══════════════════════════════════════════════════
+   CHARACTER TRAITS SECTION (Page 3)
+   ══════════════════════════════════════════════════ */
+.traits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.trait-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trait-search-wrap {
+  position: relative;
+}
+
+.trait-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 2px 3px;
+  font-weight: 600;
+}
+.trait-name-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent2);
+}
+
+.trait-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  line-height: 1.35;
+  min-height: 16px;
+  padding: 1px 3px;
+}
+
+.trait-type-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-right: 4px;
+}
+
+.trait-calc-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--effect-color);
+  font-weight: 700;
+  background: rgba(74,110,26,.08);
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.trait-benefit-text {
+  color: var(--border);
+}

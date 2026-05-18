@@ -1786,6 +1786,12 @@ function applySetup() {
   // Build adaptive pages
   if (typeof afterApplySetup === 'function') afterApplySetup(classKey, level);
 
+  // Re-affirm visible fields (some may be overwritten by rebuild)
+  set('race',      race  ? race.name  : val('race'));
+  set('charClass', cls   ? cls.name   : val('charClass'));
+  set('charLevel', level);
+  if (deityOpt && deityOpt.value) set('deity', deityOpt.value);
+
   alert(`Setup applied!\n\nCheck:\n• Ability scores (racial mods added to existing values)\n• Special Abilities tab (racial traits added)\n• Class Skills (dots marked)\n• BAB, Saves, Size updated\n\nTip: If this is a new character, set ability scores to 10 first, then apply setup.`);
 }
 
@@ -3076,9 +3082,21 @@ function onTraitSearch(slot) {
 function selectTrait(slot, name) {
   name = name.replace(/&#39;/g, "'");
   set('trait' + slot + '_name', name);
+
   const trait = (typeof getTraitByName !== 'undefined') ? getTraitByName(name) : null;
+
+  // Show description below the input
+  const descEl = document.getElementById('trait' + slot + '_desc');
+  if (descEl && trait) {
+    const calcBadge = trait.calcValue
+      ? `<span class="trait-calc-badge">${trait.calcValue}</span>` : '';
+    descEl.innerHTML = `<span class="trait-type-badge">${trait.type} · ${trait.source}</span> `
+      + calcBadge
+      + `<span class="trait-benefit-text">${trait.benefit}</span>`;
+  }
+
   if (trait) {
-    // Apply skill bonuses
+    // Apply unconditional skill bonuses
     if (trait.skillBonus) {
       Object.entries(trait.skillBonus).forEach(([skillId, amount]) => {
         const current = parseInt(val('sk_misc_' + skillId)) || 0;
@@ -3086,7 +3104,7 @@ function selectTrait(slot, name) {
         calcSkill(skillId);
       });
     }
-    // Apply save bonuses (unconditional ones only)
+    // Apply unconditional save bonuses
     if (trait.saveBonus && !trait.saveCondition) {
       ['fort','ref','will'].forEach(s => {
         if (trait.saveBonus[s]) {
@@ -3096,25 +3114,29 @@ function selectTrait(slot, name) {
       });
       calcSaves();
     }
-    // Add note to special abilities for conditional bonuses
-    if (trait.saveBonus && trait.saveCondition) {
-      const note = `[Trait: ${name}] ${trait.benefit}`;
+    // Conditional bonuses and calcValues go to Special Abilities as a note
+    if ((trait.saveBonus && trait.saveCondition) || trait.calcValue) {
+      const noteText = trait.calcValue
+        ? `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`
+        : `[Trait: ${name}] ${trait.benefit}`;
       const existing = val('special_abilities');
-      if (!existing.includes(name)) {
-        set('special_abilities', existing ? existing + '\n' + note : note);
-      }
-    }
-    if (trait.calcValue) {
-      const note = `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`;
-      const existing = val('special_abilities');
-      if (!existing.includes(name)) {
-        set('special_abilities', existing ? existing + '\n' + note : note);
+      if (!existing.includes('[Trait: ' + name + ']')) {
+        set('special_abilities', existing ? existing + '\n' + noteText : noteText);
       }
     }
   }
+
   // Hide suggestions
   const sug = document.getElementById('trait' + slot + '_suggestions');
   if (sug) sug.style.display = 'none';
+}
+
+// Restore trait descriptions on load
+function restoreTraitDescriptions() {
+  [1, 2].forEach(slot => {
+    const name = val('trait' + slot + '_name');
+    if (name) selectTrait(slot, name);
+  });
 }
 
 // Close trait suggestions on outside click
@@ -3140,6 +3162,8 @@ populateData = function(data) {
   _populateData_traits(data);
   if (data.trait1_name) set('trait1_name', data.trait1_name);
   if (data.trait2_name) set('trait2_name', data.trait2_name);
+  // Restore descriptions (with slight delay to ensure DOM is ready)
+  setTimeout(restoreTraitDescriptions, 200);
 };
 
 /* ══════════════════════════════════════════════════
