@@ -697,6 +697,555 @@ const MAGIC_ITEMS = {
     source:'CRB',
   },
 
+  // ══════════════════════════════════════════════════
+  // IOUN STONES — complete CRB list
+  // Source: aonprd.com CRB p.463
+  // ══════════════════════════════════════════════════
+  'Clear Spindle Ioun Stone': {
+    slot:'Slotless', cost:4000, weight:0,
+    note:'Sustains creature without food or water.',
+    source:'CRB' },
+  'Crimson Sphere Ioun Stone': {
+    slot:'Slotless', cost:5000, weight:0,
+    saveBonus:{ fort:2 }, bonusType:'resistance',
+    note:'+2 resistance bonus on Fortitude saves.',
+    source:'UE' },
+  'Dull Gray Ioun Stone': {
+    slot:'Slotless', cost:25, weight:0,
+    note:'Burned out stone. No magical properties. Resonance only for wayfinders.',
+    source:'CRB' },
+  'Ellipsoid Ioun Stone (Magenta)': {
+    slot:'Slotless', cost:16000, weight:0,
+    statBonus:{ str:2 }, bonusType:'enhancement',
+    note:'+2 enhancement to Strength. (Alternate color to Pale Blue Rhomboid.)',
+    source:'UE' },
+  'Flawed Pale Lavender Ellipsoid Ioun Stone': {
+    slot:'Slotless', cost:3500, weight:0,
+    note:'Absorbs spells of 4th level or lower (as pale lavender) but has only 10 charges. Crumbles when spent.',
+    source:'UE' },
+  'Lavender and Green Ellipsoid Ioun Stone': {
+    slot:'Slotless', cost:30000, weight:0,
+    note:'Absorbs spells of 8th level or lower targeted at you. Up to 50 spell levels; crumbles when spent.',
+    source:'CRB' },
+  'Pale Lavender Ellipsoid Ioun Stone': {
+    slot:'Slotless', cost:20000, weight:0,
+    note:'Absorbs spells of 4th level or lower targeted at you. Up to 20 spell levels; crumbles when spent.',
+    source:'CRB' },
+  'Pale Orange Rhomboid Ioun Stone': {
+    slot:'Slotless', cost:200000, weight:0,
+    note:'Prevents death from old age (and associated ability score loss). Does not reverse existing penalties.',
+    source:'CRB' },
+  'Pale Turquoise Rhomboid Ioun Stone': {
+    slot:'Slotless', cost:10000, weight:0,
+    note:'+4 racial bonus on saves against sonic effects.',
+    source:'UE' },
+  'Prism Ioun Stone (Clear)': {
+    slot:'Slotless', cost:4000, weight:0,
+    note:'Sustains creature without food or water. (Variant name.)',
+    source:'CRB' },
+  'Tourmaline Sphere Ioun Stone': {
+    slot:'Slotless', cost:8000, weight:0,
+    note:'Reduces the effects of starvation and thirst. Reduces fatigue from lack of sleep.',
+    source:'UE' },
+  'Western Star Ioun Stone': {
+    slot:'Slotless', cost:22000, weight:0,
+    note:'Reduces miss chance from concealment by 10% (minimum 0).',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // ADDITIONAL BELTS
+  // ══════════════════════════════════════════════════
+  'Belt of Physical Might +4 (STR/DEX)': {
+    slot:'Belt', cost:40000, weight:1,
+    statBonus:{ str:4, dex:4 }, bonusType:'enhancement',
+    note:'+4 enhancement to STR and DEX.',
+    source:'CRB' },
+  'Belt of Physical Perfection +4': {
+    slot:'Belt', cost:64000, weight:1,
+    statBonus:{ str:4, dex:4, con:4 }, bonusType:'enhancement',
+    note:'+4 enhancement to STR, DEX, and CON.',
+    source:'CRB' },
+  'Belt of Dwarvenkind': {
+    slot:'Belt', cost:14900, weight:1,
+    statBonus:{ con:2 }, bonusType:'enhancement',
+    note:'+2 CON, darkvision 60 ft, stonecunning, +2 saves vs poison/spells/SLAs, +4 CHA checks with dwarves.',
+    source:'CRB' },
+  'Corset of Dire Witchcraft': {
+    slot:'Belt', cost:12000, weight:0.5,
+    note:'+2 enhancement to INT and WIS. +1 caster level for witch spells.',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // ADDITIONAL HEADBANDS
+  // ══════════════════════════════════════════════════
+  'Headband of Inspired Wisdom +6': {
+    slot:'Headband', cost:36000, weight:0,
+    statBonus:{ wis:6 }, bonusType:'enhancement',
+    note:'+6 enhancement to WIS.',
+    source:'CRB' },
+  'Headband of Vast Intelligence +4': {
+    slot:'Headband', cost:16000, weight:0,
+    statBonus:{ int:4 }, bonusType:'enhancement',
+    note:'+4 enhancement to INT.',
+    source:'CRB' },
+  'Headband of Alluring Charisma +4': {
+    slot:'Headband', cost:16000, weight:0,
+    statBonus:{ cha:4 }, bonusType:'enhancement',
+    note:'+4 enhancement to CHA.',
+    source:'CRB' },
+  'Headband of Mental Prowess +4 (INT/WIS)': {
+    slot:'Headband', cost:40000, weight:0,
+    statBonus:{ int:4, wis:4 }, bonusType:'enhancement',
+    note:'+4 enhancement to INT and WIS.',
+    source:'CRB' },
+
+  // ══════════════════════════════════════════════════
+  // BOOTS / FEET — additional
+  // ══════════════════════════════════════════════════
+  'Boots of Teleportation': {
+    slot:'Feet', cost:49000, weight:1,
+    note:'3/day: teleport (as the spell).',
+    source:'CRB' },
+  'Boots of Tracking': {
+    slot:'Feet', cost:6500, weight:1,
+    skillBonus:{ survival:5 },
+    note:'+5 competence on Survival for tracking.',
+    source:'UE' },
+  'Boots of the Mastodon': {
+    slot:'Feet', cost:9000, weight:1,
+    note:'+4 CMD vs bull rush and trip. Once/day free bull rush attempt on charge.',
+    source:'UE' },
+  'Slippers of Spider Climbing': {
+    slot:'Feet', cost:4800, weight:0.5,
+    note:'Move on vertical surfaces and ceilings as spider climb. 10 minutes/day.',
+    source:'CRB' },
+
+  // ══════════════════════════════════════════════════
+  // ADDITIONAL RINGS
+  // ══════════════════════════════════════════════════
+  'Ring of Blinking': {
+    slot:'Ring', cost:27000, weight:0,
+    note:'On command: blink (as the spell). As long as active.',
+    source:'CRB' },
+  'Ring of Chameleon Power': {
+    slot:'Ring', cost:12700, weight:0,
+    skillBonus:{ stealth:10 },
+    note:'+10 competence on Stealth. Can adapt coloration to surroundings.',
+    source:'CRB' },
+  'Ring of Climbing': {
+    slot:'Ring', cost:2500, weight:0,
+    skillBonus:{ climb:5 },
+    note:'+5 competence on Climb checks.',
+    source:'CRB' },
+  'Ring of Energy Resistance (Minor)': {
+    slot:'Ring', cost:12000, weight:0,
+    note:'Energy resistance 10 to chosen energy type (acid, cold, electricity, fire, or sonic).',
+    source:'CRB' },
+  'Ring of Energy Resistance (Major)': {
+    slot:'Ring', cost:28000, weight:0,
+    note:'Energy resistance 20 to chosen energy type.',
+    source:'CRB' },
+  'Ring of Energy Resistance (Greater)': {
+    slot:'Ring', cost:44000, weight:0,
+    note:'Energy resistance 30 to chosen energy type.',
+    source:'CRB' },
+  'Ring of Jumping': {
+    slot:'Ring', cost:2500, weight:0,
+    skillBonus:{ acrobatics:5 },
+    note:'+5 competence on Acrobatics checks to jump.',
+    source:'CRB' },
+  'Ring of Mind Shielding': {
+    slot:'Ring', cost:8000, weight:0,
+    note:'Immune to detect thoughts, discern lies, and any attempts to magically detect alignment.',
+    source:'CRB' },
+  'Ring of Regeneration': {
+    slot:'Ring', cost:90000, weight:0,
+    note:'Regenerate 1 HP per round. Regrow severed limbs in 1d6+1 days.',
+    source:'CRB' },
+  'Ring of Shooting Stars': {
+    slot:'Ring', cost:50000, weight:0,
+    note:'Faerie fire, dancing lights at will. Shooting stars 1/day (12d6 fire, 5 targets). Lightning 1/week.',
+    source:'CRB' },
+  'Ring of Spell Storing (Major)': {
+    slot:'Ring', cost:200000, weight:0,
+    note:'Store up to 10 levels of spells.',
+    source:'CRB' },
+  'Ring of Spell Turning': {
+    slot:'Ring', cost:98280, weight:0,
+    note:'Reflects 1d4+6 spell levels back at caster (as spell turning, 3/day).',
+    source:'CRB' },
+  'Ring of Swimming': {
+    slot:'Ring', cost:2500, weight:0,
+    skillBonus:{ swim:5 },
+    note:'+5 competence on Swim checks.',
+    source:'CRB' },
+  'Ring of Telekinesis': {
+    slot:'Ring', cost:75000, weight:0,
+    note:'At will: telekinesis (CL 15, 375 lbs weight).',
+    source:'CRB' },
+  'Ring of Three Wishes': {
+    slot:'Ring', cost:120000, weight:0,
+    note:'Contains 3 wish spells. Single use per wish.',
+    source:'CRB' },
+  'Ring of X-Ray Vision': {
+    slot:'Ring', cost:25000, weight:0,
+    note:'See through 20 ft stone, 10 ft common metals, 1 ft lead. Costs 1 CON/hour.',
+    source:'CRB' },
+  'Ring of Animal Friendship': {
+    slot:'Ring', cost:10800, weight:0,
+    note:'At will: charm animal (DC 11). Animals are not frightened by wearer.',
+    source:'CRB' },
+  'Ring of Delayed Doom': {
+    slot:'Ring', cost:90000, weight:0,
+    note:'9 gems; each delays one "kill" condition for 1 round per gem expended.',
+    source:'APG' },
+  'Ring of Forcefangs': {
+    slot:'Ring', cost:8000, weight:0,
+    note:'Store and use force damage dealt to you. 9 charges max. Spend to deal 1d4 force/charge.',
+    source:'APG' },
+  'Ring of Retribution': {
+    slot:'Ring', cost:15000, weight:0,
+    note:'1/day when reduced to 0 HP or less: deal 10d6 fire damage in 30-ft burst (Ref DC 14 half).',
+    source:'APG' },
+
+  // ══════════════════════════════════════════════════
+  // NECK — additional
+  // ══════════════════════════════════════════════════
+  'Amulet of Elemental Strife': {
+    slot:'Neck', cost:8000, weight:0,
+    note:'Immunity to surprise rounds caused by elementals. +2 insight vs elemental spell effects.',
+    source:'UE' },
+  'Amulet of Proof against Detection and Location': {
+    slot:'Neck', cost:35000, weight:0,
+    note:'Immune to all divination spells and magical scrying.',
+    source:'CRB' },
+  'Brooch of Shielding': {
+    slot:'Neck', cost:1500, weight:0,
+    note:'Absorbs magic missiles (as shield). Up to 101 HP of missiles absorbed; then brooch melts.',
+    source:'CRB' },
+  'Scarab of Protection': {
+    slot:'Neck', cost:38000, weight:0,
+    note:'+4 on saves vs death effects. Absorbs 12 negative levels or death effects before crumbling.',
+    source:'CRB' },
+  'Necklace of Adaptation': {
+    slot:'Neck', cost:9000, weight:0,
+    note:'Breathe in any environment (including vacuum). Immune to gas-based attacks.',
+    source:'CRB' },
+
+  // ══════════════════════════════════════════════════
+  // SHOULDERS — additional
+  // ══════════════════════════════════════════════════
+  'Cloak of Displacement (Minor)': {
+    slot:'Shoulders', cost:24000, weight:1,
+    note:'Continuous 20% miss chance (as displacement). Negated on hit until next turn.',
+    source:'CRB' },
+  'Cloak of Displacement (Major)': {
+    slot:'Shoulders', cost:50000, weight:1,
+    note:'Continuous 50% miss chance (as displacement).',
+    source:'CRB' },
+  'Cloak of Arachnida': {
+    slot:'Shoulders', cost:14000, weight:1,
+    note:'Spider climb at will. Immune to web. +2 saves vs poison. 1/day web (CL 6).',
+    source:'CRB' },
+  'Wings of Flying': {
+    slot:'Shoulders', cost:54000, weight:2,
+    note:'Grow wings; fly 60 ft (good). Command word activated.',
+    source:'CRB' },
+  'Vest of the Cockroach': {
+    slot:'Chest', cost:16000, weight:0,
+    note:'If you would be reduced to 0 HP or fewer, 1/day you stabilize automatically at 1 HP.',
+    source:'APG' },
+  'Tunic of Careful Casting': {
+    slot:'Chest', cost:5000, weight:1,
+    note:'+2 competence on concentration checks.',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // EYES — additional
+  // ══════════════════════════════════════════════════
+  'Lenses of Detection': {
+    slot:'Eyes', cost:3500, weight:0,
+    skillBonus:{ perception:5 },
+    note:'+5 competence on Perception. 1/day: find traps (as the spell, CL 5).',
+    source:'CRB' },
+  'Eyes of Darkvision': {
+    slot:'Eyes', cost:10000, weight:0,
+    note:'Darkvision 60 ft (or +60 ft to existing darkvision).',
+    source:'UE' },
+  'Eyes of Doom': {
+    slot:'Eyes', cost:25000, weight:0,
+    note:'At will: doom (Will DC 11). 1/day: fear (Will DC 17). 1/day: eyebite (Fort DC 18).',
+    source:'CRB' },
+  'Third Eye (Clarity)': {
+    slot:'Head', cost:10000, weight:0,
+    note:'1/day: remove confusion, feeblemind, or insanity as a free action.',
+    source:'UE' },
+  'Third Eye (Conceal)': {
+    slot:'Head', cost:9000, weight:0,
+    note:'1/day: misdirection (CL 7, Will DC 13 negates).',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // HANDS — additional
+  // ══════════════════════════════════════════════════
+  'Gloves of Reconnaissance': {
+    slot:'Hands', cost:2000, weight:0,
+    note:'1/day: see and hear through solid wall up to 5 ft thick for 10 rounds.',
+    source:'APG' },
+  'Gloves of Dueling': {
+    slot:'Hands', cost:15000, weight:0,
+    note:'+4 CMD vs disarm. +2 attack when using Weapon Training class feature.',
+    source:'UC' },
+  'Gauntlet of Rust': {
+    slot:'Hands', cost:11500, weight:2,
+    note:'Touch attack: deals 2d6+7 damage to ferrous metals (Fort DC 17 half). Crumbles non-magical metal.',
+    source:'CRB' },
+  'Iron Cobra Gauntlet': {
+    slot:'Hands', cost:8000, weight:2,
+    note:'Gauntlet deals +1d6 acid damage on successful hit. 1/day: poison (DC 14).',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // HEAD — additional
+  // ══════════════════════════════════════════════════
+  'Hat of Disguise': {
+    slot:'Head', cost:1800, weight:0,
+    skillBonus:{ disguise:10 },
+    note:'At will: disguise self (as the spell). +10 competence on Disguise checks.',
+    source:'CRB' },
+  'Helm of Underwater Action': {
+    slot:'Head', cost:24000, weight:3,
+    note:'Breathe underwater. Darkvision 60 ft underwater. Swim speed 30 ft.',
+    source:'CRB' },
+  'Helm of Fearsome Mien': {
+    slot:'Head', cost:5000, weight:3,
+    note:'Intimidating appearance: once/day attempt to demoralize without Intimidate roll (DC 10+½HD+STR).',
+    source:'APG' },
+  'Crown of Conquest': {
+    slot:'Head', cost:24600, weight:1,
+    note:'+2 morale on saves vs fear for wearer and allies within 60 ft. +1 morale on attacks.',
+    source:'APG' },
+
+  // ══════════════════════════════════════════════════
+  // WRISTS — additional
+  // ══════════════════════════════════════════════════
+  'Bracers of Armor +8': {
+    slot:'Wrist', cost:64000, weight:1,
+    acBonus:8, acType:'armor',
+    note:'+8 armor bonus to AC.',
+    source:'CRB' },
+  'Bracers of Archery (Greater)': {
+    slot:'Wrist', cost:25000, weight:1,
+    note:'+2 competence on attack rolls with bows. Treat all bows as proficient.',
+    source:'CRB' },
+  'Manacles of Cooperation': {
+    slot:'Wrist', cost:2000, weight:2,
+    note:'Creature wearing them becomes helpful attitude toward captor (Will DC 11 negates).',
+    source:'APG' },
+  'Lockpicking Gloves': {
+    slot:'Wrist', cost:2000, weight:0,
+    skillBonus:{ disable_device:2 },
+    note:'+2 competence on Disable Device.',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // BODY / ROBES — additional
+  // ══════════════════════════════════════════════════
+  'Robe of Eyes': {
+    slot:'Body', cost:120000, weight:1,
+    skillBonus:{ perception:10 },
+    note:'+10 Perception. 120-ft darkvision. All-around vision (cannot be flanked). Blind by light spells.',
+    source:'CRB' },
+  'Robe of Scintillating Colors': {
+    slot:'Body', cost:27000, weight:1,
+    note:'3 rounds/day: cause confusion (Will DC 17) in 30-ft cone.',
+    source:'CRB' },
+  'Robe of Stars': {
+    slot:'Body', cost:58000, weight:1,
+    note:'+1 luck on saves. 6 stars: each usable 1/day for magic missile (5 missiles). Ethereal plane.',
+    source:'CRB' },
+  'Robe of Useful Items': {
+    slot:'Body', cost:7000, weight:1,
+    note:'Patches detach and become items (dagger, bullseye lantern, steel mirror, 10-ft pole, rope, sack, etc.).',
+    source:'CRB' },
+  'Robe of Needles': {
+    slot:'Body', cost:1000, weight:1,
+    note:'1/day fire a volley of needles: 2d4 piercing in 15-ft cone (Ref DC 11 half).',
+    source:'UE' },
+  'Cassock of the Clergy': {
+    slot:'Body', cost:4600, weight:1,
+    note:'+3 competence on CHA checks with same-alignment creatures. 1/day: bless, sanctuary. +1 orison/day.',
+    source:'APG' },
+
+  // ══════════════════════════════════════════════════
+  // SLOTLESS — additional
+  // ══════════════════════════════════════════════════
+  'Bag of Holding (Type III)': {
+    slot:'Slotless', cost:7400, weight:35,
+    note:'Holds 1000 lbs (150 cubic ft). Bag weighs 35 lbs.',
+    source:'CRB' },
+  'Bag of Holding (Type IV)': {
+    slot:'Slotless', cost:10000, weight:60,
+    note:'Holds 1500 lbs (250 cubic ft). Bag weighs 60 lbs.',
+    source:'CRB' },
+  'Carpet of Flying (5×10 ft)': {
+    slot:'Slotless', cost:20000, weight:10,
+    note:'Fly 40 ft (average) carrying up to 800 lbs. Up to 2 Medium riders.',
+    source:'CRB' },
+  'Carpet of Flying (10×10 ft)': {
+    slot:'Slotless', cost:60000, weight:20,
+    note:'Fly 40 ft (average) carrying up to 1200 lbs. Up to 4 Medium riders.',
+    source:'CRB' },
+  'Crystal Ball': {
+    slot:'Slotless', cost:42000, weight:7,
+    note:'At will: scrying (DC 16 Will). Can see and hear through the ball.',
+    source:'CRB' },
+  'Crystal Ball (with Telepathy)': {
+    slot:'Slotless', cost:70000, weight:7,
+    note:'As crystal ball, plus can communicate telepathically with viewed creature.',
+    source:'CRB' },
+  'Cube of Force': {
+    slot:'Slotless', cost:62000, weight:0.5,
+    note:'Force cube with 6 faces; each face deflects different things (gases, ranged, living, non-living, all).',
+    source:'CRB' },
+  "Daern's Instant Fortress": {
+    slot:'Slotless', cost:55000, weight:3,
+    note:'Expands into 20-ft square, 30-ft tall adamantine fortress. Hardness 20, 200 HP.',
+    source:'CRB' },
+  'Drums of Panic': {
+    slot:'Slotless', cost:30000, weight:10,
+    note:'1/day: all creatures within 60 ft are panicked for 2d4 rounds (Will DC 16 shaken only).',
+    source:'CRB' },
+  'Efficient Quiver': {
+    slot:'Slotless', cost:1800, weight:0,
+    note:'Three compartments: 60 arrows/bolts, 18 javelins/arrows +1 or longer, 6 longbows/spears/staffs.',
+    source:'CRB' },
+  'Eversmoking Bottle': {
+    slot:'Slotless', cost:5400, weight:1,
+    note:'Creates obscuring smoke in 60-ft radius (as solid fog visually). Fills 1 ft per round.',
+    source:'CRB' },
+  'Feather Token (Anchor)': {
+    slot:'Slotless', cost:50, weight:0,
+    note:'Creates an anchor; holds ship stationary in any conditions.',
+    source:'CRB' },
+  'Feather Token (Bird)': {
+    slot:'Slotless', cost:300, weight:0,
+    note:'Creates a roc-sized bird that can carry 4 passengers. Functions for 1 day.',
+    source:'CRB' },
+  'Feather Token (Swan Boat)': {
+    slot:'Slotless', cost:450, weight:0,
+    note:'Creates a 50-ft swan boat on water. Moves 60 ft/round.',
+    source:'CRB' },
+  'Feather Token (Tree)': {
+    slot:'Slotless', cost:400, weight:0,
+    note:'Grows into a large oak tree.',
+    source:'CRB' },
+  'Feather Token (Whip)': {
+    slot:'Slotless', cost:500, weight:0,
+    note:'Creates a +1 whip that fights as unseen servant for 1 hour.',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Ebony Fly)': {
+    slot:'Slotless', cost:10000, weight:0,
+    note:'Animate as giant fly 3/week for 12 hours. Carries up to 400 lbs.',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Golden Lions)': {
+    slot:'Slotless', cost:16500, weight:0,
+    note:'Animate as two lions 1/week for 1 hour.',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Ivory Goats)': {
+    slot:'Slotless', cost:21000, weight:0,
+    note:'Three goats: Traveling (fast mount), Travail (combat), Terror (warhorse stats).',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Marble Elephant)': {
+    slot:'Slotless', cost:17000, weight:0,
+    note:'Animate as elephant (combat capable) 4/week for 24 hours.',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Obsidian Steed)': {
+    slot:'Slotless', cost:28500, weight:0,
+    note:'Animate as nightstalker 1/week for 24 hours.',
+    source:'CRB' },
+  'Figurine of Wondrous Power (Onyx Dog)': {
+    slot:'Slotless', cost:15500, weight:0,
+    note:'Animate as riding dog 3/week for 6 hours. Can track as bloodhound (+4 scent checks).',
+    source:'CRB' },
+  'Horseshoes of Speed': {
+    slot:'Slotless', cost:3000, weight:4,
+    speedBonus:30,
+    note:'+30 ft speed for horses (or similar creatures). Four horseshoes needed.',
+    source:'CRB' },
+  'Horseshoes of a Zephyr': {
+    slot:'Slotless', cost:6000, weight:4,
+    note:'Horse can walk on air, clouds, water. Normal speed when running.',
+    source:'CRB' },
+  'Lyre of Building': {
+    slot:'Slotless', cost:13000, weight:5,
+    note:'1/week: play to protect structures from attacks for 30 min. OR build as 100 men in 30 min.',
+    source:'CRB' },
+  'Manual of Bodily Health +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to CON and +1 to Fortitude saves. One-time use per reader.',
+    source:'CRB' },
+  'Manual of Gainful Exercise +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to STR and +1 to STR-based skill checks.',
+    source:'CRB' },
+  'Manual of Quickness of Action +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to DEX and +1 to Reflex saves.',
+    source:'CRB' },
+  'Manual of Quickness of Action +2': {
+    slot:'Slotless', cost:55000, weight:5,
+    note:'Read in 48 hrs: +2 permanent bonus to DEX.',
+    source:'CRB' },
+  'Mirror of Opposition': {
+    slot:'Slotless', cost:92000, weight:45,
+    note:'Reflects duplicate of viewer (exact duplicate, all abilities). Duplicate hostile. Fades if original dies.',
+    source:'CRB' },
+  'Orb of Storms': {
+    slot:'Slotless', cost:48000, weight:6,
+    note:'1/day: control weather (as spell, CL 15). 1/day: call lightning storm.',
+    source:'CRB' },
+  'Pipes of Haunting': {
+    slot:'Slotless', cost:6000, weight:3,
+    note:'3/day: haunting melody in 30-ft radius. Non-Good creatures shaken 4 rounds (Will DC 13).',
+    source:'CRB' },
+  'Pipes of the Sewers': {
+    slot:'Slotless', cost:1150, weight:3,
+    note:'Summon 1d3 swarms of rats as standard action. Can control up to 3 swarms simultaneously.',
+    source:'CRB' },
+  'Stone of Alarm': {
+    slot:'Slotless', cost:2700, weight:2,
+    note:'Touch stone to designate guardian. Stone triggers audible alarm if designated area disturbed.',
+    source:'CRB' },
+  'Stone of Controlling Earth Elementals': {
+    slot:'Slotless', cost:80000, weight:5,
+    note:'1/day: summon and control a Huge earth elemental (as summon nature\'s ally VII, CL 13).',
+    source:'CRB' },
+  'Tome of Clear Thought +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to INT and +1 to INT-based skill checks.',
+    source:'CRB' },
+  'Tome of Leadership and Influence +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to CHA and +1 to CHA-based skill checks.',
+    source:'CRB' },
+  'Tome of Understanding +1': {
+    slot:'Slotless', cost:27500, weight:5,
+    note:'Read in 48 hrs: +1 permanent bonus to WIS and +1 to Will saves.',
+    source:'CRB' },
+  'Well of Many Worlds': {
+    slot:'Slotless', cost:82000, weight:1,
+    note:'Creates a 2-way gate to a random plane (determined by GM). Cannot control destination.',
+    source:'CRB' },
+  'Wind Fan': {
+    slot:'Slotless', cost:5500, weight:0,
+    note:'1/day: gust of wind (Fort DC 14 or knocked down + 1d4 rounds movement impaired). CL 5.',
+    source:'CRB' },
+  'Winged Shield': {
+    slot:'Slotless', cost:17257, weight:10,
+    note:'+3 light wooden shield. On command: fly 60 ft (good) for 5 min/day.',
+    source:'CRB' },
+
 };
 
 // ── HELPERS ──────────────────────────────────────────
