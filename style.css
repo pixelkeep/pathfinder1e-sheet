@@ -985,7 +985,7 @@ textarea.small-textarea  { min-height: 36px; }
   flex-wrap: wrap;
   gap: 3px;
   min-height: 20px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .setup-info-tag {
@@ -996,7 +996,8 @@ textarea.small-textarea  { min-height: 36px; }
   padding: 1px 5px;
   color: var(--ink-light);
   white-space: nowrap;
-  line-height: 1.6;
+  line-height: 1.8;
+  flex-shrink: 0;
 }
 
 .setup-info-tag strong {
@@ -1309,9 +1310,10 @@ textarea.small-textarea  { min-height: 36px; }
   border-color: var(--accent);
   color: var(--accent);
   cursor: help;
-  white-space: normal;
-  line-height: 1.4;
-  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
   font-weight: 600;
 }
 
