@@ -768,12 +768,17 @@ function getEffectiveMod(ability) {
 }
 
 // ── COLLECT ALL DATA ───────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
+   SAVE / LOAD — single unified collectData and populateData
+   All fields collected and restored in one place.
+   ══════════════════════════════════════════════════ */
+
 function collectData() {
   const data = {};
 
-  // Simple field IDs
+  // ── Simple text/number fields ──────────────────
   const simpleFields = [
-    'charName','alignment','player','classLevel','deity','homeland',
+    'charName','alignment','player','charClass','charLevel','deity','homeland',
     'race','size','gender','age','height','weight','hair','eyes',
     'str_score','dex_score','con_score','int_score','wis_score','cha_score',
     'str_temp','dex_temp','con_temp','int_temp','wis_temp','cha_temp',
@@ -785,60 +790,87 @@ function collectData() {
     'will_base','will_magic','will_misc','will_temp',
     'bab','spell_res',
     'cmb_size','cmb_misc','cmd_size',
-    'speed_land','speed_armor','speed_fly','speed_maneuv','speed_swim','speed_climb','speed_burrow',
+    'speed_land','speed_armor','speed_fly','speed_maneuv',
+    'speed_swim','speed_climb','speed_burrow',
     'languages','languages_custom','skill_conditional','_applied_race',
     'money_pp','money_gp','money_sp','money_cp',
     'xp_current','xp_next',
-    'feats','special_abilities','notes',
-    'domain_school','spell_conditional','spell_list',
+    'special_abilities','notes',
     'load_light','load_medium','load_heavy',
+    // Spell meta
+    'spell_ability','caster_level','domain_school','spell_conditional','spell_list',
+    // Traits
+    'trait1_name','trait2_name',
+    // Pages 3-5
+    'formulae_book','campaign_notes',
   ];
-
-  // Spell table
-  for (let i = 0; i <= 9; i++) {
-    simpleFields.push(`sp${i}_known`, `sp${i}_perday`);
-    if (i > 0) simpleFields.push(`sp${i}_dc`, `sp${i}_bonus`);
-  }
 
   simpleFields.forEach(id => {
     const el = document.getElementById(id);
     if (el) data[id] = el.value;
   });
 
-  // Skills
+  // ── Skills ─────────────────────────────────────
   data.skills = {};
-  SKILLS.forEach(([id]) => {
-    data.skills[id] = {
-      cs:    document.getElementById(`cs_${id}`)?.classList.contains('checked') || false,
-      ranks: val(`sk_ranks_${id}`),
-      misc:  val(`sk_misc_${id}`),
-    };
-  });
-
-  // Weapons
-  data.weapons = [];
-  for (let i = 0; i < WEAPON_COUNT; i++) {
-    data.weapons.push({
-      name:       val(`wpn_name_${i}`),
-      material:   val(`wpn_material_${i}`),
-      crit:       val(`wpn_crit_${i}`),
-      type:       val(`wpn_type_${i}`),
-      range:      val(`wpn_range_${i}`),
-      ammo:       val(`wpn_ammo_${i}`),
-      enh:        val(`wpn_enh_${i}`),
-      feat:       val(`wpn_feat_${i}`),
-      miscAtk:    val(`wpn_misc_atk_${i}`),
-      dmgDice:    val(`wpn_dmg_dice_${i}`),
-      dmgFeat:    val(`wpn_dmg_feat_${i}`),
-      dmgMisc:    val(`wpn_dmg_misc_${i}`),
-      twoHanded:  !!(document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked),
-      offHand:    !!(document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked),
-      ranged:     !!(document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked),
-      mw:         !!(document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked),
+  if (typeof SKILLS !== 'undefined') {
+    SKILLS.forEach(([id]) => {
+      const dot = document.getElementById(`cs_${id}`);
+      data.skills[id] = {
+        cs:    dot ? dot.classList.contains('checked') : false,
+        ranks: val(`sk_ranks_${id}`),
+        misc:  val(`sk_misc_${id}`),
+      };
     });
   }
 
-  // AC Items
+  // ── Weapons ────────────────────────────────────
+  data.weapons = [];
+  for (let i = 0; i < WEAPON_COUNT; i++) {
+    const matEl = document.getElementById(`wpn_material_${i}`);
+    data.weapons.push({
+      name:      val(`wpn_name_${i}`),
+      material:  matEl ? matEl.value : 'Normal',
+      crit:      val(`wpn_crit_${i}`),
+      type:      val(`wpn_type_${i}`),
+      range:     val(`wpn_range_${i}`),
+      ammo:      val(`wpn_ammo_${i}`),
+      enh:       val(`wpn_enh_${i}`),
+      feat:      val(`wpn_feat_${i}`),
+      miscAtk:   val(`wpn_misc_atk_${i}`),
+      dmgDice:   val(`wpn_dmg_dice_${i}`),
+      dmgFeat:   val(`wpn_dmg_feat_${i}`),
+      dmgMisc:   val(`wpn_dmg_misc_${i}`),
+      twoHanded: !!(document.getElementById(`wpn_twohanded_${i}`) && document.getElementById(`wpn_twohanded_${i}`).checked),
+      offHand:   !!(document.getElementById(`wpn_offhand_${i}`)   && document.getElementById(`wpn_offhand_${i}`).checked),
+      ranged:    !!(document.getElementById(`wpn_ranged_${i}`)    && document.getElementById(`wpn_ranged_${i}`).checked),
+      mw:        !!(document.getElementById(`wpn_mw_${i}`)        && document.getElementById(`wpn_mw_${i}`).checked),
+      notes:     val(`wpn_notes_${i}`),
+    });
+  }
+
+  // ── Wands ──────────────────────────────────────
+  data.wands = [];
+  for (let i = 0; i < WAND_COUNT; i++) {
+    const typeSel = document.getElementById(`wand_type_${i}`);
+    const atkSel  = document.getElementById(`wand_attack_type_${i}`);
+    data.wands.push({
+      name:        val(`wand_name_${i}`),
+      type:        typeSel ? typeSel.value : 'wand',
+      cl:          val(`wand_cl_${i}`),
+      spelllvl:    val(`wand_spelllvl_${i}`),
+      attackType:  atkSel  ? atkSel.value  : 'none',
+      miscAtk:     val(`wand_misc_atk_${i}`),
+      dcAbil:      val(`wand_dc_abil_${i}`),
+      dcMisc:      val(`wand_dc_misc_${i}`),
+      effect:      val(`wand_effect_${i}`),
+      duration:    val(`wand_duration_${i}`),
+      chargesMax:  val(`wand_charges_max_${i}`),
+      chargesUsed: val(`wand_charges_used_${i}`),
+      notes:       val(`wand_notes_${i}`),
+    });
+  }
+
+  // ── AC Items ───────────────────────────────────
   data.acItems = [];
   for (let i = 0; i < AC_ITEM_COUNT; i++) {
     data.acItems.push({
@@ -853,22 +885,7 @@ function collectData() {
     });
   }
 
-  // Blessings
-  data.blessings = {
-    b1name:  val('blessing1_name'),  b1minor: val('blessing1_minor'), b1major: val('blessing1_major'),
-    b2name:  val('blessing2_name'),  b2minor: val('blessing2_minor'), b2major: val('blessing2_major'),
-    sacredWeaponName:    val('sacred_weapon_name'),
-    sacredWeaponEnh:     val('sacred_weapon_enh'),
-    sacredWeaponDmg:     val('sacred_weapon_dmg'),
-    sacredWeaponSpecial: val('sacred_weapon_special'),
-    weaponFocus:         val('weapon_focus'),
-  };
-
-  // Separate class and level
-  data.charClass = val('charClass');
-  data.charLevel = val('charLevel');
-
-  // Gear
+  // ── Gear ───────────────────────────────────────
   data.gear = [];
   for (let i = 0; i < GEAR_COUNT; i++) {
     data.gear.push({
@@ -877,407 +894,45 @@ function collectData() {
     });
   }
 
-  data.feats_structured = collectFeatData();
-  // Save deity obedience bonus state
-  data._deityBonusKey   = (typeof _deityBonusLabel !== 'undefined') ? _deityBonusLabel : '';
-  data._deityBonuses    = (typeof _deityBonuses    !== 'undefined') ? JSON.stringify(_deityBonuses) : '';
-  data._version = '1.0';
-  data._timestamp = new Date().toISOString();
-  return data;
-}
+  // ── Feats ──────────────────────────────────────
+  data.feats_structured = [];
+  for (let i = 0; i < 30; i++) {
+    const name = val(`feat_name_${i}`);
+    const desc = val(`feat_desc_${i}`);
+    const type = val(`feat_type_${i}`);
+    const wpn  = val(`feat_wpn_${i}`);
+    if (name || desc) data.feats_structured.push({ name, desc, type, wpn });
+  }
 
-// ── POPULATE FROM DATA ─────────────────────────────────────────────
-function populateData(data) {
-  Object.entries(data).forEach(([id, value]) => {
-    if (typeof value !== 'string') return;
-    const el = document.getElementById(id);
-    if (el) el.value = value;
-  });
-
-  // Skills
-  if (data.skills) {
-    SKILLS.forEach(([id]) => {
-      const s = data.skills[id];
-      if (!s) return;
-      const dot = document.getElementById(`cs_${id}`);
-      if (dot) {
-        dot.classList.toggle('checked', !!s.cs);
-      }
-      set(`sk_ranks_${id}`, s.ranks || '');
-      set(`sk_misc_${id}`,  s.misc  || '');
+  // ── Magic Items ────────────────────────────────
+  data.magicItems = [];
+  for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
+    data.magicItems.push({
+      name:        val(`mi_name_${i}`),
+      chargesMax:  val(`mi_charges_max_${i}`),
+      chargesUsed: val(`mi_charges_used_${i}`),
     });
   }
 
-  // Weapons
-  if (data.weapons) {
-    data.weapons.forEach((w, i) => {
-      set(`wpn_name_${i}`,      w.name     || '');
-      const matEl = document.getElementById(`wpn_material_${i}`);
-      if (matEl && w.material) matEl.value = w.material;
-      set(`wpn_crit_${i}`,      w.crit     || '');
-      set(`wpn_type_${i}`,      w.type     || '');
-      set(`wpn_range_${i}`,     w.range    || '');
-      set(`wpn_ammo_${i}`,      w.ammo     || '');
-      set(`wpn_enh_${i}`,       w.enh      || '');
-      set(`wpn_feat_${i}`,      w.feat     || '');
-      set(`wpn_misc_atk_${i}`,  w.miscAtk  || '');
-      set(`wpn_dmg_dice_${i}`,  w.dmgDice  || '');
-      set(`wpn_dmg_feat_${i}`,  w.dmgFeat  || '');
-      set(`wpn_dmg_misc_${i}`,  w.dmgMisc  || '');
-      const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-      setCheck(`wpn_twohanded_${i}`, w.twoHanded);
-      setCheck(`wpn_offhand_${i}`,   w.offHand);
-      setCheck(`wpn_ranged_${i}`,    w.ranged);
-      setCheck(`wpn_mw_${i}`,        w.mw);
-      set(`wpn_notes_${i}`, w.notes || '');
-      calcWeapon(i);
-    });
-  }
-
-  // AC Items
-  if (data.acItems) {
-    data.acItems.forEach((a, i) => {
-      set(`aci_name_${i}`,   a.name   || '');
-      set(`aci_bonus_${i}`,  a.bonus  || '');
-      set(`aci_type_${i}`,   a.type   || '');
-      set(`aci_maxdex_${i}`, a.maxDex || '');
-      set(`aci_check_${i}`,  a.check  || '');
-      set(`aci_sf_${i}`,     a.sf     || '');
-      set(`aci_wt_${i}`,     a.wt     || '');
-      set(`aci_props_${i}`,  a.props  || '');
-    });
-    calcACItems();
-  }
-
-  // Blessings
-  if (data.blessings) {
-    const b = data.blessings;
-    set('blessing1_name',  b.b1name  || ''); set('blessing1_minor', b.b1minor || ''); set('blessing1_major', b.b1major || '');
-    set('blessing2_name',  b.b2name  || ''); set('blessing2_minor', b.b2minor || ''); set('blessing2_major', b.b2major || '');
-    set('sacred_weapon_name',    b.sacredWeaponName    || '');
-    set('sacred_weapon_enh',     b.sacredWeaponEnh     || '');
-    set('sacred_weapon_dmg',     b.sacredWeaponDmg     || '');
-    set('sacred_weapon_special', b.sacredWeaponSpecial || '');
-    set('weapon_focus',          b.weaponFocus         || '');
-  }
-
-  // Class and level (separate fields)
-  if (data.charClass) set('charClass', data.charClass);
-  if (data.charLevel) set('charLevel', data.charLevel);
-  // Legacy: classLevel combined field
-  if (data.classLevel && !data.charClass) {
-    const parts = data.classLevel.match(/^(.*?)\s+(\d+)$/);
-    if (parts) { set('charClass', parts[1]); set('charLevel', parts[2]); }
-    else set('charClass', data.classLevel);
-  }
-
-  // Gear
-  if (data.gear) {
-    data.gear.forEach((g, i) => {
-      set(`gear_name_${i}`, g.name || '');
-      set(`gear_wt_${i}`,   g.wt   || '');
-    });
-    calcGear();
-  }
-
-  // Recalculate everything
-  calcAll();
-}
-
-// ── SAVE / LOAD ────────────────────────────────────────────────────
-function saveCharacter() {
-  const data     = collectData();
-  const name     = (data.charName || 'character').replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-  const filename = `${name}.json`;
-  const json     = JSON.stringify(data, null, 2);
-  const blob     = new Blob([json], { type: 'application/json' });
-  const url      = URL.createObjectURL(blob);
-  const a        = document.createElement('a');
-  a.href         = url;
-  a.download     = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function loadCharacter() {
-  document.getElementById('fileInput').click();
-}
-
-function handleFileLoad(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const raw = e.target.result;
-      // Validate it parses
-      let data;
-      try { data = JSON.parse(raw); } catch(parseErr) {
-        alert('Could not parse file as JSON. Make sure it is a .json file saved from this sheet.');
-        return;
-      }
-      if (typeof data !== 'object' || Array.isArray(data)) {
-        alert('Invalid character file format.');
-        return;
-      }
-      // Try to populate, show specific errors if any
-      try {
-        populateData(data);
-        calcAll();
-      } catch(popErr) {
-        console.error('populateData error:', popErr);
-        alert('File loaded but some fields could not be restored: ' + popErr.message + '\nCheck the browser console for details.');
-      }
-    } catch (err) {
-      console.error('Load error:', err);
-      alert('Could not load character file: ' + err.message);
-    }
+  // ── Blessings / class-specific (page 3) ────────
+  data.blessings = {
+    b1name:  val('blessing1_name'),  b1minor: val('blessing1_minor'), b1major: val('blessing1_major'),
+    b2name:  val('blessing2_name'),  b2minor: val('blessing2_minor'), b2major: val('blessing2_major'),
+    sacredWeaponName:    val('sacred_weapon_name'),
+    sacredWeaponEnh:     val('sacred_weapon_enh'),
+    sacredWeaponDmg:     val('sacred_weapon_dmg'),
+    sacredWeaponSpecial: val('sacred_weapon_special'),
+    sacredArmorName:     val('sacred_armor_name'),
+    sacredArmorEnh:      val('sacred_armor_enh'),
+    sacredArmorSpecial:  val('sacred_armor_special'),
+    weaponFocus:         val('weapon_focus'),
+    classNotes:          val('class_notes'),
   };
-  reader.readAsText(file);
-  // Reset so same file can be loaded again
-  event.target.value = '';
-}
 
-function newCharacter() {
-  if (!confirm('Start a new character? All unsaved changes will be lost.')) return;
-  // Clear all inputs
-  document.querySelectorAll('input:not([readonly]), textarea').forEach(el => {
-    el.value = '';
-  });
-  // Clear CS dots
-  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
-  calcAll();
-  calcACItems();
-  calcGear();
-}
-
-/* ══════════════════════════════════════════════════
-   PAGES 3–5 — Class Resources, Spells, Cheatsheet
-   ══════════════════════════════════════════════════ */
-
-const RESOURCE_POOL_COUNT = 6;
-const DAILY_ABILITY_COUNT = 8;
-const MY_ACTIONS_COUNT    = 10;
-const BUFF_TRACKER_COUNT  = 8;
-const SPELL_NAMES_PER_LEVEL = 6; // per level per column = 12 total
-const EXTRACT_LEVELS      = 6;   // Alchemist extracts level 1-6
-
-// Pathfinder 1e carry weight table by STR score (light / medium / heavy in lbs)
-const CARRY_TABLE = {
-  1: [3, 6, 10], 2: [6, 13, 20], 3: [10, 20, 30], 4: [13, 26, 40],
-  5: [16, 33, 50], 6: [20, 40, 60], 7: [23, 46, 70], 8: [26, 53, 80],
-  9: [30, 60, 90], 10: [33, 66, 100], 11: [38, 76, 115], 12: [43, 86, 130],
-  13: [50, 100, 150], 14: [58, 116, 175], 15: [66, 133, 200],
-  16: [76, 153, 230], 17: [86, 173, 260], 18: [100, 200, 300],
-  19: [116, 233, 350], 20: [133, 266, 400], 21: [153, 306, 460],
-  22: [173, 346, 520], 23: [200, 400, 600], 24: [233, 466, 700],
-  25: [266, 533, 800], 26: [306, 613, 920], 27: [346, 693, 1040],
-  28: [400, 800, 1200], 29: [466, 933, 1400], 30: [533, 1066, 1600],
-};
-
-function initPages35() {
-  buildClassResources();
-  buildDailyAbilities();
-  buildExtracts();
-  buildSpellLevels();
-  buildMyActions();
-  buildBuffTracker();
-  updateCarryWeight();
-  calcSpellMeta();
-
-  // Watch STR changes to update carry weight
-  const strInput = document.getElementById('str_score');
-  if (strInput) strInput.addEventListener('input', updateCarryWeight);
-}
-
-// ── CLASS RESOURCE POOLS ───────────────────────────────────────────
-function buildClassResources() {
-  const container = document.getElementById('class-resources-container');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 0; i < RESOURCE_POOL_COUNT; i++) {
-    const row = document.createElement('div');
-    row.className = 'resource-pool-row';
-    row.innerHTML = `
-      <input type="text" id="pool_label_${i}" class="resource-pool-label" placeholder="Pool name…">
-      <input type="number" id="pool_max_${i}" class="num small-num resource-pool-max" placeholder="Max" oninput="updatePoolDots(${i})">
-      <div class="pool-dots" id="pool_dots_${i}"></div>
-    `;
-    container.appendChild(row);
-    updatePoolDots(i);
-  }
-}
-
-function updatePoolDots(i) {
-  const max = parseInt(val(`pool_max_${i}`)) || 0;
-  const container = document.getElementById(`pool_dots_${i}`);
-  if (!container) return;
-  // Preserve filled state
-  const currentFilled = container.querySelectorAll('.pool-dot.filled').length;
-  container.innerHTML = '';
-  const show = Math.min(Math.max(max, 0), 20);
-  for (let d = 0; d < show; d++) {
-    const dot = document.createElement('span');
-    dot.className = 'pool-dot' + (d < currentFilled ? ' filled' : '');
-    dot.onclick = () => dot.classList.toggle('filled');
-    container.appendChild(dot);
-  }
-}
-
-// ── DAILY ABILITIES ────────────────────────────────────────────────
-function buildDailyAbilities() {
-  const tbody = document.getElementById('daily-abilities-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  for (let i = 0; i < DAILY_ABILITY_COUNT; i++) {
-    tbody.innerHTML += `<tr>
-      <td><input type="text"   id="daily_name_${i}"></td>
-      <td><input type="number" id="daily_max_${i}"  class="num small-num"></td>
-      <td><input type="number" id="daily_used_${i}" class="num small-num"></td>
-    </tr>`;
-  }
-}
-
-// ── EXTRACTS (ALCHEMIST) ───────────────────────────────────────────
-function buildExtracts() {
-  const tbody = document.getElementById('extracts-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  for (let lvl = 1; lvl <= EXTRACT_LEVELS; lvl++) {
-    const dots = Array.from({length: 6}, (_, d) =>
-      `<span class="spell-slot-dot" onclick="this.classList.toggle('used')" title="Slot ${d+1}"></span>`
-    ).join('');
-    tbody.innerHTML += `<tr>
-      <td style="font-family:var(--font-heading);color:var(--accent)">${lvl}</td>
-      <td><input type="number" id="ext_perday_${lvl}" class="num small-num"></td>
-      <td><input type="number" id="ext_bonus_${lvl}"  class="num small-num"></td>
-      <td><div class="spell-slot-dots">${dots}</div></td>
-    </tr>`;
-  }
-}
-
-// ── SPELL LEVELS 0–9 ──────────────────────────────────────────────
-function buildSpellLevels() {
-  const container = document.getElementById('spell-levels-container');
-  if (!container) return;
-  container.innerHTML = '';
-  const labels = ['0 (Cantrips/Orisons)', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
-
-  for (let lvl = 0; lvl <= 9; lvl++) {
-    const maxDots = lvl === 0 ? 0 : 8; // level 0 unlimited
-    const dotHtml = lvl === 0 ? '<em style="font-size:8px;color:var(--border)">unlimited</em>' :
-      Array.from({length: maxDots}, (_, d) =>
-        `<span class="spell-slot-dot" onclick="this.classList.toggle('used')" title="Slot ${d+1}"></span>`
-      ).join('');
-
-    const dcField = lvl === 0 ? '—' :
-      `<label>DC <input type="number" id="spl_dc_${lvl}" class="num small-num" readonly title="10 + ${lvl} + ability mod"></label>`;
-    const bonusField = lvl === 0 ? '' :
-      `<label>Bonus <input type="number" id="spl_bonus_${lvl}" class="num small-num" oninput="calcSpellMeta()"></label>`;
-
-    container.innerHTML += `
-      <div class="spell-level-block">
-        <div class="spell-level-header">
-          <span class="spell-level-label">Level ${labels[lvl]}</span>
-          <label>Per day <input type="number" id="spl_perday_${lvl}" class="num small-num"></label>
-          ${bonusField}
-          ${dcField}
-          <div class="spell-slot-dots">${dotHtml}</div>
-        </div>
-        <div class="spell-names-grid" id="spl_names_${lvl}">
-          ${Array.from({length: 12}, (_, i) =>
-            `<input type="text" id="spl_name_${lvl}_${i}" placeholder="Spell name…">`
-          ).join('')}
-        </div>
-      </div>`;
-  }
-}
-
-// ── SPELL META CALCULATION ─────────────────────────────────────────
-function calcSpellMeta() {
-  const abilityKey = (val('spell_ability') || '').toLowerCase().trim();
-  const abilMap = { wis: 'wis', int: 'int', cha: 'cha' };
-  const ability = abilMap[abilityKey] || null;
-  const abilMod = ability ? (getEffectiveMod(ability) || 0) : 0;
-  const cl = parseInt(val('caster_level')) || 0;
-
-  set('spell_dc_base', 10 + abilMod);
-  set('concentration', cl + abilMod);
-
-  // Update per-level DCs
-  for (let lvl = 1; lvl <= 9; lvl++) {
-    const el = document.getElementById(`spl_dc_${lvl}`);
-    if (el) el.value = 10 + lvl + abilMod;
-  }
-}
-
-// ── CARRY WEIGHT ───────────────────────────────────────────────────
-function updateCarryWeight() {
-  const display = document.getElementById('carry-weight-display');
-  if (!display) return;
-  const str = parseInt(val('str_score')) || 0;
-  if (str < 1 || str > 30) {
-    display.innerHTML = '<p class="helper-text">Enter STR score on page 1 to see carry limits.</p>';
-    return;
-  }
-  const [light, medium, heavy] = CARRY_TABLE[str] || [0, 0, 0];
-  display.innerHTML = `
-    <table>
-      <thead><tr><th>Load</th><th>Max (lbs)</th><th>Effects</th></tr></thead>
-      <tbody>
-        <tr><td>Light</td><td class="carry-highlight">≤ ${light}</td><td>No penalty</td></tr>
-        <tr><td>Medium</td><td class="carry-highlight">≤ ${medium}</td><td>–3 AC/max Dex, –3 checks, ×4 run</td></tr>
-        <tr><td>Heavy</td><td class="carry-highlight">≤ ${heavy}</td><td>–6 AC, max Dex +1, –6 checks, ×3 run</td></tr>
-        <tr><td>Lift over head</td><td>${heavy} lbs</td><td>Max heavy load</td></tr>
-        <tr><td>Lift off ground</td><td>${heavy * 2} lbs</td><td>Move 5 ft/round only</td></tr>
-        <tr><td>Drag or push</td><td>${heavy * 5} lbs</td><td>Move 5 ft/round, rough terrain impossible</td></tr>
-      </tbody>
-    </table>
-  `;
-}
-
-// ── MY GO-TO ACTIONS ───────────────────────────────────────────────
-function buildMyActions() {
-  const tbody = document.getElementById('my-actions-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  for (let i = 0; i < MY_ACTIONS_COUNT; i++) {
-    tbody.innerHTML += `<tr>
-      <td><input type="text" id="act_name_${i}"   placeholder="e.g. Fervor (heal self)"></td>
-      <td><input type="text" id="act_type_${i}"   placeholder="Swift" style="width:52px"></td>
-      <td><input type="text" id="act_roll_${i}"   placeholder="+7 / 2d6"></td>
-      <td><input type="text" id="act_notes_${i}"  placeholder="Notes…"></td>
-    </tr>`;
-  }
-}
-
-// ── BUFF TRACKER ───────────────────────────────────────────────────
-function buildBuffTracker() {
-  const tbody = document.getElementById('buff-tracker-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  for (let i = 0; i < BUFF_TRACKER_COUNT; i++) {
-    tbody.innerHTML += `<tr>
-      <td><input type="text" id="buff_name_${i}"     placeholder="Bless, Haste…"></td>
-      <td><input type="text" id="buff_effect_${i}"   placeholder="+1 atk/saves"></td>
-      <td><input type="text" id="buff_duration_${i}" placeholder="3 rounds / cleric"></td>
-    </tr>`;
-  }
-}
-
-/* ══════════════════════════════════════════════════
-   EXTEND SAVE / LOAD FOR PAGES 3–5
-   ══════════════════════════════════════════════════ */
-
-// Extend collectData to include pages 3-5
-const _collectDataOriginal = collectData;
-collectData = function() {
-  const data = _collectDataOriginal();
-
-  // Class resource pools
+  // ── Resource pools ─────────────────────────────
   data.resourcePools = [];
   for (let i = 0; i < RESOURCE_POOL_COUNT; i++) {
-    const dots = document.getElementById(`pool_dots_${i}`);
+    const dots   = document.getElementById(`pool_dots_${i}`);
     const filled = dots ? dots.querySelectorAll('.pool-dot.filled').length : 0;
     data.resourcePools.push({
       label:  val(`pool_label_${i}`),
@@ -1286,7 +941,7 @@ collectData = function() {
     });
   }
 
-  // Daily abilities
+  // ── Daily abilities ────────────────────────────
   data.dailyAbilities = [];
   for (let i = 0; i < DAILY_ABILITY_COUNT; i++) {
     data.dailyAbilities.push({
@@ -1296,20 +951,7 @@ collectData = function() {
     });
   }
 
-  // Extracts
-  data.extracts = [];
-  for (let lvl = 1; lvl <= EXTRACT_LEVELS; lvl++) {
-    data.extracts.push({
-      perday: val(`ext_perday_${lvl}`),
-      bonus:  val(`ext_bonus_${lvl}`),
-    });
-  }
-
-  // Spell fields
-  data.spellMeta = {
-    ability: val('spell_ability'),
-    casterLevel: val('caster_level'),
-  };
+  // ── Spell levels (page 4) ──────────────────────
   data.spellLevels = [];
   for (let lvl = 0; lvl <= 9; lvl++) {
     const names = [];
@@ -1321,7 +963,7 @@ collectData = function() {
     });
   }
 
-  // My actions
+  // ── My Actions (cheatsheet) ────────────────────
   data.myActions = [];
   for (let i = 0; i < MY_ACTIONS_COUNT; i++) {
     data.myActions.push({
@@ -1332,7 +974,7 @@ collectData = function() {
     });
   }
 
-  // Buffs
+  // ── Buff tracker ───────────────────────────────
   data.buffs = [];
   for (let i = 0; i < BUFF_TRACKER_COUNT; i++) {
     data.buffs.push({
@@ -1342,23 +984,150 @@ collectData = function() {
     });
   }
 
-  data.formulae_book  = val('formulae_book');
-  data.campaign_notes = val('campaign_notes');
+  // ── Deity bonus state ──────────────────────────
+  data._deityBonusKey  = (typeof _deityBonusLabel !== 'undefined') ? _deityBonusLabel : '';
+  data._deityBonuses   = (typeof _deityBonuses    !== 'undefined') ? JSON.stringify(_deityBonuses) : '';
 
+  data._version = '3.3';
   return data;
-};
+}
 
-// Extend populateData for pages 3-5
-const _populateDataOriginal = populateData;
-populateData = function(data) {
-  _populateDataOriginal(data);
+function populateData(data) {
+  // ── Simple fields ──────────────────────────────
+  Object.entries(data).forEach(([id, value]) => {
+    if (typeof value !== 'string') return;
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
 
+  // ── Skills ─────────────────────────────────────
+  if (data.skills && typeof SKILLS !== 'undefined') {
+    SKILLS.forEach(([id]) => {
+      const s = data.skills[id];
+      if (!s) return;
+      const dot = document.getElementById(`cs_${id}`);
+      if (dot) dot.classList.toggle('checked', !!s.cs);
+      set(`sk_ranks_${id}`, s.ranks || '');
+      set(`sk_misc_${id}`,  s.misc  || '');
+      calcSkill(id);
+    });
+  }
+
+  // ── Weapons ────────────────────────────────────
+  if (data.weapons) {
+    data.weapons.forEach((w, i) => {
+      if (i >= WEAPON_COUNT) return;
+      set(`wpn_name_${i}`,      w.name     || '');
+      set(`wpn_crit_${i}`,      w.crit     || '');
+      set(`wpn_type_${i}`,      w.type     || '');
+      set(`wpn_range_${i}`,     w.range    || '');
+      set(`wpn_ammo_${i}`,      w.ammo     || '');
+      set(`wpn_enh_${i}`,       w.enh      || '');
+      set(`wpn_feat_${i}`,      w.feat     || '');
+      set(`wpn_misc_atk_${i}`,  w.miscAtk  || '');
+      set(`wpn_dmg_dice_${i}`,  w.dmgDice  || '');
+      set(`wpn_dmg_feat_${i}`,  w.dmgFeat  || '');
+      set(`wpn_dmg_misc_${i}`,  w.dmgMisc  || '');
+      set(`wpn_notes_${i}`,     w.notes    || '');
+      const matEl = document.getElementById(`wpn_material_${i}`);
+      if (matEl && w.material) matEl.value = w.material;
+      const setChk = (id, v) => { const el = document.getElementById(id); if (el) { el.checked = !!v; el.disabled = false; } };
+      setChk(`wpn_twohanded_${i}`, w.twoHanded);
+      setChk(`wpn_offhand_${i}`,   w.offHand);
+      setChk(`wpn_ranged_${i}`,    w.ranged);
+      setChk(`wpn_mw_${i}`,        w.mw);
+      calcWeapon(i);
+    });
+  }
+
+  // ── Wands ──────────────────────────────────────
+  if (data.wands) {
+    data.wands.forEach((w, i) => {
+      if (i >= WAND_COUNT) return;
+      set(`wand_name_${i}`,         w.name        || '');
+      set(`wand_cl_${i}`,           w.cl          || '');
+      set(`wand_spelllvl_${i}`,     w.spelllvl    || '');
+      set(`wand_misc_atk_${i}`,     w.miscAtk     || '');
+      set(`wand_dc_abil_${i}`,      w.dcAbil      || '');
+      set(`wand_dc_misc_${i}`,      w.dcMisc      || '');
+      set(`wand_effect_${i}`,       w.effect      || '');
+      set(`wand_duration_${i}`,     w.duration    || '');
+      set(`wand_charges_max_${i}`,  w.chargesMax  || '');
+      set(`wand_charges_used_${i}`, w.chargesUsed || '');
+      set(`wand_notes_${i}`,        w.notes       || '');
+      const typeSel = document.getElementById(`wand_type_${i}`);
+      if (typeSel && w.type) typeSel.value = w.type;
+      const atkSel = document.getElementById(`wand_attack_type_${i}`);
+      if (atkSel && w.attackType) atkSel.value = w.attackType;
+      updateWandDots(i);
+      calcWand(i);
+    });
+  }
+
+  // ── AC Items ───────────────────────────────────
+  if (data.acItems) {
+    data.acItems.forEach((a, i) => {
+      set(`aci_name_${i}`,    a.name   || '');
+      set(`aci_bonus_${i}`,   a.bonus  || '');
+      set(`aci_type_${i}`,    a.type   || '');
+      set(`aci_maxdex_${i}`,  a.maxDex || '');
+      set(`aci_check_${i}`,   a.check  || '');
+      set(`aci_sf_${i}`,      a.sf     || '');
+      set(`aci_wt_${i}`,      a.wt     || '');
+      set(`aci_props_${i}`,   a.props  || '');
+    });
+    calcACItems();
+  }
+
+  // ── Gear ───────────────────────────────────────
+  if (data.gear) {
+    data.gear.forEach((g, i) => {
+      set(`gear_name_${i}`, g.name || '');
+      set(`gear_wt_${i}`,   g.wt   || '');
+    });
+    calcGear();
+  }
+
+  // ── Feats ──────────────────────────────────────
+  if (data.feats_structured && typeof buildAdaptivePage2 === 'function') {
+    const classKey = (val('charClass') || '').toLowerCase();
+    const level    = parseInt(val('charLevel')) || 1;
+    buildAdaptivePage2(classKey, level);
+    setTimeout(() => restoreFeatData(data.feats_structured), 100);
+  }
+
+  // ── Magic Items ────────────────────────────────
+  if (data.magicItems) {
+    data.magicItems.forEach((m, i) => {
+      set(`mi_name_${i}`,         m.name        || '');
+      set(`mi_charges_max_${i}`,  m.chargesMax  || '');
+      set(`mi_charges_used_${i}`, m.chargesUsed || '');
+      updateMagicItemDots(i);
+    });
+  }
+
+  // ── Blessings ──────────────────────────────────
+  if (data.blessings) {
+    const b = data.blessings;
+    set('blessing1_name',  b.b1name  || ''); set('blessing1_minor', b.b1minor || ''); set('blessing1_major', b.b1major || '');
+    set('blessing2_name',  b.b2name  || ''); set('blessing2_minor', b.b2minor || ''); set('blessing2_major', b.b2major || '');
+    set('sacred_weapon_name',    b.sacredWeaponName    || '');
+    set('sacred_weapon_enh',     b.sacredWeaponEnh     || '');
+    set('sacred_weapon_dmg',     b.sacredWeaponDmg     || '');
+    set('sacred_weapon_special', b.sacredWeaponSpecial || '');
+    if (b.sacredArmorName)    set('sacred_armor_name',    b.sacredArmorName);
+    if (b.sacredArmorEnh)     set('sacred_armor_enh',     b.sacredArmorEnh);
+    if (b.sacredArmorSpecial) set('sacred_armor_special', b.sacredArmorSpecial);
+    if (b.weaponFocus)        set('weapon_focus',         b.weaponFocus);
+    if (b.classNotes)         set('class_notes',          b.classNotes);
+  }
+
+  // ── Resource pools ─────────────────────────────
   if (data.resourcePools) {
     data.resourcePools.forEach((p, i) => {
       set(`pool_label_${i}`, p.label || '');
       set(`pool_max_${i}`,   p.max   || '');
       updatePoolDots(i);
-      // Restore filled dots
       const dotsEl = document.getElementById(`pool_dots_${i}`);
       if (dotsEl && p.filled) {
         dotsEl.querySelectorAll('.pool-dot').forEach((dot, d) => {
@@ -1368,6 +1137,7 @@ populateData = function(data) {
     });
   }
 
+  // ── Daily abilities ────────────────────────────
   if (data.dailyAbilities) {
     data.dailyAbilities.forEach((a, i) => {
       set(`daily_name_${i}`, a.name || '');
@@ -1376,20 +1146,7 @@ populateData = function(data) {
     });
   }
 
-  if (data.extracts) {
-    data.extracts.forEach((e, i) => {
-      const lvl = i + 1;
-      set(`ext_perday_${lvl}`, e.perday || '');
-      set(`ext_bonus_${lvl}`,  e.bonus  || '');
-    });
-  }
-
-  if (data.spellMeta) {
-    set('spell_ability', data.spellMeta.ability || '');
-    set('caster_level',  data.spellMeta.casterLevel || '');
-    calcSpellMeta();
-  }
-
+  // ── Spell levels ───────────────────────────────
   if (data.spellLevels) {
     data.spellLevels.forEach((s, lvl) => {
       set(`spl_perday_${lvl}`, s.perday || '');
@@ -1398,6 +1155,7 @@ populateData = function(data) {
     });
   }
 
+  // ── My Actions ─────────────────────────────────
   if (data.myActions) {
     data.myActions.forEach((a, i) => {
       set(`act_name_${i}`,  a.name  || '');
@@ -1407,6 +1165,7 @@ populateData = function(data) {
     });
   }
 
+  // ── Buffs ──────────────────────────────────────
   if (data.buffs) {
     data.buffs.forEach((b, i) => {
       set(`buff_name_${i}`,     b.name     || '');
@@ -1415,22 +1174,11 @@ populateData = function(data) {
     });
   }
 
+  // ── Formulae / campaign notes ──────────────────
   set('formulae_book',  data.formulae_book  || '');
   set('campaign_notes', data.campaign_notes || '');
 
-  // Restore language checkboxes
-  if (data.languages) {
-    // Rebuild picker with race data if available
-    const raceKey = data._applied_race;
-    const race = raceKey && RACES[raceKey];
-    buildLanguagePicker(
-      race ? race.languages      : [],
-      race ? race.bonusLanguages : []
-    );
-    restoreLanguagePicker(data.languages);
-  }
-
-  // Restore deity bonus
+  // ── Deity bonus ────────────────────────────────
   if (data._deityBonusKey && data._deityBonuses) {
     try {
       _deityBonusLabel = data._deityBonusKey;
@@ -1439,1732 +1187,26 @@ populateData = function(data) {
     } catch(e) {}
   }
 
-  // Restore structured feats
-  if (data.feats_structured) {
-    buildAdaptivePage2(data._applied_race ? (data.charClass || '').toLowerCase() : '', parseInt(data.charLevel) || 1);
-    restoreFeatData(data.feats_structured);
+  // ── Language picker ────────────────────────────
+  const raceKey = data._applied_race;
+  const race = (raceKey && typeof RACES !== 'undefined') ? RACES[raceKey] : null;
+  if (typeof buildLanguagePicker === 'function') {
+    buildLanguagePicker(race ? race.languages : [], race ? race.bonusLanguages : []);
+  }
+  if (data.languages && typeof restoreLanguagePicker === 'function') {
+    restoreLanguagePicker(data.languages);
   }
 
-  updateCarryWeight();
-};
+  // ── Traits ─────────────────────────────────────
+  setTimeout(restoreTraitDescriptions, 200);
 
-/* ══════════════════════════════════════════════════
-   CHARACTER SETUP — class/race/level auto-fill
-   Requires data.js loaded before sheet.js
-   ══════════════════════════════════════════════════ */
-
-// ── BUILD SETUP PANEL IN HTML ──────────────────────
-function buildSetupPanel() {
-  const panel = document.getElementById('setup-panel');
-  if (!panel) return;
-
-  // Class options
-  const classOpts = Object.entries(CLASSES)
-    .sort((a,b) => a[1].name.localeCompare(b[1].name))
-    .map(([k,v]) => `<option value="${k}">${v.name} (${v.source})</option>`)
-    .join('');
-
-  // Race options
-  const raceOpts = Object.entries(RACES)
-    .sort((a,b) => a[1].name.localeCompare(b[1].name))
-    .map(([k,v]) => `<option value="${k}">${v.name}</option>`)
-    .join('');
-
-  // Size options
-  const sizeOpts = Object.keys(SIZE_DATA)
-    .map(s => `<option value="${s}"${s==='Medium'?' selected':''}>${s}</option>`)
-    .join('');
-
-  // Deity options
-  const deityOpts = DEITIES
-    .map(d => `<option value="${d[0]}" data-align="${d[1]}" data-domains="${d[2]}" data-weapon="${d[3]}">${d[0]} (${d[1]}) — ${d[3]}</option>`)
-    .join('');
-
-  panel.innerHTML = `
-    <div class="setup-row">
-      <label class="setup-label">Race
-        <select id="setup_race" onchange="onRaceChange()">
-          <option value="">— select —</option>
-          ${raceOpts}
-        </select>
-      </label>
-      <label class="setup-label">Class
-        <select id="setup_class" onchange="onClassChange()">
-          <option value="">— select —</option>
-          ${classOpts}
-        </select>
-      </label>
-      <label class="setup-label">Level
-        <input type="number" id="setup_level" min="1" max="20" value="1" style="width:42px" oninput="onLevelChange()">
-      </label>
-      <label class="setup-label">Size
-        <select id="setup_size" onchange="onSizeChange()">
-          ${sizeOpts}
-        </select>
-      </label>
-      <label class="setup-label">Deity
-        <select id="setup_deity" onchange="onDeityChange()" style="max-width:180px">
-          <option value="">— select —</option>
-          ${deityOpts}
-        </select>
-      </label>
-      <button class="setup-apply-btn" onclick="applySetup()">Apply Setup</button>
-    </div>
-    <div id="setup-info" class="setup-info"></div>
-  `;
-}
-
-// ── ON CHANGE HANDLERS ─────────────────────────────
-function onLevelFieldChange() {
-  // When the level field on page 1 is changed directly, update preview
-  const lvl = parseInt(document.getElementById('charLevel') && document.getElementById('charLevel').value) || 1;
-  const setupLevel = document.getElementById('setup_level');
-  if (setupLevel) setupLevel.value = lvl;
-  showSetupInfo();
-}
-
-function onSizeFieldChange() {
-  // Size dropdown on page 1 changed
-  const size = document.getElementById('size') && document.getElementById('size').value;
-  if (!size) return;
-  const setupSize = document.getElementById('setup_size');
-  if (setupSize) setupSize.value = size;
-  onSizeChange();
-}
-
-function onRaceChange() {
-  const key = document.getElementById('setup_race').value;
-  const race = RACES[key];
-  if (!race) return;
-  showSetupInfo();
-}
-
-function onClassChange() {
-  showSetupInfo();
-}
-
-function onLevelChange() {
-  showSetupInfo();
-  const lvl = parseInt(document.getElementById('setup_level').value) || 1;
-  const classKey = document.getElementById('setup_class').value;
-  if (classKey) previewClassStats(classKey, lvl);
-}
-
-function onSizeChange() {
-  const size = document.getElementById('setup_size').value;
-  const sizeData = SIZE_DATA[size];
-  if (!sizeData) return;
-  set('ac_size', sizeData.acMod);
-  set('cmb_size', sizeData.cmbMod);
-  set('cmd_size', sizeData.cmbMod);
-  calcAC();
-  calcCombat();
-}
-
-function onDeityChange() {
-  // Set deity field on the sheet immediately for convenience
-  const sel = document.getElementById('setup_deity');
-  if (sel && sel.value) set('deity', sel.value);
-  showSetupInfo();
-}
-
-function showSetupInfo() {
-  const info = document.getElementById('setup-info');
-  if (!info) return;
-  const raceEl  = document.getElementById('setup_race');
-  const classEl = document.getElementById('setup_class');
-  const levelEl = document.getElementById('setup_level');
-  const deityEl = document.getElementById('setup_deity');
-  const raceKey  = raceEl  ? raceEl.value  : '';
-  const classKey = classEl ? classEl.value : '';
-  const level    = parseInt(levelEl ? levelEl.value : '1') || 1;
-  const race = (typeof RACES   !== 'undefined') ? RACES[raceKey]   : null;
-  const cls  = (typeof CLASSES !== 'undefined') ? CLASSES[classKey]: null;
-  let html = '';
-
-  // ── RACE ──────────────────────────────────────────
-  if (race) {
-    const modStr = Object.entries(race.abilityMods)
-      .filter(([,v]) => v !== 0)
-      .map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
-      .join(', ');
-    if (modStr) html += `<span class="setup-info-tag">📊 ${modStr}</span>`;
-    html += `<span class="setup-info-tag">👁 ${race.vision}</span>`;
-    html += `<span class="setup-info-tag">🗣 ${race.languages.join(', ')}</span>`;
-    if (race.bonusLanguages && race.bonusLanguages.length)
-      html += `<span class="setup-info-tag" style="opacity:.8">+ bonus: ${race.bonusLanguages.slice(0,5).join(', ')}${race.bonusLanguages.length > 5 ? '…' : ''}</span>`;
-  }
-
-  // ── CLASS ──────────────────────────────────────────
-  if (cls) {
-    const bab   = (typeof getBAB       !== 'undefined') ? getBAB(classKey, level)        : '?';
-    const saves = (typeof getClassSaves!== 'undefined') ? getClassSaves(classKey, level) : {fort:'?',ref:'?',will:'?'};
-    html += `<span class="setup-info-tag">⚔ BAB +${bab}</span>`;
-    html += `<span class="setup-info-tag">💛 Fort +${saves.fort} / Ref +${saves.ref} / Will +${saves.will}</span>`;
-    html += `<span class="setup-info-tag">🎲 HD d${cls.hd} · ${cls.skillsPerLevel} skills/lvl</span>`;
-    if (cls.spellAbility)
-      html += `<span class="setup-info-tag">✨ Spells: ${(cls.spellAbility||'').toUpperCase()}</span>`;
-    if (cls.proficiencies)
-      html += `<span class="setup-info-tag" title="${cls.proficiencies}">🛡 ${cls.proficiencies.substring(0,50)}${cls.proficiencies.length>50?'…':''}</span>`;
-    const xpNext = (typeof getXPForLevel !== 'undefined') ? getXPForLevel(level) : 0;
-    if (xpNext) html += `<span class="setup-info-tag">📈 XP to next: ${xpNext.toLocaleString()}</span>`;
-    // Bonus feat count
-    const bonusFeatCnt = (typeof getBonusFeatCount !== 'undefined') ? getBonusFeatCount(classKey, level) : 0;
-    if (bonusFeatCnt > 0)
-      html += `<span class="setup-info-tag">🏅 ${bonusFeatCnt} bonus feat${bonusFeatCnt>1?'s':''}</span>`;
-  }
-
-  // ── DEITY ──────────────────────────────────────────
-  if (deityEl && deityEl.value) {
-    const deityName = deityEl.value;
-    // Find deity data
-    const deityRow = (typeof DEITIES !== 'undefined') ?
-      DEITIES.find(d => d[0] === deityName) : null;
-    if (deityRow) {
-      html += `<span class="setup-info-tag">⚔ Favored weapon: <strong>${deityRow[4]}</strong></span>`;
-      html += `<span class="setup-info-tag">🏛 ${deityRow[2]}</span>`;
-    }
-    const perk = (typeof DEITY_PERKS !== 'undefined') ? DEITY_PERKS[deityName] : null;
-    if (perk) {
-      html += `<span class="setup-info-tag deity-perk" title="Obedience: ${perk.obedience}">🙏 ${perk.perk}</span>`;
-    }
-  }
-
-  info.innerHTML = html || '<span class="setup-info-tag" style="opacity:.5">Select race, class, and deity above to see details</span>';
-}
-
-function previewClassStats(classKey, level) {
-  // Just update the info display
-  showSetupInfo();
-}
-
-// ── APPLY SETUP ────────────────────────────────────
-function applySetup() {
-  const raceKey  = document.getElementById('setup_race').value;
-  const classKey = document.getElementById('setup_class').value;
-  const level    = parseInt(document.getElementById('setup_level').value) || 1;
-  const sizeKey  = document.getElementById('setup_size').value;
-  const deityEl  = document.getElementById('setup_deity');
-  const deityOpt = deityEl ? deityEl.options[deityEl.selectedIndex] : null;
-
-  const race = RACES[raceKey];
-  const cls  = CLASSES[classKey];
-
-  // ── Deity
-  if (deityOpt && deityOpt.value) {
-    set('deity', deityOpt.value);
-  }
-
-  // ── Class + level
-  if (cls) {
-    set('charClass', cls.name);
-    set('charLevel', level);
-
-    // BAB
-    const bab = getBAB(classKey, level);
-    set('bab', bab);
-
-    // Base saves
-    const saves = getClassSaves(classKey, level);
-    set('fort_base', saves.fort);
-    set('ref_base',  saves.ref);
-    set('will_base', saves.will);
-
-    // Spell ability for page 3
-    if (cls.spellAbility) set('spell_ability', cls.spellAbility.toUpperCase());
-
-    // Caster level for page 3
-    set('caster_level', level);
-
-    // XP
-    set('xp_current', '0');
-    const xpNext = getXPForLevel(level);
-    if (xpNext) set('xp_next', xpNext);
-
-    // Class skills — mark dots
-    markClassSkills(cls.classSkills);
-
-    // Resource pool labels (page 3)
-    if (typeof updatePoolDots === 'function') {
-      cls.resources.forEach((r, i) => {
-        set(`pool_label_${i}`, r.label);
-      });
-    }
-  }
-
-  // ── Race
-  if (race) {
-    set('race', race.name);
-
-    // Ability score racial mods — idempotent:
-    // reverse any previously applied race mods first, then apply new ones
-    const prevRaceKey = val('_applied_race');
-    const prevRace = prevRaceKey && RACES[prevRaceKey];
-    ['str','dex','con','int','wis','cha'].forEach(ab => {
-      const raw = val(`${ab}_score`);
-      if (raw === '' || raw === null) return; // never touch empty fields
-      let score = parseInt(raw) || 0;
-      // Reverse old racial mod if a different race was applied before
-      if (prevRace && prevRaceKey !== raceKey) {
-        score -= (prevRace.abilityMods[ab] || 0);
-      }
-      // Apply new racial mod only if race changed or not yet applied
-      const newMod = race.abilityMods[ab] || 0;
-      if (prevRaceKey !== raceKey && newMod !== 0) {
-        score += newMod;
-        set(`${ab}_score`, score);
-      }
-    });
-    // Remember which race we applied
-    set('_applied_race', raceKey);
-
-    // Size
-    set('size', race.size);
-    const setupSize = document.getElementById('setup_size');
-    if (setupSize) setupSize.value = race.size;
-    onSizeChange();
-
-    // Speed
-    set('speed_land', race.speed);
-    set('speed_armor', race.size === 'Medium' ? race.speed - 10 : race.speed);
-
-    // Languages — build picker with racial defaults pre-checked
-    buildLanguagePicker(race.languages, race.bonusLanguages);
-
-    // Racial traits — clear old and re-add cleanly
-    const traitText = race.traits.join('\n');
-    let existingFeatures = val('special_abilities');
-    // Remove any previous racial traits block
-    const racialMarker = '--- Racial Traits ---';
-    if (existingFeatures.includes(racialMarker)) {
-      const idx = existingFeatures.indexOf(racialMarker);
-      existingFeatures = existingFeatures.substring(0, idx).trim();
-    }
-    set('special_abilities', existingFeatures
-      ? existingFeatures + '\n\n' + racialMarker + '\n' + traitText
-      : racialMarker + '\n' + traitText);
-
-    // Racial bonus languages note
-    if (race.bonusLanguages && race.bonusLanguages.length) {
-      const existing = val('skill_conditional') || '';
-      set('skill_conditional',
-        (existing ? existing + ' | ' : '') +
-        `Bonus languages: ${race.bonusLanguages.join(', ')}`);
-    }
-  }
-
-  // ── Recalculate everything
+  // ── Recalc everything ──────────────────────────
   calcAll();
   calcSaves();
   calcCombat();
-
-  // Write deity perk info:
-  // 1. Into the special abilities box as a reference note
-  // 2. Into buff tracker slot 0 on page 5 (as a reminder to apply after obedience)
-  const deityEl2 = document.getElementById('setup_deity');
-  if (deityEl2 && deityEl2.value) {
-    const perkData = (typeof DEITY_PERKS !== 'undefined') && DEITY_PERKS[deityEl2.value];
-    if (perkData) {
-      // Add to special abilities as a permanent reference (once)
-      const existingSA = val('special_abilities');
-      const perkNote = `[Deity Obedience — ${deityEl2.value}]\n${perkData.perk}\n⚠ Requires: ${perkData.obedience}`;
-      if (!existingSA.includes('Deity Obedience') && !existingSA.includes(deityEl2.value)) {
-        set('special_abilities', existingSA ? existingSA + '\n\n' + perkNote : perkNote);
-      }
-      // Add to buff tracker slot 0 (page 5) as reminder
-      if (!val('buff_name_0')) {
-        set('buff_name_0',     `${deityEl2.value} Obedience`);
-        set('buff_effect_0',   perkData.perk);
-        set('buff_duration_0', 'Daily (1h prayer required)');
-      }
-
-      // Apply typed bonus objects from the structured perk data
-      applyDeityBonuses(perkData, deityEl2.value);
-    }
-  }
-
-  // Build adaptive pages
-  if (typeof afterApplySetup === 'function') afterApplySetup(classKey, level);
-
-  // Re-affirm visible fields (some may be overwritten by rebuild)
-  set('race',      race  ? race.name  : val('race'));
-  set('charClass', cls   ? cls.name   : val('charClass'));
-  set('charLevel', level);
-  if (deityOpt && deityOpt.value) set('deity', deityOpt.value);
-
-  alert(`Setup applied!\n\nCheck:\n• Ability scores (racial mods added to existing values)\n• Special Abilities tab (racial traits added)\n• Class Skills (dots marked)\n• BAB, Saves, Size updated\n\nTip: If this is a new character, set ability scores to 10 first, then apply setup.`);
-}
-
-// ── MARK CLASS SKILLS ──────────────────────────────
-function markClassSkills(classSkillIds) {
-  // First clear all
-  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
-  // Mark class skills
-  classSkillIds.forEach(id => {
-    const dot = document.getElementById(`cs_${id}`);
-    if (dot) {
-      dot.classList.add('checked');
-      calcSkill(id.replace(/\d+$/, '') === id ? id : id); // handle craft1/craft2
-    }
-  });
-  // Recalc all skills
-  calcSkills();
-}
-
-// ── WEAPON LOOKUP ──────────────────────────────────
-function buildWeaponLookup() {
-  const container = document.getElementById('weapon-lookup');
-  if (!container) return;
-
-  const opts = Object.keys(WEAPONS).sort()
-    .map(w => `<option value="${w}">${w}</option>`)
-    .join('');
-
-  container.innerHTML = `
-    <div class="weapon-lookup-row">
-      <select id="wpn_lookup_name" style="width:180px">
-        <option value="">— lookup weapon —</option>
-        ${opts}
-      </select>
-      <select id="wpn_lookup_slot" style="width:60px">
-        ${Array.from({length:WEAPON_COUNT},(_,i)=>`<option value="${i}">Slot ${i+1}</option>`).join('')}
-      </select>
-      <label><input type="checkbox" id="wpn_lookup_mw"> Masterwork (+1 atk)</label>
-      <label>Enhance <input type="number" id="wpn_lookup_enhance" class="num small-num" min="0" max="5" value="0"> </label>
-      <button onclick="applyWeaponLookup()">Fill Slot</button>
-    </div>
-  `;
-}
-
-function applyWeaponLookup() {
-  const name    = val('wpn_lookup_name');
-  const slot    = parseInt(val('wpn_lookup_slot')) || 0;
-  const mw      = document.getElementById('wpn_lookup_mw') && document.getElementById('wpn_lookup_mw').checked;
-  const enhance = parseInt(val('wpn_lookup_enhance')) || 0;
-  const wpn     = WEAPONS[name];
-  if (!wpn) { alert('Select a weapon first.'); return; }
-
-  // Helper to set a checkbox
-  const setChk = (id, v) => {
-    const el = document.getElementById(id);
-    if (el) { el.checked = !!v; el.disabled = false; }
-  };
-  const lockChk = (id, v) => {
-    const el = document.getElementById(id);
-    if (el) { el.checked = !!v; el.disabled = true; } // locked — weapon type forces this
-  };
-
-  // Name and material
-  set(`wpn_name_${slot}`, name + (enhance > 0 ? ` +${enhance}` : (mw && enhance === 0 ? ' (MW)' : '')));
-  // Set material if it was selected
-  const matSel = document.getElementById(`wpn_material_${slot}`);
-  if (matSel && matSel.value === 'Normal' && mw && enhance === 0) matSel.value = 'Masterwork';
-
-  // Stats from data
-  set(`wpn_crit_${slot}`,     wpn.crit);
-  set(`wpn_type_${slot}`,     wpn.type);
-  set(`wpn_range_${slot}`,    wpn.range > 0 ? wpn.range + ' ft.' : 'melee');
-  set(`wpn_dmg_dice_${slot}`, wpn.dmg);   // ← correct field: dice, not total
-  set(`wpn_enh_${slot}`,      enhance || '');
-
-  // Checkboxes — two-handed and ranged are locked by weapon type
-  const isRanged    = wpn.group === 'ranged';
-  const isTwoHanded = !!wpn.twoHanded;
-  const isLight     = wpn.group === 'light';
-
-  lockChk(`wpn_twohanded_${slot}`, isTwoHanded);  // locked: polearms/two-handers always two-handed
-  setChk(`wpn_offhand_${slot}`,  false);           // user can toggle
-  lockChk(`wpn_ranged_${slot}`,    isRanged);      // locked: ranged weapons always ranged
-  setChk(`wpn_mw_${slot}`,        mw && enhance === 0); // MW checkbox
-
-  // Recalculate full breakdown
-  calcWeapon(slot);
-}
-
-// ── ARMOR LOOKUP ───────────────────────────────────
-function buildArmorLookup() {
-  const container = document.getElementById('armor-lookup');
-  if (!container) return;
-
-  const opts = Object.keys(ARMOR).sort()
-    .map(a => `<option value="${a}">${a}</option>`)
-    .join('');
-
-  container.innerHTML = `
-    <div class="armor-lookup-row">
-      <select id="armor_lookup_name" style="width:180px">
-        <option value="">— lookup armor/shield —</option>
-        ${opts}
-      </select>
-      <select id="armor_lookup_slot" style="width:60px">
-        ${Array.from({length:AC_ITEM_COUNT},(_,i)=>`<option value="${i}">Slot ${i+1}</option>`).join('')}
-      </select>
-      <label><input type="checkbox" id="armor_lookup_mw"> Masterwork</label>
-      <label>Enhance <input type="number" id="armor_lookup_enhance" class="num small-num" min="0" max="5" value="0"></label>
-      <button onclick="applyArmorLookup()">Fill Slot</button>
-    </div>
-  `;
-}
-
-function applyArmorLookup() {
-  const name    = val('armor_lookup_name');
-  const slot    = parseInt(val('armor_lookup_slot')) || 0;
-  const mw      = document.getElementById('armor_lookup_mw').checked;
-  const enhance = parseInt(val('armor_lookup_enhance')) || 0;
-  const armor   = ARMOR[name];
-  if (!armor) { alert('Select armor or shield first.'); return; }
-
-  const checkPen = mw || enhance > 0
-    ? Math.min(0, armor.checkPen + 1)
-    : armor.checkPen;
-
-  set(`aci_name_${slot}`,  name + (mw && enhance===0 ? ' (MW)' : '') + (enhance > 0 ? ` +${enhance}` : ''));
-  set(`aci_bonus_${slot}`, armor.bonus + enhance);
-  set(`aci_type_${slot}`,  armor.type);
-  set(`aci_check_${slot}`, checkPen);
-  set(`aci_sf_${slot}`,    armor.sf);
-  set(`aci_wt_${slot}`,    armor.weight);
-
   calcACItems();
+  calcGear();
 }
-
-// ── GEAR LOOKUP ────────────────────────────────────
-function buildGearLookup() {
-  const container = document.getElementById('gear-lookup');
-  if (!container) return;
-
-  const opts = Object.keys(COMMON_GEAR).sort()
-    .map(g => `<option value="${g}">${g} (${COMMON_GEAR[g].weight} lbs, ${COMMON_GEAR[g].cost} gp)</option>`)
-    .join('');
-
-  container.innerHTML = `
-    <div class="gear-lookup-row">
-      <select id="gear_lookup_name" style="width:220px">
-        <option value="">— quick-add gear —</option>
-        ${opts}
-      </select>
-      <button onclick="applyGearLookup()">Add to Gear</button>
-    </div>
-  `;
-}
-
-function applyGearLookup() {
-  const name = val('gear_lookup_name');
-  const item = COMMON_GEAR[name];
-  if (!item) { alert('Select an item first.'); return; }
-
-  // Find first empty gear slot
-  for (let i = 0; i < GEAR_COUNT; i++) {
-    if (!val(`gear_name_${i}`)) {
-      set(`gear_name_${i}`, name);
-      set(`gear_wt_${i}`,   item.weight);
-      calcGear();
-      return;
-    }
-  }
-  alert('No empty gear slots. Clear a slot first.');
-}
-
-// ── INIT: attach lookups after DOM ready ───────────
-const _originalDOMReady = document.addEventListener;
-document.addEventListener('DOMContentLoaded', () => {
-  buildSetupPanel();
-  buildWeaponLookup();
-  buildArmorLookup();
-  buildGearLookup();
-});
-
-/* ══════════════════════════════════════════════════
-   ADAPTIVE PAGE 2 — Class Abilities + Feats
-   ══════════════════════════════════════════════════ */
-
-// Stored class/level state for adaptive rendering
-let _currentClass = '';
-let _currentLevel = 1;
-
-// Total feat slots: 1 at level 1, then every odd level
-function getRegularFeatCount(level) {
-  // 1st level: 1 feat
-  // Every odd level after: +1
-  let count = 1;
-  for (let l = 3; l <= level; l += 2) count++;
-  return count;
-}
-
-function buildAdaptivePage2(classKey, level) {
-  _currentClass = classKey;
-  _currentLevel = level;
-  const cls = CLASSES[classKey];
-  if (!cls) return;
-
-  buildFeatsSection(classKey, level);
-  buildClassAbilitiesSection(classKey, level);
-  buildClassSpecificBlock(classKey, level);
-  buildPage4Spells(classKey, level);
-}
-
-// ── FEATS SECTION ──────────────────────────────────
-function buildFeatsSection(classKey, level) {
-  const container = document.getElementById('feats-container');
-  if (!container) return;
-
-  const regularFeats  = getRegularFeatCount(level);
-  const bonusFeats    = getBonusFeatCount(classKey, level);
-  const totalFeatSlots = regularFeats + bonusFeats;
-
-  // Update label
-  const label = document.getElementById('feat-count-label');
-  if (label) label.textContent = `${regularFeats} regular + ${bonusFeats} bonus = ${totalFeatSlots} total at level ${level}`;
-
-  // Build feat rows — preserve existing values
-  const existing = [];
-  for (let i = 0; i < 30; i++) {
-    const name = val(`feat_name_${i}`);
-    const desc = val(`feat_desc_${i}`);
-    const type = val(`feat_type_${i}`);
-    const wpn  = val(`feat_wpn_${i}`);
-    if (name || desc) existing.push({ name, desc, type, wpn });
-  }
-
-  container.innerHTML = '';
-
-  // Determine which feat slots are bonus feats
-  const bonusFeatAbilities = (CLASS_ABILITIES[classKey] || [])
-    .filter(a => a.type === 'bonus_feat' && a.level <= level)
-    .sort((a,b) => a.level - b.level);
-
-  for (let i = 0; i < totalFeatSlots; i++) {
-    const isBonus  = i >= regularFeats;
-    const bonusIdx = i - regularFeats;
-    const bonusAbil = isBonus ? bonusFeatAbilities[bonusIdx] : null;
-
-    // Regular feats: gained at level 1, 3, 5, 7...
-    const gainedLevel = isBonus
-      ? (bonusAbil ? bonusAbil.level : '?')
-      : (i === 0 ? 1 : 1 + (i * 2) - 1);
-
-    const existing_i = existing[i] || {};
-    const isWeaponFeat = existing_i.type === 'weapon';
-
-    const row = document.createElement('div');
-    row.className = `feat-row${isBonus ? ' feat-bonus' : ''}`;
-    row.innerHTML = `
-      <div class="feat-row-header">
-        <span class="feat-level-badge ${isBonus ? 'feat-badge-bonus' : 'feat-badge-regular'}"
-              title="${isBonus ? `Bonus feat (${bonusAbil?.description || ''})` : `Regular feat (gained level ${gainedLevel})`}">
-          ${isBonus ? `B${bonusIdx+1}` : `L${gainedLevel}`}
-        </span>
-        <div class="feat-search-wrap" style="position:relative;flex:1;min-width:80px">
-          <input type="text" id="feat_name_${i}" class="feat-name-input"
-                 value="${(existing_i.name||'').replace(/"/g,'&quot;')}"
-                 placeholder="${isBonus ? `Bonus feat…` : 'Type to search feats…'}"
-                 oninput="onFeatSearch(${i})" autocomplete="off">
-          <div id="feat_suggestions_${i}" class="feat-suggestions" style="display:none"></div>
-        </div>
-        <select id="feat_type_${i}" class="feat-type-select" onchange="onFeatTypeChange(${i})">
-          <option value=""     ${(existing_i.type||'')==''      ?'selected':''}>—</option>
-          <option value="combat"   ${existing_i.type==='combat'  ?'selected':''}>Combat</option>
-          <option value="weapon"   ${existing_i.type==='weapon'  ?'selected':''}>Weapon</option>
-          <option value="metamagic"${existing_i.type==='metamagic'?'selected':''}>Metamagic</option>
-          <option value="general"  ${existing_i.type==='general' ?'selected':''}>General</option>
-          <option value="item"     ${existing_i.type==='item'    ?'selected':''}>Item Creation</option>
-        </select>
-        <select id="feat_wpn_${i}" class="feat-wpn-select ${isWeaponFeat ? '' : 'hidden'}"
-                title="Link to weapon slot" onchange="onFeatWeaponLink(${i})">
-          <option value="">— weapon slot —</option>
-          ${Array.from({length: WEAPON_COUNT}, (_,w) => {
-            const wname = val(`wpn_name_${w}`) || '(empty)';
-            return `<option value="${w}" ${existing_i.wpn==w?'selected':''}>Weapon ${w+1}: ${wname}</option>`;
-          }).join('')}
-        </select>
-      </div>
-      <input type="text" id="feat_desc_${i}" class="feat-desc-input"
-             value="${(existing_i.desc||'').replace(/"/g,'&quot;')}"
-             placeholder="Brief effect — e.g. +1 attack with chosen weapon">
-    `;
-    container.appendChild(row);
-  }
-}
-
-function onFeatTypeChange(i) {
-  const type = val(`feat_type_${i}`);
-  const wpnSel = document.getElementById(`feat_wpn_${i}`);
-  if (wpnSel) wpnSel.classList.toggle('hidden', type !== 'weapon');
-}
-
-function onFeatWeaponLink(i) {
-  updateWeaponFeatBonuses();
-  // Refresh feat section to show updated weapon name in dropdowns
-  buildFeatsSection(_currentClass, _currentLevel);
-}
-
-// ── FEAT AUTOCOMPLETE ─────────────────────────────
-function onFeatSearch(i) {
-  const query = val(`feat_name_${i}`);
-  const suggestions = document.getElementById(`feat_suggestions_${i}`);
-  if (!suggestions) return;
-
-  if (typeof searchFeats === 'undefined' || query.length < 2) {
-    suggestions.style.display = 'none';
-    return;
-  }
-
-  const results = searchFeats(query);
-  if (!results.length) { suggestions.style.display = 'none'; return; }
-
-  suggestions.innerHTML = results.map(f => {
-    const safeName = f.name.replace(/'/g, '&#39;');
-    const safePrereqs = (f.prereqs||'').replace(/"/g,'&quot;');
-    const shortBenefit = f.benefit.length > 60 ? f.benefit.substring(0,60) + '…' : f.benefit;
-    return `<div class="feat-suggestion-item" onclick="selectFeat(${i}, '${`${f.name}`.replace(/'/g,'&#39;')}')"
-         title="${safePrereqs}">
-      <span class="feat-sug-name">${f.name}</span>
-      <span class="feat-sug-type">${f.type}</span>
-      <span class="feat-sug-benefit">${shortBenefit}</span>
-    </div>`;
-  }).join('');
-  suggestions.style.display = 'block';
-}
-
-function selectFeat(i, name) {
-  name = name.replace(/&#39;/g, "'");
-  const feat = (typeof getFeatByName !== 'undefined') ? getFeatByName(name) : null;
-  set(`feat_name_${i}`, name);
-  if (feat) {
-    set(`feat_desc_${i}`, feat.benefit);
-    const typeSel = document.getElementById(`feat_type_${i}`);
-    if (typeSel) typeSel.value = feat.type === 'combat' ? 'combat'
-      : feat.type === 'metamagic' ? 'metamagic'
-      : feat.type === 'item_creation' ? 'item' : 'general';
-    if (feat.weaponLinked) {
-      const wpnSel = document.getElementById(`feat_wpn_${i}`);
-      if (wpnSel) wpnSel.classList.remove('hidden');
-    }
-    onFeatTypeChange(i);
-  }
-  const suggestions = document.getElementById(`feat_suggestions_${i}`);
-  if (suggestions) suggestions.style.display = 'none';
-}
-
-// Called when weapon-linked feat changes its slot selection
-// Accumulates all weapon-linked feat bonuses onto the weapon's feat field
-function updateWeaponFeatBonuses() {
-  // Reset all weapon feat bonuses to 0
-  const atkBonuses = Array(WEAPON_COUNT).fill(0);
-  const dmgBonuses = Array(WEAPON_COUNT).fill(0);
-
-  // Loop through all feats and check for weapon links
-  for (let fi = 0; fi < 30; fi++) {
-    const featName = val(`feat_name_${fi}`);
-    const wpnSlot  = val(`feat_wpn_${fi}`);
-    if (!featName || wpnSlot === '') continue;
-    const slotIdx = parseInt(wpnSlot);
-    if (isNaN(slotIdx)) continue;
-    const feat = (typeof getFeatByName !== 'undefined') ? getFeatByName(featName) : null;
-    if (!feat) continue;
-    if (feat.attackMod) atkBonuses[slotIdx] = (atkBonuses[slotIdx] || 0) + feat.attackMod;
-    if (feat.damageMod) dmgBonuses[slotIdx] = (dmgBonuses[slotIdx] || 0) + feat.damageMod;
-  }
-
-  // Apply to weapon feat fields and recalc
-  for (let wi = 0; wi < WEAPON_COUNT; wi++) {
-    if (atkBonuses[wi] !== 0 || dmgBonuses[wi] !== 0) {
-      // Only set if user hasn't manually overridden
-      const currentAtk = parseInt(val(`wpn_feat_${wi}`)) || 0;
-      const currentDmg = parseInt(val(`wpn_dmg_feat_${wi}`)) || 0;
-      // Set if the auto-value differs — show a tooltip note
-      set(`wpn_feat_${wi}`,     atkBonuses[wi] || currentAtk);
-      set(`wpn_dmg_feat_${wi}`, dmgBonuses[wi] || currentDmg);
-      calcWeapon(wi);
-    }
-  }
-}
-
-// Close suggestions when clicking outside
-document.addEventListener('click', e => {
-  if (!e.target.closest('.feat-search-wrap')) {
-    document.querySelectorAll('.feat-suggestions').forEach(el => el.style.display = 'none');
-  }
-});
-
-// ── CLASS ABILITIES SECTION ────────────────────────
-function buildClassAbilitiesSection(classKey, level) {
-  const container = document.getElementById('class-abilities-container');
-  if (!container) return;
-
-  const label = document.getElementById('class-abilities-label');
-  const cls = CLASSES[classKey];
-  if (label && cls) label.textContent = `${cls.name} level ${level}`;
-
-  const abilities = getClassAbilitiesForLevel(classKey, level);
-  if (!abilities.length) {
-    container.innerHTML = '<p class="helper-text">Select a class in Character Setup and click Apply to populate class abilities.</p>';
-    return;
-  }
-
-  // Build class features header block
-  const features = (typeof getClassFeatures === 'function') ? getClassFeatures(classKey) : null;
-  let featuresHtml = '';
-  if (features) {
-    const sc = features.spellcasting;
-    const prof = features.proficiencies;
-    featuresHtml = `
-      <div class="cf-block">
-        <div class="cf-section-title">Class Features</div>
-        <div class="cf-row"><span class="cf-label">Weapons</span><span class="cf-value">${prof.weapons}</span></div>
-        <div class="cf-row"><span class="cf-label">Armor</span><span class="cf-value">${prof.armor}</span></div>
-        ${prof.note ? `<div class="cf-row"><span class="cf-label"></span><span class="cf-note">${prof.note}</span></div>` : ''}
-        ${sc ? `
-        <div class="cf-row"><span class="cf-label">Spellcasting</span><span class="cf-value">${sc.type} · ${sc.ability} · Max level ${sc.maxLevel} · ${sc.prepared ? 'Prepared' : 'Spontaneous'}</span></div>
-        <div class="cf-row"><span class="cf-label">Spell list</span><span class="cf-note">${sc.list}</span></div>
-        <div class="cf-row"><span class="cf-label">Bonus spells</span><span class="cf-note">${sc.bonusSpells}</span></div>
-        ` : '<div class="cf-row"><span class="cf-label">Spellcasting</span><span class="cf-value">None</span></div>'}
-        ${features.specialRules.map(r =>
-          `<div class="cf-row"><span class="cf-label">${r.name}</span><span class="cf-note">${r.text}</span></div>`
-        ).join('')}
-        ${features.healSpells ? `<div class="cf-row cf-heal"><span class="cf-label">Heal spells</span><span class="cf-note">${features.healSpells.note}</span></div>` : ''}
-      </div>
-      <div class="cf-divider"></div>`;
-  }
-
-  // Group by type
-  const groups = {
-    resource: abilities.filter(a => a.type === 'resource'),
-    weapon:   abilities.filter(a => a.type === 'weapon'),
-    armor:    abilities.filter(a => a.type === 'armor'),
-    active:   abilities.filter(a => a.type === 'active'),
-    passive:  abilities.filter(a => a.type === 'passive'),
-  };
-
-  let html = '';
-
-  // Resources first (most important at table)
-  if (groups.resource.length) {
-    html += `<div class="ca-group">`;
-    // Deduplicate by name (some abilities appear at multiple levels)
-    const seen = new Set();
-    groups.resource.forEach(a => {
-      if (seen.has(a.name)) return;
-      seen.add(a.name);
-      const poolId = a.resource || '';
-      // Bold the calcValue parts (dice, numbers) in descriptions
-      const highlightCalc = txt => txt.replace(/(\d+d\d+[+\d/levelmax]*|\+\d+\/\w+|\d+ uses?\/day)/gi,
-        '<strong>$1</strong>');
-      html += `
-        <div class="ca-row ca-resource">
-          <span class="ca-badge ca-badge-resource">Pool</span>
-          <span class="ca-name">${a.name}</span>
-          <span class="ca-desc">${highlightCalc(a.description)}</span>
-          ${poolId ? `<span class="ca-pool-display" id="ca_pool_${poolId}"></span>` : ''}
-        </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // Weapon-linked abilities
-  if (groups.weapon.length) {
-    html += `<div class="ca-group">`;
-    const seen = new Set();
-    groups.weapon.forEach(a => {
-      if (seen.has(a.name)) return;
-      seen.add(a.name);
-      html += `
-        <div class="ca-row ca-weapon">
-          <span class="ca-badge ca-badge-weapon">Wpn</span>
-          <span class="ca-name">${a.name}</span>
-          ${a.weaponLinked ? `<select class="ca-wpn-link" title="Link to weapon slot"><option value="">— slot —</option>${Array.from({length:WEAPON_COUNT},(_,w)=>`<option value="${w}">Weapon ${w+1}</option>`).join('')}</select>` : ''}
-          <span class="ca-desc">${a.description}</span>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // Armor
-  if (groups.armor.length) {
-    html += `<div class="ca-group">`;
-    const seen = new Set();
-    groups.armor.forEach(a => {
-      if (seen.has(a.name)) return;
-      seen.add(a.name);
-      html += `
-        <div class="ca-row ca-armor">
-          <span class="ca-badge ca-badge-armor">Arm</span>
-          <span class="ca-name">${a.name}</span>
-          <span class="ca-desc">${a.description}</span>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // Active abilities
-  if (groups.active.length) {
-    html += `<div class="ca-group">`;
-    const seen = new Set();
-    groups.active.forEach(a => {
-      if (seen.has(a.name)) return;
-      seen.add(a.name);
-      html += `
-        <div class="ca-row ca-active">
-          <span class="ca-badge ca-badge-active">Act</span>
-          <span class="ca-name">${a.name}</span>
-          <span class="ca-desc">${a.description}</span>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // Passive abilities (smaller, less prominent)
-  if (groups.passive.length) {
-    html += `<div class="ca-group ca-passive-group">`;
-    const seen = new Set();
-    groups.passive.forEach(a => {
-      if (seen.has(a.name)) return;
-      seen.add(a.name);
-      html += `
-        <div class="ca-row ca-passive">
-          <span class="ca-badge ca-badge-passive">—</span>
-          <span class="ca-name">${a.name}</span>
-          <span class="ca-desc">${a.description}</span>
-        </div>`;
-    });
-    html += `</div>`;
-  }
-
-  container.innerHTML = featuresHtml + html;
-
-  // Update resource pool displays
-  updateResourcePoolDisplays(classKey, level);
-}
-
-function updateResourcePoolDisplays(classKey, level) {
-  const mods = {
-    str: getEffectiveMod('str'), dex: getEffectiveMod('dex'),
-    con: getEffectiveMod('con'), int: getEffectiveMod('int'),
-    wis: getEffectiveMod('wis'), cha: getEffectiveMod('cha'),
-  };
-  const pools = getResourcePools(classKey, level, mods);
-  pools.forEach(p => {
-    const el = document.getElementById(`ca_pool_${p.id}`);
-    if (el) el.textContent = `${p.max}/day`;
-  });
-}
-
-// ── CLASS-SPECIFIC BLOCK (page 3) ─────────────────
-function buildClassSpecificBlock(classKey, level) {
-  const container = document.getElementById('class-specific-block');
-  if (!container) return;
-
-  let html = '';
-
-  if (classKey === 'warpriest') {
-    html = buildWarpriestBlock(level);
-  } else if (classKey === 'barbarian') {
-    html = buildBarbarianBlock(level);
-  } else if (classKey === 'paladin') {
-    html = buildPaladinBlock(level);
-  } else if (['cleric','oracle','druid','ranger','bard','skald','inquisitor'].includes(classKey)) {
-    html = buildSpellcasterClassBlock(classKey, level);
-  } else {
-    // Generic: just a notes area
-    html = `<div class="section-box">
-      <div class="section-title">Class Notes
-        <span class="section-note">${CLASSES[classKey]?.name || classKey}</span>
-      </div>
-      <textarea id="class_notes" class="big-textarea" placeholder="Class-specific notes, special abilities, custom resources..."></textarea>
-    </div>`;
-  }
-
-  container.innerHTML = html;
-}
-
-function buildWarpriestBlock(level) {
-  const mods = { wis: getEffectiveMod('wis') };
-  const fervorMax = Math.floor(level/2) + mods.wis;
-  const blessingsMax = 3 + Math.floor(level/2);
-  const swEnh = level >= 4 ? Math.floor((level-1)/4) : 0;
-  const swDmg = level >= 15 ? '2d8' : level >= 10 ? '2d6' : level >= 5 ? '1d10' : '1d8';
-  const saEnh = level >= 19 ? 3 : level >= 13 ? 2 : level >= 7 ? 1 : 0;
-
-  return `
-    <div class="section-box p2-fullwidth">
-      <div class="section-title">Warpriest Class Features
-        <span class="section-note">Level ${level} · Fervor ${fervorMax}/day · Blessings ${blessingsMax}/day</span>
-      </div>
-      <div class="warpriest-grid">
-
-        <div class="wp-block">
-          <div class="wp-block-title">Blessings (${blessingsMax}/day)</div>
-          <div class="blessing-slot">
-            <label class="blessing-sublabel">Blessing 1 <input type="text" id="blessing1_name" class="full-width-input" placeholder="Domain name…"></label>
-            <label class="blessing-sublabel">Minor power <textarea id="blessing1_minor" class="blessing-textarea" placeholder="Minor power (level 1+)…"></textarea></label>
-            ${level >= 10 ? `<label class="blessing-sublabel">Major power <textarea id="blessing1_major" class="blessing-textarea" placeholder="Major power (level 10+)…"></textarea></label>` : ''}
-          </div>
-          <div class="blessing-slot" style="margin-top:4px">
-            <label class="blessing-sublabel">Blessing 2 <input type="text" id="blessing2_name" class="full-width-input" placeholder="Domain name…"></label>
-            <label class="blessing-sublabel">Minor power <textarea id="blessing2_minor" class="blessing-textarea" placeholder="Minor power (level 1+)…"></textarea></label>
-            ${level >= 10 ? `<label class="blessing-sublabel">Major power <textarea id="blessing2_major" class="blessing-textarea" placeholder="Major power (level 10+)…"></textarea></label>` : ''}
-          </div>
-        </div>
-
-        <div class="wp-block">
-          <div class="wp-block-title">Sacred Weapon ${swEnh > 0 ? `(+${swEnh} enh · ${swEnh*level} rounds/day)` : '(level 1-3: no enhancement)'}</div>
-          <div class="wp-stats-grid">
-            <label class="blessing-sublabel">Weapon name<br><input type="text" id="sacred_weapon_name" style="width:100%" placeholder="e.g. Lucerne hammer"></label>
-            <label class="blessing-sublabel">Damage die (sacred)<br><input type="text" id="sacred_weapon_dmg" style="width:48px" value="${swDmg}"></label>
-            <label class="blessing-sublabel">Enh. bonus<br><input type="number" id="sacred_weapon_enh" class="num small-num" value="${swEnh}"></label>
-            <label class="blessing-sublabel">Special props<br><input type="text" id="sacred_weapon_special" style="width:120px" placeholder="flaming, keen…"></label>
-            <label class="blessing-sublabel">Enh. rounds/day<br><input type="number" id="sw_rounds_max" class="num" value="${level >= 4 ? level : 0}" readonly></label>
-          </div>
-          ${saEnh > 0 ? `
-          <div class="wp-block-title" style="margin-top:6px">Sacred Armor (+${saEnh} enh · ${level} min/day)</div>
-          <div class="wp-stats-grid">
-            <label class="blessing-sublabel">Armor name<br><input type="text" id="sacred_armor_name" style="width:100%" placeholder="e.g. Chainmail"></label>
-            <label class="blessing-sublabel">Enh. bonus<br><input type="number" id="sacred_armor_enh" class="num small-num" value="${saEnh}"></label>
-            <label class="blessing-sublabel">Special props<br><input type="text" id="sacred_armor_special" style="width:120px" placeholder="fortification…"></label>
-            <label class="blessing-sublabel">Enh. min/day<br><input type="number" id="sa_minutes_max" class="num" value="${level}" readonly></label>
-          </div>` : ''}
-          <div class="wp-block-title" style="margin-top:6px">Fervor (${fervorMax}/day)</div>
-          <p class="helper-text" style="margin:0">Heal 1d6+1d6/3lvls · Swift on self · Or: cast prepared spell on self as swift action${level >= 4 ? ' · Channel Energy (2 Fervor)' : ''}</p>
-        </div>
-
-        <div class="wp-block">
-          <div class="wp-block-title">Weapon Focus</div>
-          <label class="blessing-sublabel">Chosen weapon (bonus feat)<br><input type="text" id="weapon_focus" style="width:100%" placeholder="e.g. Lucerne hammer"></label>
-          <p class="helper-text">+1 attack with this weapon. Required for Weapon Specialization.</p>
-          <div class="wp-block-title" style="margin-top:6px">Aura &amp; Spontaneous Casting</div>
-          <p class="helper-text">Aura: ${level >= 1 ? 'Active — matches deity alignment' : '—'}<br>Spontaneous: sacrifice spell → cure/inflict wounds of same level or lower.</p>
-        </div>
-
-      </div>
-    </div>`;
-}
-
-function buildBarbarianBlock(level) {
-  return `
-    <div class="section-box p2-fullwidth">
-      <div class="section-title">Barbarian Class Features
-        <span class="section-note">Level ${level}</span>
-      </div>
-      <div class="blessings-grid">
-        <div class="blessing-slot">
-          <div class="wp-block-title">Rage Powers</div>
-          ${Array.from({length: Math.floor(level/2)}, (_,i) =>
-            `<label class="blessing-sublabel">Power ${i+1}<br><input type="text" id="rage_power_${i}" style="width:100%" placeholder="e.g. Animal Fury, Knockdown…"></label>`
-          ).join('')}
-        </div>
-        <div class="blessing-slot">
-          <div class="wp-block-title">Rage Stats</div>
-          <p class="helper-text">While raging: +4 STR, +4 CON, +2 Will, –2 AC. Fatigued after.${level >= 11 ? '<br>Greater Rage: +6 STR/CON, +3 Will.' : ''}</p>
-          <label class="blessing-sublabel">Damage Reduction<br><input type="text" id="barbarian_dr" style="width:80px" value="${level >= 7 ? `DR ${Math.min(5,Math.floor((level-4)/3))}/—` : '—'}"></label>
-        </div>
-        <div class="blessing-slot">
-          <div class="wp-block-title">Notes</div>
-          <textarea id="class_notes" class="blessing-textarea" style="min-height:80px" placeholder="Favored enemy, rage notes..."></textarea>
-        </div>
-      </div>
-    </div>`;
-}
-
-function buildPaladinBlock(level) {
-  return `
-    <div class="section-box p2-fullwidth">
-      <div class="section-title">Paladin Class Features
-        <span class="section-note">Level ${level}</span>
-      </div>
-      <div class="blessings-grid">
-        <div class="blessing-slot">
-          <div class="wp-block-title">Mercies</div>
-          ${Array.from({length: Math.floor(level/3)}, (_,i) =>
-            `<label class="blessing-sublabel">Mercy ${i+1}<br><input type="text" id="mercy_${i}" style="width:100%" placeholder="e.g. Fatigued, Shaken…"></label>`
-          ).join('')}
-        </div>
-        <div class="blessing-slot">
-          <div class="wp-block-title">Divine Bond</div>
-          <label class="blessing-sublabel">Type (weapon/mount)<br><input type="text" id="divine_bond_type" style="width:100%" placeholder="Holy weapon / Mount"></label>
-          <label class="blessing-sublabel">Enhancement<br><input type="text" id="divine_bond_enh" style="width:100%" placeholder="+1 flaming…"></label>
-        </div>
-        <div class="blessing-slot">
-          <div class="wp-block-title">Notes</div>
-          <textarea id="class_notes" class="blessing-textarea" style="min-height:80px" placeholder="Code of conduct, oaths..."></textarea>
-        </div>
-      </div>
-    </div>`;
-}
-
-function buildSpellcasterClassBlock(classKey, level) {
-  const name = CLASSES[classKey]?.name || classKey;
-  return `
-    <div class="section-box p2-fullwidth">
-      <div class="section-title">${name} Class Features
-        <span class="section-note">Level ${level} · See Page 4 for full spell list</span>
-      </div>
-      <div class="blessings-grid">
-        <div class="blessing-slot">
-          <div class="wp-block-title">Domain / School / Bond</div>
-          <input type="text" id="domain_school" style="width:100%" placeholder="e.g. Abjuration, Fire domain…">
-          <textarea id="class_notes" class="blessing-textarea" style="margin-top:4px" placeholder="Domain powers, school powers, arcane bond…"></textarea>
-        </div>
-        <div class="blessing-slot">
-          <div class="wp-block-title">Special Abilities</div>
-          <textarea id="class_notes2" class="blessing-textarea" placeholder="Class-specific features…"></textarea>
-        </div>
-      </div>
-    </div>`;
-}
-
-// ── PAGE 4: SPELLS / EXTRACTS ──────────────────────
-const SPELLCASTER_CLASSES  = ['warpriest','cleric','druid','oracle','wizard','sorcerer','witch','shaman','inquisitor','bard','skald','ranger','paladin','magus'];
-const EXTRACT_CLASSES      = ['alchemist'];
-const NON_CASTER_CLASSES   = ['fighter','barbarian','rogue','monk','gunslinger','swashbuckler'];
-
-function buildPage4Spells(classKey, level) {
-  const page = document.getElementById('page4-spells');
-  const content = document.getElementById('page4-spells-content');
-  const subtitle = document.getElementById('p4-spells-subtitle');
-  if (!page || !content) return;
-
-  if (NON_CASTER_CLASSES.includes(classKey)) {
-    // Hide page 4 — non-casters don't need it
-    page.style.display = 'none';
-    return;
-  }
-
-  page.style.display = '';
-
-  if (EXTRACT_CLASSES.includes(classKey)) {
-    if (subtitle) subtitle.textContent = 'Extracts & Bombs — Page 4';
-    content.innerHTML = buildExtractsPage(level);
-    return;
-  }
-
-  // Spellcaster
-  if (subtitle) subtitle.textContent = `${CLASSES[classKey]?.name || classKey} Spells — Page 4`;
-  content.innerHTML = buildSpellsPage(classKey, level);
-}
-
-function buildSpellsPage(classKey, level) {
-  const maxSpellLevel = classKey === 'warpriest' ? 6
-    : classKey === 'ranger' || classKey === 'paladin' ? 4
-    : classKey === 'bard' || classKey === 'skald' ? 6
-    : 9;
-  // Set grid columns based on spell levels
-  const cols = maxSpellLevel <= 4 ? 2 : maxSpellLevel <= 6 ? 2 : 3;
-
-  const mods = { wis: getEffectiveMod('wis'), int: getEffectiveMod('int'), cha: getEffectiveMod('cha') };
-  const cls = CLASSES[classKey];
-  const abilKey = cls?.spellAbility || 'wis';
-  const abilMod = mods[abilKey] || 0;
-
-  let html = `<div class="spells-page-grid" style="grid-template-columns: repeat(${cols}, 1fr)">`;
-
-  for (let lvl = 0; lvl <= maxSpellLevel; lvl++) {
-    const dc = lvl === 0 ? '—' : 10 + lvl + abilMod;
-    const dots = lvl === 0 ? 8 : 6;
-    const dotHtml = Array.from({length: dots}, (_,d) =>
-      `<span class="spell-slot-dot" onclick="this.classList.toggle('used')" title="Slot ${d+1}"></span>`
-    ).join('');
-
-    html += `
-      <div class="spell-level-block">
-        <div class="spell-level-header">
-          <span class="spell-level-label">Level ${lvl === 0 ? '0' : lvl}</span>
-          <label>DC <input type="number" id="spl_dc_${lvl}" class="num small-num" value="${dc}" ${lvl===0?'readonly':''}></label>
-          <label>Per day <input type="number" id="spl_perday_${lvl}" class="num small-num"></label>
-          ${lvl > 0 ? `<label>Bonus <input type="number" id="spl_bonus_${lvl}" class="num small-num"></label>` : ''}
-          <div class="spell-slot-dots">${dotHtml}</div>
-        </div>
-        <div class="spell-names-grid" id="spl_names_${lvl}">
-          ${Array.from({length:12}, (_,i) =>
-            `<input type="text" id="spl_name_${lvl}_${i}" placeholder="Spell name…">`
-          ).join('')}
-        </div>
-      </div>`;
-  }
-
-  html += `<div class="spell-level-block">
-    <div class="spell-level-header"><span class="spell-level-label">Conditional Modifiers</span></div>
-    <textarea id="spell_conditional" class="small-textarea" style="width:100%"></textarea>
-  </div>`;
-
-  html += `</div>`;
-  return html;
-}
-
-function buildExtractsPage(level) {
-  const intMod = getEffectiveMod('int');
-  const bomdsPerDay = level + intMod;
-
-  let html = `<div class="spells-page-grid">
-    <div class="spell-level-block" style="grid-column:1/-1">
-      <div class="spell-level-header">
-        <span class="spell-level-label">Bombs</span>
-        <span style="font-family:var(--font-mono);font-size:9px;color:var(--border)">
-          ${bomdsPerDay}/day · ${level}d6+${intMod} fire · Splash 1 · Range 20 ft
-        </span>
-        <div class="spell-slot-dots">
-          ${Array.from({length: Math.min(bomdsPerDay, 20)}, (_,d) =>
-            `<span class="spell-slot-dot" onclick="this.classList.toggle('used')"></span>`
-          ).join('')}
-        </div>
-      </div>
-    </div>`;
-
-  for (let lvl = 1; lvl <= 6; lvl++) {
-    const dc = 10 + lvl + intMod;
-    html += `
-      <div class="spell-level-block">
-        <div class="spell-level-header">
-          <span class="spell-level-label">Extract ${lvl}</span>
-          <label>DC <input type="number" class="num small-num" value="${dc}" readonly></label>
-          <label>Per day <input type="number" id="spl_perday_${lvl}" class="num small-num"></label>
-          <label>INT bonus <input type="number" id="spl_bonus_${lvl}" class="num small-num" value="${intMod > 0 ? intMod : 0}"></label>
-          <div class="spell-slot-dots">
-            ${Array.from({length:6}, (_,d) =>
-              `<span class="spell-slot-dot" onclick="this.classList.toggle('used')"></span>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="spell-names-grid" id="spl_names_${lvl}">
-          ${Array.from({length:10}, (_,i) =>
-            `<input type="text" id="spl_name_${lvl}_${i}" placeholder="Extract name…">`
-          ).join('')}
-        </div>
-      </div>`;
-  }
-
-  html += `<div class="spell-level-block">
-    <div class="spell-level-header"><span class="spell-level-label">Formulae Book</span></div>
-    <textarea id="formulae_book" class="big-textarea" style="width:100%" placeholder="Known formulae by level…"></textarea>
-  </div></div>`;
-  return html;
-}
-
-// ── Wire into applySetup ───────────────────────────
-// Called from applySetup in the existing code
-function afterApplySetup(classKey, level) {
-  buildAdaptivePage2(classKey, level);
-  updateHPLevelupInfo(classKey, level);
-}
-
-function updateHPLevelupInfo(classKey, level) {
-  const info = document.getElementById('hp-levelup-info');
-  const hint = document.getElementById('hp-levelup-hint');
-  const cls  = CLASSES[classKey];
-  if (!cls || !info) return;
-  const conMod = getEffectiveMod('con');
-  const hd     = cls.hd;
-  const avgHP  = Math.floor(hd / 2) + 1 + conMod;
-  const maxHP  = hd + conMod;
-  info.style.display = '';
-  info.innerHTML = `
-    <span class="hp-info-tag">HD: d${hd}</span>
-    <span class="hp-info-tag">CON mod: ${conMod >= 0 ? '+' : ''}${conMod}</span>
-    <span class="hp-info-tag">Per level: max ${maxHP} · avg ${avgHP} · min ${1 + conMod}</span>
-    <span class="hp-info-tag" style="color:var(--accent)">Level 1: d${hd} + CON = ${hd + conMod} (max) or ${Math.ceil(hd/2) + conMod} (avg)</span>
-  `;
-  if (hint) hint.textContent = `d${hd} + CON mod per level`;
-}
-
-// ── Save/load feat data ────────────────────────────
-function collectFeatData() {
-  const feats = [];
-  for (let i = 0; i < 30; i++) {
-    const name = val(`feat_name_${i}`);
-    const desc = val(`feat_desc_${i}`);
-    const type = val(`feat_type_${i}`);
-    const wpn  = val(`feat_wpn_${i}`);
-    if (name || desc) feats.push({ name, desc, type, wpn });
-  }
-  return feats;
-}
-
-function restoreFeatData(feats) {
-  if (!feats) return;
-  feats.forEach((f, i) => {
-    set(`feat_name_${i}`, f.name || '');
-    set(`feat_desc_${i}`, f.desc || '');
-    set(`feat_type_${i}`, f.type || '');
-    set(`feat_wpn_${i}`,  f.wpn  || '');
-    onFeatTypeChange(i);
-  });
-}
-
-/* ══════════════════════════════════════════════════
-   MAGIC ITEMS / WANDS / CHARGES
-   ══════════════════════════════════════════════════ */
-const MAGIC_ITEM_COUNT = 8;
-
-function buildMagicItems() {
-  const container = document.getElementById('magic-items-container');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
-    const row = document.createElement('div');
-    row.className = 'magic-item-row';
-    row.innerHTML = `
-      <input type="text" id="mi_name_${i}" class="mi-name-input" placeholder="e.g. Wand of Cure Moderate Wounds">
-      <div class="mi-charges-wrap">
-        <input type="number" id="mi_charges_max_${i}" class="num small-num" placeholder="50" oninput="updateMagicItemDots(${i})" min="0" max="50">
-        <span class="mi-label">max</span>
-        <input type="number" id="mi_charges_used_${i}" class="num small-num" placeholder="0" oninput="updateMagicItemDots(${i})" min="0">
-        <span class="mi-label">used</span>
-        <span id="mi_dots_${i}" class="mi-dots"></span>
-        <span id="mi_remaining_${i}" class="mi-remaining"></span>
-      </div>
-    `;
-    container.appendChild(row);
-  }
-}
-
-function updateMagicItemDots(i) {
-  const max  = parseInt(val(`mi_charges_max_${i}`))  || 0;
-  const used = parseInt(val(`mi_charges_used_${i}`)) || 0;
-  const remaining = Math.max(0, max - used);
-
-  const remainEl = document.getElementById(`mi_remaining_${i}`);
-  if (remainEl) remainEl.textContent = max > 0 ? `${remaining}/${max}` : '';
-
-  // Dot display — show up to 20 dots, scaled
-  const dotsEl = document.getElementById(`mi_dots_${i}`);
-  if (!dotsEl || max === 0) { if (dotsEl) dotsEl.innerHTML = ''; return; }
-  const show = Math.min(max, 20);
-  const usedDots = Math.round((used / max) * show);
-  let html = '';
-  for (let d = 0; d < show; d++) {
-    html += `<span class="mi-dot ${d < (show - usedDots) ? 'mi-dot-full' : 'mi-dot-used'}"
-             onclick="useMagicItemCharge(${i})" title="Click to use charge"></span>`;
-  }
-  dotsEl.innerHTML = html;
-}
-
-function useMagicItemCharge(i) {
-  const max  = parseInt(val(`mi_charges_max_${i}`))  || 0;
-  const used = parseInt(val(`mi_charges_used_${i}`)) || 0;
-  if (used < max) {
-    set(`mi_charges_used_${i}`, used + 1);
-    updateMagicItemDots(i);
-  }
-}
-
-// Add to DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-  buildMagicItems();
-  buildWands();
-  updateSlotCountDisplay();
-});
-
-// Extend collectData
-const _collectData_v3 = collectData;
-collectData = function() {
-  const data = _collectData_v3();
-  // Wands
-  data.wands = [];
-  for (let i = 0; i < WAND_COUNT; i++) {
-    data.wands.push({
-      name:        val(`wand_name_${i}`),
-      type:        val(`wand_type_${i}`),
-      cl:          val(`wand_cl_${i}`),
-      spelllvl:    val(`wand_spelllvl_${i}`),
-      attackType:  val(`wand_attack_type_${i}`),
-      miscAtk:     val(`wand_misc_atk_${i}`),
-      dcAbil:      val(`wand_dc_abil_${i}`),
-      dcMisc:      val(`wand_dc_misc_${i}`),
-      effect:      val(`wand_effect_${i}`),
-      duration:    val(`wand_duration_${i}`),
-      chargesMax:  val(`wand_charges_max_${i}`),
-      chargesUsed: val(`wand_charges_used_${i}`),
-      notes:       val(`wand_notes_${i}`),
-    });
-  }
-  data.magicItems = [];
-  for (let i = 0; i < MAGIC_ITEM_COUNT; i++) {
-    data.magicItems.push({
-      name:       val(`mi_name_${i}`),
-      chargesMax: val(`mi_charges_max_${i}`),
-      chargesUsed:val(`mi_charges_used_${i}`),
-    });
-  }
-  return data;
-};
-
-// Extend populateData
-const _populateData_v3 = populateData;
-populateData = function(data) {
-  _populateData_v3(data);
-  if (data.wands) {
-    data.wands.forEach((w, i) => {
-      set(`wand_name_${i}`,        w.name        || '');
-      const typeSel = document.getElementById(`wand_type_${i}`);
-      if (typeSel && w.type) typeSel.value = w.type;
-      set(`wand_cl_${i}`,          w.cl          || '');
-      set(`wand_atk_${i}`,         w.atk         || '');
-      set(`wand_dc_${i}`,          w.dc          || '');
-      set(`wand_effect_${i}`,      w.effect      || '');
-      set(`wand_charges_max_${i}`, w.chargesMax  || '');
-      set(`wand_charges_used_${i}`,w.chargesUsed || '');
-      set(`wand_notes_${i}`,         w.notes      || '');
-      updateWandDots(i);
-    });
-  }
-  if (data.magicItems) {
-    data.magicItems.forEach((m, i) => {
-      set(`mi_name_${i}`,         m.name        || '');
-      set(`mi_charges_max_${i}`,  m.chargesMax  || '');
-      set(`mi_charges_used_${i}`, m.chargesUsed || '');
-      updateMagicItemDots(i);
-    });
-  }
-};
-
-/* ══════════════════════════════════════════════════
-   SPELL AUTOCOMPLETE
-   Works in: wand name fields, spell list fields,
-   and page 4 spell name inputs
-   ══════════════════════════════════════════════════ */
-
-function buildSpellAutocomplete(inputId, onSelect) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-
-  // Create suggestion dropdown
-  const wrap = document.createElement('div');
-  wrap.style.position = 'relative';
-  input.parentNode.insertBefore(wrap, input);
-  wrap.appendChild(input);
-
-  const suggestions = document.createElement('div');
-  suggestions.className = 'spell-suggestions';
-  suggestions.style.display = 'none';
-  wrap.appendChild(suggestions);
-
-  input.addEventListener('input', () => {
-    const q = input.value;
-    if (typeof searchSpells === 'undefined' || q.length < 2) {
-      suggestions.style.display = 'none';
-      return;
-    }
-    const results = searchSpells(q);
-    if (!results.length) { suggestions.style.display = 'none'; return; }
-
-    suggestions.innerHTML = results.map(s => {
-      const lvlStr = Object.entries(s.level).map(([k,v]) => `${k} ${v}`).join(', ');
-      const safeCalc = s.calcValue ? `<span class="spell-sug-calc">${s.calcValue}</span>` : '';
-      return `<div class="spell-suggestion-item" onclick="selectSpellInto('${inputId}', '${s.name.replace(/'/g,"\\'")}')">
-        <span class="feat-sug-name">${s.name}</span>
-        <span class="feat-sug-type">${s.school.split(' ')[0]}</span>
-        ${safeCalc}
-        <span class="feat-sug-benefit">${lvlStr}</span>
-      </div>`;
-    }).join('');
-    suggestions.style.display = 'block';
-  });
-
-  input.addEventListener('blur', () => {
-    setTimeout(() => { suggestions.style.display = 'none'; }, 200);
-  });
-}
-
-function selectSpellInto(inputId, name) {
-  set(inputId, name);
-  const spell = (typeof getSpellByName !== 'undefined') ? getSpellByName(name) : null;
-
-  // Find parent context — are we in a wand block?
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const wandBlock = input.closest('.wand-block');
-  if (wandBlock && spell) {
-    // Auto-fill wand fields from spell data
-    const idx = wandBlock.querySelector('[id^="wand_name_"]')?.id?.replace('wand_name_','');
-    if (idx !== undefined) {
-      // Spell level for this wand — find lowest level
-      const minLevel = Math.min(...Object.values(spell.level));
-      set(`wand_spelllvl_${idx}`, minLevel);
-
-      // Effect / calcValue
-      if (spell.calcValue) set(`wand_effect_${idx}`, spell.calcValue);
-      if (spell.duration)  set(`wand_duration_${idx}`, spell.duration);
-
-      // DC — if has save DC
-      if (spell.saveDC && !spell.saveDC.includes('None') && !spell.saveDC.includes('harmless')) {
-        // DC needs caster ability — leave dcAbil for user to fill
-      }
-
-      // Attack type
-      const atkSel = document.getElementById(`wand_attack_type_${idx}`);
-      if (atkSel) {
-        if (spell.description.toLowerCase().includes('ranged touch')) atkSel.value = 'ranged_touch';
-        else if (spell.description.toLowerCase().includes('melee touch')) atkSel.value = 'melee_touch';
-        else atkSel.value = 'none';
-      }
-      calcWand(parseInt(idx));
-    }
-  }
-
-  // Close suggestions
-  const wrap = input.closest('div[style*="relative"]');
-  if (wrap) {
-    const sug = wrap.querySelector('.spell-suggestions');
-    if (sug) sug.style.display = 'none';
-  }
-}
-
-// Attach spell autocomplete to wand name fields after build
-const _buildWandsOrig = buildWands;
-buildWands = function() {
-  _buildWandsOrig();
-  for (let i = 0; i < WAND_COUNT; i++) {
-    buildSpellAutocomplete(`wand_name_${i}`, null);
-  }
-};
-
-// Also attach to spell name inputs on page 4 when built
-const _buildSpellsPageOrig = buildSpellsPage;
-buildSpellsPage = function(classKey, level) {
-  const html = _buildSpellsPageOrig(classKey, level);
-  // After rendering, attach autocomplete
-  setTimeout(() => {
-    const maxLevel = classKey === 'warpriest' ? 6 : classKey === 'ranger' || classKey === 'paladin' ? 4 : 9;
-    for (let lvl = 0; lvl <= maxLevel; lvl++) {
-      for (let i = 0; i < 12; i++) {
-        const id = `spl_name_${lvl}_${i}`;
-        if (document.getElementById(id)) buildSpellAutocomplete(id, null);
-      }
-    }
-  }, 100);
-  return html;
-};
-
-/* ══════════════════════════════════════════════════
-   MAGIC ITEMS QUICK-FILL
-   Sources items from data/items.js MAGIC_ITEMS
-   ══════════════════════════════════════════════════ */
-
-function buildMagicItemLookup() {
-  const container = document.getElementById('magic-item-lookup');
-  if (!container) return;
-
-  const slotOpts = ['', 'Belt','Body','Chest','Eyes','Feet','Hands',
-    'Head','Headband','Neck','Ring','Shoulders','Slotless','Wrist','Armor','Shield']
-    .map(s => `<option value="${s}">${s || '— all slots —'}</option>`).join('');
-
-  container.innerHTML = `
-    <div class="gear-lookup-row" style="flex-wrap:wrap;gap:6px">
-      <input type="text" id="mi_lookup_search" style="width:200px;font-family:var(--font-body);font-size:10px;border:1px solid var(--border-light);padding:2px 4px"
-             placeholder="Search: dusty rose, belt of giant…" oninput="searchMagicItemUI()">
-      <select id="mi_lookup_slot" onchange="searchMagicItemUI()" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
-        ${slotOpts}
-      </select>
-      <label style="font-family:var(--font-mono);font-size:9px;display:flex;align-items:center;gap:3px">
-        Target
-        <select id="mi_lookup_target" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
-          <option value="ac">AC Items (p.3)</option>
-          <option value="gear">Gear list</option>
-        </select>
-        Slot
-        <select id="mi_lookup_acslot" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px">
-          ${Array.from({length: AC_ITEM_COUNT}, (_,i) => `<option value="${i}">Slot ${i+1}</option>`).join('')}
-        </select>
-        <button onclick="applyMagicItemLookup()" class="slot-btn" style="width:auto;padding:2px 8px">Fill</button>
-      </label>
-    </div>
-    <div id="mi_search_results" style="margin-top:4px;max-height:150px;overflow-y:auto"></div>
-  `;
-
-  searchMagicItemUI(); // Show initial items
-}
-
-let _selectedMagicItem = null;
-
-function searchMagicItemUI() {
-  const query    = document.getElementById('mi_lookup_search')?.value || '';
-  const slotFilt = document.getElementById('mi_lookup_slot')?.value || '';
-  const results  = document.getElementById('mi_search_results');
-  if (!results || typeof searchMagicItems === 'undefined') return;
-
-  const items = searchMagicItems(query, slotFilt || null);
-  results.innerHTML = items.map(([name, item]) => `
-    <div class="mi-search-row ${_selectedMagicItem === name ? 'mi-selected' : ''}"
-         onclick="selectMagicItem('${name.replace(/'/g, "\\'")}')">
-      <span class="mi-item-name">${name}</span>
-      <span class="mi-item-slot">${item.slot}</span>
-      <span class="mi-item-cost">${item.cost ? item.cost.toLocaleString() + ' gp' : ''}</span>
-      <span class="mi-item-note">${(item.note || '').substring(0, 60)}${(item.note||'').length > 60 ? '…' : ''}</span>
-    </div>
-  `).join('') || '<p class="helper-text" style="padding:4px">No items found. Try a different search.</p>';
-}
-
-function selectMagicItem(name) {
-  _selectedMagicItem = name;
-  searchMagicItemUI(); // Re-render to highlight selected
-}
-
-function applyMagicItemLookup() {
-  if (!_selectedMagicItem) { alert('Select an item first.'); return; }
-  const item = (typeof getMagicItem !== 'undefined') ? getMagicItem(_selectedMagicItem) : null;
-  if (!item) return;
-
-  const target  = document.getElementById('mi_lookup_target')?.value || 'ac';
-  const acSlot  = parseInt(document.getElementById('mi_lookup_acslot')?.value || '0');
-
-  if (target === 'ac') {
-    // Fill AC Items row
-    set(`aci_name_${acSlot}`,   _selectedMagicItem);
-    set(`aci_bonus_${acSlot}`,  item.acBonus  || '');
-    set(`aci_type_${acSlot}`,   item.acType   || item.slot || '');
-    set(`aci_maxdex_${acSlot}`, item.maxDex !== undefined && item.maxDex < 99 ? item.maxDex : '');
-    set(`aci_check_${acSlot}`,  item.checkPen !== undefined ? item.checkPen : '');
-    set(`aci_sf_${acSlot}`,     item.spellFail || '');
-    set(`aci_wt_${acSlot}`,     item.weight   || '');
-    set(`aci_props_${acSlot}`,  item.note     || '');
-    calcACItems();
-
-    // Also apply stat bonuses if item provides them
-    if (item.statBonus) {
-      const bonusNote = Object.entries(item.statBonus)
-        .map(([ab, v]) => `+${v} ${ab.toUpperCase()}`)
-        .join(', ');
-      const existSA = val('special_abilities');
-      const itemNote = `[${_selectedMagicItem}] ${bonusNote} (${item.bonusType || 'enhancement'})`;
-      if (!existSA.includes(_selectedMagicItem)) {
-        set('special_abilities', existSA ? existSA + '\n' + itemNote : itemNote);
-      }
-    }
-  } else {
-    // Fill Gear row
-    for (let i = 0; i < GEAR_COUNT; i++) {
-      if (!val(`gear_name_${i}`)) {
-        set(`gear_name_${i}`, _selectedMagicItem);
-        set(`gear_wt_${i}`,   item.weight || 0);
-        calcGear();
-        return;
-      }
-    }
-    alert('No empty gear slots. Clear one first.');
-  }
-
-  _selectedMagicItem = null;
-  searchMagicItemUI();
-}
-
-// Add to DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-  buildMagicItemLookup();
-});
-
-/* ══════════════════════════════════════════════════
-   TRAITS AUTOCOMPLETE
-   ══════════════════════════════════════════════════ */
-
-function onTraitSearch(slot) {
-  const inputId = 'trait' + slot + '_name';
-  const sugId   = 'trait' + slot + '_suggestions';
-  const query   = val(inputId);
-  const sug     = document.getElementById(sugId);
-  if (!sug || typeof searchTraits === 'undefined') return;
-  if (query.length < 2) { sug.style.display = 'none'; return; }
-
-  const results = searchTraits(query, null);
-  if (!results.length) { sug.style.display = 'none'; return; }
-
-  sug.innerHTML = results.map(t => {
-    const safeCalc = t.calcValue ? `<span class="spell-sug-calc">${t.calcValue}</span>` : '';
-    return `<div class="feat-suggestion-item"
-                 onclick="selectTrait(${slot}, '${t.name.replace(/'/g,"\\'")}')">
-      <span class="feat-sug-name">${t.name}</span>
-      <span class="feat-sug-type">${t.type}</span>
-      ${safeCalc}
-      <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
-    </div>`;
-  }).join('');
-  sug.style.display = 'block';
-}
-
-function selectTrait(slot, name) {
-  name = name.replace(/&#39;/g, "'");
-  set('trait' + slot + '_name', name);
-
-  const trait = (typeof getTraitByName !== 'undefined') ? getTraitByName(name) : null;
-
-  // Show description below the input
-  const descEl = document.getElementById('trait' + slot + '_desc');
-  if (descEl && trait) {
-    const calcBadge = trait.calcValue
-      ? `<span class="trait-calc-badge">${trait.calcValue}</span>` : '';
-    descEl.innerHTML = `<span class="trait-type-badge">${trait.type} · ${trait.source}</span> `
-      + calcBadge
-      + `<span class="trait-benefit-text">${trait.benefit}</span>`;
-  }
-
-  if (trait) {
-    // Apply unconditional skill bonuses
-    if (trait.skillBonus) {
-      Object.entries(trait.skillBonus).forEach(([skillId, amount]) => {
-        const current = parseInt(val('sk_misc_' + skillId)) || 0;
-        set('sk_misc_' + skillId, current + amount);
-        calcSkill(skillId);
-      });
-    }
-    // Apply unconditional save bonuses
-    if (trait.saveBonus && !trait.saveCondition) {
-      ['fort','ref','will'].forEach(s => {
-        if (trait.saveBonus[s]) {
-          const current = parseInt(val(s + '_misc')) || 0;
-          set(s + '_misc', current + trait.saveBonus[s]);
-        }
-      });
-      calcSaves();
-    }
-    // Conditional bonuses and calcValues go to Special Abilities as a note
-    if ((trait.saveBonus && trait.saveCondition) || trait.calcValue) {
-      const noteText = trait.calcValue
-        ? `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`
-        : `[Trait: ${name}] ${trait.benefit}`;
-      const existing = val('special_abilities');
-      if (!existing.includes('[Trait: ' + name + ']')) {
-        set('special_abilities', existing ? existing + '\n' + noteText : noteText);
-      }
-    }
-  }
-
-  // Hide suggestions
-  const sug = document.getElementById('trait' + slot + '_suggestions');
-  if (sug) sug.style.display = 'none';
-}
-
-// Restore trait descriptions on load
-function restoreTraitDescriptions() {
-  [1, 2].forEach(slot => {
-    const name = val('trait' + slot + '_name');
-    if (name) selectTrait(slot, name);
-  });
-}
-
-// Close trait suggestions on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.trait-search-wrap')) {
-    document.querySelectorAll('[id$="_suggestions"]').forEach(el => {
-      if (el.id.startsWith('trait')) el.style.display = 'none';
-    });
-  }
-});
-
-// Save/load traits
-const _collectData_traits = collectData;
-collectData = function() {
-  const data = _collectData_traits();
-  data.trait1_name = val('trait1_name');
-  data.trait2_name = val('trait2_name');
-  return data;
-};
-
-const _populateData_traits = populateData;
-populateData = function(data) {
-  _populateData_traits(data);
-  if (data.trait1_name) set('trait1_name', data.trait1_name);
-  if (data.trait2_name) set('trait2_name', data.trait2_name);
-  // Restore descriptions (with slight delay to ensure DOM is ready)
-  setTimeout(restoreTraitDescriptions, 200);
-};
 
 /* ══════════════════════════════════════════════════
    SETUP BAR TOGGLE
