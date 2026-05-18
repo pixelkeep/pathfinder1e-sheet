@@ -77,12 +77,218 @@ const AC_ITEM_COUNT = 7;
 const GEAR_COUNT    = 20;
 
 // ── INIT ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// SETUP PANEL BUILDERS — character setup + all quick-fills
+// ══════════════════════════════════════════════════
+
+function buildSetupPanel() {
+  const container = document.getElementById('setup-panel');
+  if (!container) return;
+
+  // Race options
+  const raceOpts = Object.entries(typeof RACES !== 'undefined' ? RACES : {})
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name))
+    .map(([k,r]) => `<option value="${k}">${r.name}</option>`)
+    .join('');
+
+  // Class options
+  const classOpts = Object.entries(typeof CLASSES !== 'undefined' ? CLASSES : {})
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name))
+    .map(([k,cls]) => `<option value="${k}">${cls.name}${cls.source ? ' ('+cls.source+')' : ''}</option>`)
+    .join('');
+
+  // Deity options
+  const deityOpts = (typeof DEITIES !== 'undefined' ? DEITIES : [])
+    .map(d => `<option value="${d[0]}" data-align="${d[1]}" data-domains="${d[2]}" data-weapon="${d[4]}">${d[0]} (${d[1]}) — ${d[4]}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="setup-grid">
+      <label class="setup-label">RACE
+        <select id="setup_race" onchange="onRaceChange()">
+          <option value="">— select —</option>
+          ${raceOpts}
+        </select>
+      </label>
+      <label class="setup-label">CLASS
+        <select id="setup_class" onchange="onClassChange()">
+          <option value="">— select —</option>
+          ${classOpts}
+        </select>
+      </label>
+      <label class="setup-label">LEVEL
+        <input type="number" id="setup_level" min="1" max="20" value="1"
+               style="width:42px" oninput="onLevelChange()">
+      </label>
+      <label class="setup-label">SIZE
+        <select id="setup_size" onchange="onSizeChange()">
+          <option>Fine</option><option>Diminutive</option><option>Tiny</option>
+          <option>Small</option><option value="Medium" selected>Medium</option>
+          <option>Large</option><option>Huge</option><option>Gargantuan</option><option>Colossal</option>
+        </select>
+      </label>
+      <label class="setup-label">DEITY
+        <select id="setup_deity" onchange="onDeityChange()" style="max-width:220px">
+          <option value="">— none —</option>
+          ${deityOpts}
+        </select>
+      </label>
+      <button onclick="applySetup()" class="apply-btn">APPLY SETUP</button>
+    </div>
+    <div id="setup-info" class="setup-info-row"></div>
+  `;
+}
+
+function buildWeaponLookup() {
+  const container = document.getElementById('weapon-lookup');
+  if (!container || typeof WEAPONS === 'undefined') return;
+
+  const opts = Object.keys(WEAPONS).sort()
+    .map(w => `<option value="${w}">${w}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="weapon-lookup-row">
+      <select id="wpn_lookup_name" style="width:200px">
+        <option value="">— lookup weapon —</option>
+        ${opts}
+      </select>
+      <select id="wpn_lookup_slot" style="width:90px">
+        ${Array.from({length:WEAPON_COUNT},(_,i)=>`<option value="${i}">Weapon ${i+1}</option>`).join('')}
+      </select>
+      <label><input type="checkbox" id="wpn_lookup_mw"> Masterwork (+1 atk)</label>
+      <label>Enhance
+        <input type="number" id="wpn_lookup_enhance" class="num small-num" min="0" max="5" value="0">
+      </label>
+      <button onclick="applyWeaponLookup()">FILL SLOT</button>
+    </div>
+  `;
+}
+
+function buildArmorLookup() {
+  const container = document.getElementById('armor-lookup');
+  if (!container || typeof ARMOR === 'undefined') return;
+
+  const opts = Object.keys(ARMOR).sort()
+    .map(a => `<option value="${a}">${a}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="armor-lookup-row">
+      <select id="armor_lookup_name" style="width:200px">
+        <option value="">— lookup armor/shield —</option>
+        ${opts}
+      </select>
+      <select id="armor_lookup_slot" style="width:90px">
+        ${Array.from({length:AC_ITEM_COUNT},(_,i)=>`<option value="${i}">Slot ${i+1}</option>`).join('')}
+      </select>
+      <label><input type="checkbox" id="armor_lookup_mw"> Masterwork</label>
+      <label>Enhance
+        <input type="number" id="armor_lookup_enhance" class="num small-num" min="0" max="5" value="0">
+      </label>
+      <button onclick="applyArmorLookup()">FILL SLOT</button>
+    </div>
+  `;
+}
+
+function buildGearLookup() {
+  const container = document.getElementById('gear-lookup');
+  if (!container || typeof COMMON_GEAR === 'undefined') return;
+
+  const opts = Object.keys(COMMON_GEAR).sort()
+    .map(g => `<option value="${g}">${g}</option>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="gear-lookup-row">
+      <select id="gear_lookup_name" style="width:200px">
+        <option value="">— quick-add gear —</option>
+        ${opts}
+      </select>
+      <button onclick="applyGearLookup()">ADD TO GEAR</button>
+    </div>
+  `;
+}
+
+function applyWeaponLookup() {
+  const name   = val('wpn_lookup_name');
+  const slot   = parseInt(val('wpn_lookup_slot')) || 0;
+  const mw     = document.getElementById('wpn_lookup_mw')?.checked;
+  const enh    = parseInt(val('wpn_lookup_enhance')) || 0;
+  const wpn    = (typeof WEAPONS !== 'undefined') ? WEAPONS[name] : null;
+  if (!wpn) { alert('Select a weapon first.'); return; }
+
+  set(`wpn_name_${slot}`,      name + (enh > 0 ? ` +${enh}` : mw ? ' (MW)' : ''));
+  set(`wpn_dmg_dice_${slot}`,  wpn.dmg     || '');
+  set(`wpn_crit_${slot}`,      wpn.crit    || '×2');
+  set(`wpn_type_${slot}`,      wpn.type    || '');
+  set(`wpn_range_${slot}`,     wpn.range   || 'melee');
+  set(`wpn_enh_${slot}`,       enh > 0 ? enh : (mw ? 1 : 0));
+
+  // Set checkboxes based on weapon properties
+  const setChk = (id, v) => { const el = document.getElementById(id); if (el) { el.checked = !!v; el.disabled = false; } };
+  const isTwoH = wpn.twoHanded || (wpn.hands === 2);
+  const isRanged = (wpn.range || '').toLowerCase().includes('ft') || wpn.ranged;
+  setChk(`wpn_twohanded_${slot}`, isTwoH);
+  setChk(`wpn_offhand_${slot}`,   false);
+  setChk(`wpn_ranged_${slot}`,    isRanged);
+  setChk(`wpn_mw_${slot}`,        mw && enh === 0);
+
+  // Material select — set to Normal; user can change after
+  const matEl = document.getElementById(`wpn_material_${slot}`);
+  if (matEl) matEl.value = 'Normal';
+
+  calcWeapon(slot);
+}
+
+function applyArmorLookup() {
+  const name   = val('armor_lookup_name');
+  const slot   = parseInt(val('armor_lookup_slot')) || 0;
+  const mw     = document.getElementById('armor_lookup_mw')?.checked;
+  const enh    = parseInt(val('armor_lookup_enhance')) || 0;
+  const armor  = (typeof ARMOR !== 'undefined') ? ARMOR[name] : null;
+  if (!armor) { alert('Select an armor or shield first.'); return; }
+
+  set(`aci_name_${slot}`,   name + (enh > 0 ? ` +${enh}` : mw ? ' (MW)' : ''));
+  set(`aci_bonus_${slot}`,  (armor.acBonus || 0) + enh);
+  set(`aci_type_${slot}`,   armor.armorType || '');
+  set(`aci_maxdex_${slot}`, armor.maxDex !== undefined ? armor.maxDex : '');
+  set(`aci_check_${slot}`,  armor.checkPen !== undefined ? (mw ? armor.checkPen + 1 : armor.checkPen) : '');
+  set(`aci_sf_${slot}`,     armor.spellFail || '');
+  set(`aci_wt_${slot}`,     armor.weight || '');
+  set(`aci_props_${slot}`,  armor.note || '');
+  calcACItems();
+}
+
+function applyGearLookup() {
+  const name = val('gear_lookup_name');
+  const gear = (typeof COMMON_GEAR !== 'undefined') ? COMMON_GEAR[name] : null;
+  if (!gear) { alert('Select an item first.'); return; }
+
+  for (let i = 0; i < GEAR_COUNT; i++) {
+    if (!val(`gear_name_${i}`)) {
+      set(`gear_name_${i}`, name);
+      set(`gear_wt_${i}`, gear.weight || 0);
+      calcGear();
+      return;
+    }
+  }
+  alert('No empty gear slots. Clear one first.');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  buildSetupPanel();
+  buildWeaponLookup();
+  buildArmorLookup();
+  buildGearLookup();
+  buildMagicItemLookup();
   buildSkillsTable();
   buildLanguagePicker([], []);
   buildWeapons();
+  buildWands();
   buildACItems();
   buildGear();
+  buildMagicItems();
   calcAll();
   updateSlotCountDisplay();
 });
