@@ -2997,3 +2997,100 @@ function applyMagicItemLookup() {
 document.addEventListener('DOMContentLoaded', () => {
   buildMagicItemLookup();
 });
+
+/* ══════════════════════════════════════════════════
+   TRAITS AUTOCOMPLETE
+   ══════════════════════════════════════════════════ */
+
+function onTraitSearch(slot) {
+  const inputId = 'trait' + slot + '_name';
+  const sugId   = 'trait' + slot + '_suggestions';
+  const query   = val(inputId);
+  const sug     = document.getElementById(sugId);
+  if (!sug || typeof searchTraits === 'undefined') return;
+  if (query.length < 2) { sug.style.display = 'none'; return; }
+
+  const results = searchTraits(query, null);
+  if (!results.length) { sug.style.display = 'none'; return; }
+
+  sug.innerHTML = results.map(t => {
+    const safeCalc = t.calcValue ? `<span class="spell-sug-calc">${t.calcValue}</span>` : '';
+    return `<div class="feat-suggestion-item"
+                 onclick="selectTrait(${slot}, '${t.name.replace(/'/g,"\\'")}')">
+      <span class="feat-sug-name">${t.name}</span>
+      <span class="feat-sug-type">${t.type}</span>
+      ${safeCalc}
+      <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
+    </div>`;
+  }).join('');
+  sug.style.display = 'block';
+}
+
+function selectTrait(slot, name) {
+  name = name.replace(/&#39;/g, "'");
+  set('trait' + slot + '_name', name);
+  const trait = (typeof getTraitByName !== 'undefined') ? getTraitByName(name) : null;
+  if (trait) {
+    // Apply skill bonuses
+    if (trait.skillBonus) {
+      Object.entries(trait.skillBonus).forEach(([skillId, amount]) => {
+        const current = parseInt(val('sk_misc_' + skillId)) || 0;
+        set('sk_misc_' + skillId, current + amount);
+        calcSkill(skillId);
+      });
+    }
+    // Apply save bonuses (unconditional ones only)
+    if (trait.saveBonus && !trait.saveCondition) {
+      ['fort','ref','will'].forEach(s => {
+        if (trait.saveBonus[s]) {
+          const current = parseInt(val(s + '_misc')) || 0;
+          set(s + '_misc', current + trait.saveBonus[s]);
+        }
+      });
+      calcSaves();
+    }
+    // Add note to special abilities for conditional bonuses
+    if (trait.saveBonus && trait.saveCondition) {
+      const note = `[Trait: ${name}] ${trait.benefit}`;
+      const existing = val('special_abilities');
+      if (!existing.includes(name)) {
+        set('special_abilities', existing ? existing + '\n' + note : note);
+      }
+    }
+    if (trait.calcValue) {
+      const note = `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`;
+      const existing = val('special_abilities');
+      if (!existing.includes(name)) {
+        set('special_abilities', existing ? existing + '\n' + note : note);
+      }
+    }
+  }
+  // Hide suggestions
+  const sug = document.getElementById('trait' + slot + '_suggestions');
+  if (sug) sug.style.display = 'none';
+}
+
+// Close trait suggestions on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.trait-search-wrap')) {
+    document.querySelectorAll('[id$="_suggestions"]').forEach(el => {
+      if (el.id.startsWith('trait')) el.style.display = 'none';
+    });
+  }
+});
+
+// Save/load traits
+const _collectData_traits = collectData;
+collectData = function() {
+  const data = _collectData_traits();
+  data.trait1_name = val('trait1_name');
+  data.trait2_name = val('trait2_name');
+  return data;
+};
+
+const _populateData_traits = populateData;
+populateData = function(data) {
+  _populateData_traits(data);
+  if (data.trait1_name) set('trait1_name', data.trait1_name);
+  if (data.trait2_name) set('trait2_name', data.trait2_name);
+};

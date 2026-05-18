@@ -92,6 +92,20 @@
     </div>
     <div class="field-row">
       <label>Race <input type="text" id="race" class="medium"></label>
+      <label>Trait 1
+        <div class="trait-search-wrap" style="position:relative;display:inline-block">
+          <input type="text" id="trait1_name" class="medium" placeholder="Search traits…"
+                 oninput="onTraitSearch(1)" autocomplete="off">
+          <div id="trait1_suggestions" class="feat-suggestions" style="display:none"></div>
+        </div>
+      </label>
+      <label>Trait 2
+        <div class="trait-search-wrap" style="position:relative;display:inline-block">
+          <input type="text" id="trait2_name" class="medium" placeholder="Search traits…"
+                 oninput="onTraitSearch(2)" autocomplete="off">
+          <div id="trait2_suggestions" class="feat-suggestions" style="display:none"></div>
+        </div>
+      </label>
       <label>Size <select id="size" class="short-select" onchange="onSizeFieldChange()">
         <option value="">—</option>
         <option value="Fine">Fine</option>
@@ -897,6 +911,7 @@
 <script src="data/feats.js"></script>
 <script src="data/class_features.js"></script>
 <script src="data/spells.js"></script>
+<script src="data/traits.js"></script>
 <script src="sheet.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
