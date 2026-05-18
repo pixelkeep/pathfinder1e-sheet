@@ -73,8 +73,14 @@ function updateSlotCountDisplay() {
   if (wc) wc.textContent = WEAPON_COUNT;
   if (vc) vc.textContent = WAND_COUNT;
 }
-const AC_ITEM_COUNT = 7;
-const GEAR_COUNT    = 20;
+const AC_ITEM_COUNT        = 7;
+const GEAR_COUNT           = 20;
+const MAGIC_ITEM_COUNT     = 8;
+const RESOURCE_POOL_COUNT  = 6;
+const DAILY_ABILITY_COUNT  = 8;
+const MY_ACTIONS_COUNT     = 10;
+const BUFF_TRACKER_COUNT   = 6;
+const EXTRACT_LEVELS       = 6;
 
 // ── INIT ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════
@@ -277,20 +283,25 @@ function applyGearLookup() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildSetupPanel();
-  buildWeaponLookup();
-  buildArmorLookup();
-  buildGearLookup();
-  buildMagicItemLookup();
-  buildSkillsTable();
-  buildLanguagePicker([], []);
-  buildWeapons();
-  buildWands();
-  buildACItems();
-  buildGear();
-  buildMagicItems();
-  calcAll();
-  updateSlotCountDisplay();
+  // Run each builder independently so one failure doesn't block the rest
+  const safe = (fn, name) => {
+    try { fn(); }
+    catch(e) { console.error(`Error in ${name}:`, e); }
+  };
+  safe(buildSetupPanel,     'buildSetupPanel');
+  safe(buildWeaponLookup,   'buildWeaponLookup');
+  safe(buildArmorLookup,    'buildArmorLookup');
+  safe(buildGearLookup,     'buildGearLookup');
+  safe(buildMagicItemLookup,'buildMagicItemLookup');
+  safe(buildSkillsTable,    'buildSkillsTable');
+  safe(() => buildLanguagePicker([], []), 'buildLanguagePicker');
+  safe(buildWeapons,        'buildWeapons');
+  safe(buildWands,          'buildWands');
+  safe(buildACItems,        'buildACItems');
+  safe(buildGear,           'buildGear');
+  safe(buildMagicItems,     'buildMagicItems');
+  safe(calcAll,             'calcAll');
+  safe(updateSlotCountDisplay, 'updateSlotCountDisplay');
 });
 
 // ── ABILITY MODIFIER ───────────────────────────────────────────────
