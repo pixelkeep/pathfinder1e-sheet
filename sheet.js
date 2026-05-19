@@ -295,10 +295,11 @@ function applyArmorLookup() {
   if (!armor) { alert('Select an armor or shield first.'); return; }
 
   set(`aci_name_${slot}`,   name + (enh > 0 ? ` +${enh}` : mw ? ' (MW)' : ''));
-  set(`aci_bonus_${slot}`,  (armor.acBonus || 0) + enh);
-  set(`aci_type_${slot}`,   armor.armorType || '');
+  set(`aci_bonus_${slot}`,  (armor.acBonus || armor.bonus || 0) + enh);
+  set(`aci_type_${slot}`,   armor.armorType || armor.type || '');
   set(`aci_maxdex_${slot}`, armor.maxDex !== undefined ? armor.maxDex : '');
-  set(`aci_check_${slot}`,  armor.checkPen !== undefined ? (mw ? armor.checkPen + 1 : armor.checkPen) : '');
+  const checkPen = armor.checkPen !== undefined ? armor.checkPen : (armor.check !== undefined ? armor.check : null);
+  set(`aci_check_${slot}`,  checkPen !== null ? (mw ? checkPen + 1 : checkPen) : '');
   set(`aci_sf_${slot}`,     armor.spellFail || '');
   set(`aci_wt_${slot}`,     armor.weight || '');
   set(`aci_props_${slot}`,  armor.note || '');
@@ -474,6 +475,8 @@ function syncItemRegistry() {
     }
   }
   applyAllItemBonuses();
+  // Recalc weapons after item bonuses applied (STR mod changes affect damage)
+  if (typeof calcAllWeapons !== 'undefined') calcAllWeapons();
 }
 
 // Persist registry in save data (via collectData)
@@ -1507,7 +1510,16 @@ function populateData(data) {
       set(`wpn_dmg_misc_${i}`,  w.dmgMisc  || '');
       set(`wpn_notes_${i}`,     w.notes    || '');
       const matEl = document.getElementById(`wpn_material_${i}`);
-      if (matEl && w.material) matEl.value = w.material;
+      if (matEl && w.material) {
+        // Try immediate set, then retry after short delay for dynamically built selects
+        matEl.value = w.material;
+        if (matEl.value !== w.material) {
+          setTimeout(() => {
+            const el2 = document.getElementById(`wpn_material_${i}`);
+            if (el2) { el2.value = w.material; calcWeapon(i); }
+          }, 200);
+        }
+      }
       const setChk = (id, v) => { const el = document.getElementById(id); if (el) { el.checked = !!v; el.disabled = false; } };
       setChk(`wpn_twohanded_${i}`, w.twoHanded);
       setChk(`wpn_offhand_${i}`,   w.offHand);
@@ -1679,7 +1691,12 @@ function populateData(data) {
 
   // ── Recalc everything ──────────────────────────
   calcAll();
-  setTimeout(syncItemRegistry, 300);
+  setTimeout(() => {
+    syncItemRegistry();
+    calcAllWeapons();
+    calcACItems();
+    calcAC();
+  }, 400);
   calcSaves();
   calcCombat();
   calcACItems();
@@ -1897,6 +1914,34 @@ function applySetup() {
     set('special_abilities', (sa ? sa + '\n\n' : '') + marker + '\n' + traitText);
   }
 
+  // Warpriest: auto-apply Weapon Focus as bonus feat at level 1
+  if (classKey === 'warpriest' && level >= 1) {
+    // Weapon Focus applies to sacred/favored weapon
+    // Find first empty feat slot and fill with Weapon Focus
+    // Also set +1 attack bonus on weapon slot 0 if it has a weapon
+    const wf = typeof getFeatByName !== 'undefined' ? getFeatByName('Weapon Focus') : null;
+    if (wf) {
+      // Check if Weapon Focus already in feats
+      let hasWF = false;
+      for (let fi = 0; fi < 30; fi++) {
+        if ((val('feat_name_' + fi) || '').toLowerCase().includes('weapon focus')) {
+          hasWF = true; break;
+        }
+      }
+      if (!hasWF) {
+        // Find first empty feat slot
+        for (let fi = 0; fi < 20; fi++) {
+          if (!val('feat_name_' + fi)) {
+            set('feat_name_' + fi, 'Weapon Focus');
+            set('feat_desc_' + fi, wf.benefit || '+1 bonus on attack rolls with chosen weapon.');
+            set('feat_type_' + fi, 'weapon');
+            break;
+          }
+        }
+      }
+    }
+  }
+
   // Deity perk
   if (deityEl && deityEl.value) {
     const perk = typeof DEITY_PERKS !== 'undefined' ? DEITY_PERKS[deityEl.value] : null;
@@ -1968,6 +2013,27 @@ function afterApplySetup(classKey, level) {
   buildClassAbilitiesSection(classKey, level);
   buildClassSpecificBlock(classKey, level);
   buildPage4Spells(classKey, level);
+  fillResourcePools(classKey, level);
+}
+
+function fillResourcePools(classKey, level) {
+  if (typeof getResourcePools === 'undefined') return;
+  const mods = {
+    str: getEffectiveMod('str'), dex: getEffectiveMod('dex'),
+    con: getEffectiveMod('con'), int: getEffectiveMod('int'),
+    wis: getEffectiveMod('wis'), cha: getEffectiveMod('cha'),
+  };
+  const pools = getResourcePools(classKey, level, mods);
+  pools.forEach((pool, i) => {
+    if (i >= RESOURCE_POOL_COUNT) return;
+    // Only fill if slot is empty or has the same label
+    const existLabel = val('pool_label_' + i);
+    if (!existLabel || existLabel === pool.label) {
+      set('pool_label_' + i, pool.label);
+      set('pool_max_' + i, pool.max);
+      updatePoolDots(i);
+    }
+  });
 }
 
 function buildAdaptivePage2(classKey, level) {
