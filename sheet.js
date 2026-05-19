@@ -825,10 +825,15 @@ function calcSkills() {
 
 // ── WEAPONS ────────────────────────────────────────────────────────
 function buildMaterialOptions() {
-  if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
-  return Object.keys(WEAPON_MATERIALS)
-    .map(m => `<option value="${m}">${m}</option>`)
-    .join('');
+  // Fallback list — always present even if equipment.js not yet uploaded to GitHub
+  const defaultMaterials = [
+    'Normal', 'Masterwork', 'Alchemical Silver', 'Cold Iron',
+    'Adamantine', 'Mithral', 'Darkwood', 'Bone'
+  ];
+  const materials = (typeof WEAPON_MATERIALS !== 'undefined')
+    ? Object.keys(WEAPON_MATERIALS)
+    : defaultMaterials;
+  return materials.map(m => `<option value="${m}">${m}</option>`).join('');
 }
 
 function getMaterialNote(i) {
