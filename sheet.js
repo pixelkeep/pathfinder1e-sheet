@@ -321,6 +321,205 @@ function applyGearLookup() {
   alert('No empty gear slots. Clear one first.');
 }
 
+
+/* ══════════════════════════════════════════════════
+   ITEM BONUS SYSTEM
+   Tracks which items are equipped and what bonuses
+   they provide. Handles stacking rules correctly.
+   Enhancement bonuses to the same stat don't stack.
+   ══════════════════════════════════════════════════ */
+
+// Registry: itemName → { statBonus, skillBonus, saveBonus, speedBonus, acBonus, slot, acSlot }
+let _itemBonusRegistry = {};
+
+// Apply all item bonuses from registry to the sheet
+function applyAllItemBonuses() {
+  // Collect totals per ability/skill/save (highest enhancement wins per type)
+  const statBonuses  = {};  // ability → { enhancement: max, luck: sum, ... }
+  const skillBonuses = {};  // skillId → total
+  const saveBonuses  = {};  // fort/ref/will → total
+  let   speedBonus   = 0;
+
+  Object.values(_itemBonusRegistry).forEach(entry => {
+    const item = entry.itemData;
+    if (!item) return;
+
+    // Stat bonuses — enhancement doesn't stack; take highest per ability
+    if (item.statBonus) {
+      const btype = item.bonusType || 'enhancement';
+      Object.entries(item.statBonus).forEach(([ab, amt]) => {
+        if (!statBonuses[ab]) statBonuses[ab] = {};
+        if (btype === 'enhancement') {
+          statBonuses[ab].enhancement = Math.max(statBonuses[ab].enhancement || 0, amt);
+        } else {
+          statBonuses[ab][btype] = (statBonuses[ab][btype] || 0) + amt;
+        }
+      });
+    }
+
+    // Skill bonuses — competence doesn't stack; take highest
+    if (item.skillBonus) {
+      Object.entries(item.skillBonus).forEach(([skillId, amt]) => {
+        skillBonuses[skillId] = Math.max(skillBonuses[skillId] || 0, amt);
+      });
+    }
+
+    // Save bonuses — resistance doesn't stack; take highest
+    if (item.saveBonus) {
+      const btype = item.bonusType || 'resistance';
+      ['fort','ref','will'].forEach(s => {
+        if (item.saveBonus[s]) {
+          if (btype === 'resistance') {
+            saveBonuses[s] = Math.max(saveBonuses[s] || 0, item.saveBonus[s]);
+          } else {
+            saveBonuses[s] = (saveBonuses[s] || 0) + item.saveBonus[s];
+          }
+        }
+      });
+    }
+
+    // Speed bonus — enhancement doesn't stack; take highest
+    if (item.speedBonus) {
+      speedBonus = Math.max(speedBonus, item.speedBonus);
+    }
+  });
+
+  // Apply stat bonuses — write to dedicated item bonus display fields
+  // calcMod reads these via getEffectiveMod
+  const ALL_ABILITIES = ['str','dex','con','int','wis','cha'];
+  ALL_ABILITIES.forEach(ab => {
+    const bonuses = statBonuses[ab];
+    const total = bonuses ? Object.values(bonuses).reduce((a,b) => a+b, 0) : 0;
+    // Store in hidden input that calcMod reads
+    let hiddenEl = document.getElementById('item_bonus_' + ab);
+    if (!hiddenEl) {
+      hiddenEl = document.createElement('input');
+      hiddenEl.type = 'hidden';
+      hiddenEl.id = 'item_bonus_' + ab;
+      document.body.appendChild(hiddenEl);
+    }
+    hiddenEl.value = total || '0';
+    calcMod(ab);
+  });
+
+  // Apply skill bonuses to sk_misc fields
+  Object.entries(skillBonuses).forEach(([skillId, total]) => {
+    const miscEl = document.getElementById('sk_misc_' + skillId);
+    if (!miscEl) return;
+    // Store base misc separately
+    const base = parseInt(miscEl.dataset.baseValue || '0') || 0;
+    miscEl.value = base + total;
+    calcSkill(skillId);
+  });
+
+  // Apply save bonuses to save misc
+  Object.entries(saveBonuses).forEach(([save, total]) => {
+    const miscEl = document.getElementById(save + '_misc');
+    if (!miscEl) return;
+    const base = parseInt(miscEl.dataset.baseValue || '0') || 0;
+    miscEl.value = base + total;
+  });
+  if (Object.keys(saveBonuses).length) calcSaves();
+
+  // Apply speed bonus
+  if (speedBonus > 0) {
+    const race = typeof RACES !== 'undefined' && _itemBonusRegistry['_race'] ?
+      RACES[_itemBonusRegistry['_race'].key] : null;
+    const baseSpeed = race ? race.speed : (parseInt(val('speed_land')) || 30);
+    set('speed_land', baseSpeed + speedBonus);
+  }
+
+  // Update item bonus display panel
+  updateItemBonusPanel();
+}
+
+// Register an item as equipped (called when filling a slot)
+function registerItemBonus(itemName, acSlot) {
+  const item = typeof getMagicItem !== 'undefined' ? getMagicItem(itemName) : null;
+  if (!item) return;
+
+  // Only register items with actual bonuses
+  const hasBonuses = item.statBonus || item.skillBonus || item.saveBonus ||
+                     item.speedBonus || (item.acBonus && item.acType === 'deflection') ||
+                     (item.acBonus && item.acType === 'insight') ||
+                     (item.acBonus && item.acType === 'natural armor');
+  if (!hasBonuses) return;
+
+  _itemBonusRegistry[itemName] = { itemData: item, acSlot: acSlot };
+  saveItemRegistry();
+  applyAllItemBonuses();
+}
+
+// Unregister an item (called when clearing a slot)
+function unregisterItemBonus(itemName) {
+  if (_itemBonusRegistry[itemName]) {
+    delete _itemBonusRegistry[itemName];
+    saveItemRegistry();
+    applyAllItemBonuses();
+  }
+}
+
+// Detect items in AC slots and sync registry
+function syncItemRegistry() {
+  // Clear stat/skill item bonuses first
+  _itemBonusRegistry = {};
+
+  for (let i = 0; i < AC_ITEM_COUNT; i++) {
+    const name = val('aci_name_' + i);
+    if (!name) continue;
+    const item = typeof getMagicItem !== 'undefined' ? getMagicItem(name) : null;
+    if (!item) continue;
+    if (item.statBonus || item.skillBonus || item.saveBonus || item.speedBonus) {
+      _itemBonusRegistry[name] = { itemData: item, acSlot: i };
+    }
+  }
+  applyAllItemBonuses();
+}
+
+// Persist registry in save data (via collectData)
+function saveItemRegistry() {
+  // Stored as part of collectData/_version
+}
+
+// Show active item bonuses in a small panel
+function updateItemBonusPanel() {
+  const panel = document.getElementById('item-bonus-panel');
+  if (!panel) return;
+  const entries = Object.entries(_itemBonusRegistry);
+  if (!entries.length) { panel.innerHTML = '<span style="opacity:.5;font-size:8px">No active item bonuses</span>'; return; }
+
+  panel.innerHTML = entries.map(([name, entry]) => {
+    const item = entry.itemData;
+    const parts = [];
+    if (item.statBonus) parts.push(...Object.entries(item.statBonus).map(([ab,v])=>`+${v} ${ab.toUpperCase()}`));
+    if (item.skillBonus) parts.push(...Object.entries(item.skillBonus).map(([sk,v])=>`+${v} ${sk}`));
+    if (item.saveBonus && !item.saveCondition) parts.push(...Object.entries(item.saveBonus).map(([s,v])=>`+${v} ${s}`));
+    if (item.speedBonus) parts.push(`+${item.speedBonus} speed`);
+    return `<span class="item-bonus-tag" title="${name}">
+      <span class="item-bonus-name">${name.substring(0,25)}${name.length>25?'…':''}</span>
+      <span class="item-bonus-values">${parts.join(', ')}</span>
+    </span>`;
+  }).join('');
+}
+
+// Hook into AC item name fields — detect when item name changes
+function watchACItemName(slot) {
+  const el = document.getElementById('aci_name_' + slot);
+  if (!el || el.dataset.watchingItems) return;
+  el.dataset.watchingItems = '1';
+  el.addEventListener('change', () => {
+    // Re-sync the whole registry when any AC name changes
+    setTimeout(syncItemRegistry, 100);
+  });
+}
+
+// Init watching on all AC slots
+function initItemBonusWatchers() {
+  for (let i = 0; i < AC_ITEM_COUNT; i++) {
+    watchACItemName(i);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Run each builder independently so one failure doesn't block the rest
   const safe = (fn, name) => {
@@ -341,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
   safe(buildMagicItems,     'buildMagicItems');
   safe(calcAll,             'calcAll');
   safe(updateSlotCountDisplay, 'updateSlotCountDisplay');
+  safe(initItemBonusWatchers, 'initItemBonusWatchers');
 });
 
 // ── ABILITY MODIFIER ───────────────────────────────────────────────
@@ -352,12 +552,21 @@ function abilityMod(score) {
 function calcMod(ability) {
   const score    = parseInt(val(`${ability}_score`)) || 0;
   const tempVal  = val(`${ability}_temp`);
-  const effective = (tempVal !== '') ? (parseInt(tempVal) || 0) : score;
-  const mod      = abilityMod(score);
-  const tempMod  = (tempVal !== '') ? abilityMod(effective) : '';
+  // Item bonus from equipped magic items (e.g. Belt of Giant Strength +2)
+  const itemBonus = parseInt(document.getElementById('item_bonus_'+ability)?.value || '0') || 0;
+  const effective = (tempVal !== '') ? (parseInt(tempVal) || 0) : (score + itemBonus);
+  const mod       = abilityMod(score + itemBonus);
+  const tempMod   = (tempVal !== '') ? abilityMod(effective) : (itemBonus ? abilityMod(score+itemBonus) : '');
 
   set(`${ability}_mod`,      mod);
   set(`${ability}_temp_mod`, tempMod !== '' ? tempMod : '');
+
+  // Show item bonus visually next to the score
+  const bonusEl = document.getElementById(`${ability}_item_badge`);
+  if (bonusEl) {
+    bonusEl.textContent = itemBonus > 0 ? `+${itemBonus}` : '';
+    bonusEl.style.display = itemBonus > 0 ? 'inline' : 'none';
+  }
 
   // cascade
   calcInit();
@@ -1458,6 +1667,7 @@ function populateData(data) {
 
   // ── Recalc everything ──────────────────────────
   calcAll();
+  setTimeout(syncItemRegistry, 300);
   calcSaves();
   calcCombat();
   calcACItems();
@@ -2093,12 +2303,8 @@ function applyMagicItemLookup() {
     set('aci_wt_'+acSlot,     item.weight || '');
     set('aci_props_'+acSlot,  item.note || '');
     calcACItems();
-    if (item.statBonus) {
-      const bn = Object.entries(item.statBonus).map(([ab,v])=>`+${v} ${ab.toUpperCase()}`).join(', ');
-      const sa = val('special_abilities');
-      const note = `[${_selectedMagicItem}] ${bn} (${item.bonusType||'enhancement'})`;
-      if (!sa.includes(_selectedMagicItem)) set('special_abilities', sa ? sa+'\n'+note : note);
-    }
+    // Auto-apply item bonuses to ability scores / skills / saves
+    registerItemBonus(_selectedMagicItem, acSlot);
   } else {
     for (let i=0; i<GEAR_COUNT; i++) {
       if (!val('gear_name_'+i)) { set('gear_name_'+i,_selectedMagicItem); set('gear_wt_'+i,item.weight||0); calcGear(); return; }

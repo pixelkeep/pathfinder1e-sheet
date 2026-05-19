@@ -2346,3 +2346,55 @@ input[id^="wand_dc_"][id$="_3"] {
 .trait-benefit-text {
   color: var(--border);
 }
+
+/* ══════════════════════════════════════════════════
+   ITEM BONUS PANEL
+   ══════════════════════════════════════════════════ */
+.item-bonus-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 0;
+  border-top: 1px dashed var(--border-light);
+  margin-top: 4px;
+}
+
+.item-bonus-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(42,74,107,.07);
+  border: 1px solid var(--accent2);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--accent2);
+}
+
+.item-bonus-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.item-bonus-values {
+  color: var(--accent2);
+}
+
+/* ══════════════════════════════════════════════════
+   ITEM BONUS BADGE on ability mod
+   ══════════════════════════════════════════════════ */
+.item-score-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent2);
+  border-radius: 3px;
+  padding: 0 2px;
+  pointer-events: none;
+  z-index: 2;
+}
