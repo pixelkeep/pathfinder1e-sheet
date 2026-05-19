@@ -2131,12 +2131,23 @@ function selectFeat(i, name) {
   if (feat) {
     set('feat_desc_'+i, feat.benefit);
     const ts = document.getElementById('feat_type_'+i);
-    if (ts) ts.value = feat.type==='combat'?'combat':feat.type==='metamagic'?'metamagic':feat.type==='item_creation'?'item':'general';
-    if (feat.weaponLinked) { const ws=document.getElementById('feat_wpn_'+i); if(ws) ws.classList.remove('hidden'); }
+    if (ts) {
+      if (feat.weaponLinked) ts.value = 'weapon';
+      else if (feat.type === 'metamagic') ts.value = 'metamagic';
+      else if (feat.type === 'item_creation') ts.value = 'item';
+      else if (feat.type === 'combat') ts.value = 'combat';
+      else ts.value = 'general';
+    }
+    if (feat.weaponLinked) {
+      const ws = document.getElementById('feat_wpn_'+i);
+      if (ws) ws.classList.remove('hidden');
+    }
     onFeatTypeChange(i);
   }
   const sug = document.getElementById('feat_suggestions_'+i);
   if (sug) sug.style.display = 'none';
+  // Recalc all feat bonuses
+  setTimeout(updateWeaponFeatBonuses, 50);
 }
 
 document.addEventListener('click', e => {
@@ -2151,20 +2162,77 @@ document.addEventListener('click', e => {
 function updateWeaponFeatBonuses() {
   const atkBonuses = Array(WEAPON_COUNT).fill(0);
   const dmgBonuses = Array(WEAPON_COUNT).fill(0);
+  const saveBonuses = {fort:0, ref:0, will:0};
+  let   initBonus  = 0;
+  let   acBonus    = 0;
+
   for (let fi = 0; fi < 30; fi++) {
     const featName = val('feat_name_'+fi);
-    const wpnSlot  = val('feat_wpn_'+fi);
-    if (!featName || wpnSlot==='') continue;
-    const si = parseInt(wpnSlot);
-    if (isNaN(si)) continue;
-    const feat = typeof getFeatByName!=='undefined' ? getFeatByName(featName) : null;
+    if (!featName) continue;
+    const feat = typeof getFeatByName !== 'undefined' ? getFeatByName(featName) : null;
     if (!feat) continue;
-    if (feat.attackMod) atkBonuses[si] += feat.attackMod;
-    if (feat.damageMod) dmgBonuses[si] += feat.damageMod;
+
+    // ── Weapon-linked feats (attack/damage) ───────
+    const wpnSlot = val('feat_wpn_'+fi);
+    if (wpnSlot !== '' && !isNaN(parseInt(wpnSlot))) {
+      const si = parseInt(wpnSlot);
+      if (feat.attackMod) atkBonuses[si] += feat.attackMod;
+      if (feat.damageMod) dmgBonuses[si] += feat.damageMod;
+    }
+
+    // ── Save bonuses (Iron Will, Lightning Reflexes, Great Fortitude) ──
+    if (feat.saveMod) {
+      if (feat.saveMod.fort) saveBonuses.fort += feat.saveMod.fort;
+      if (feat.saveMod.ref)  saveBonuses.ref  += feat.saveMod.ref;
+      if (feat.saveMod.will) saveBonuses.will += feat.saveMod.will;
+    }
+
+    // ── Initiative bonus (Improved Initiative +4) ──
+    if (feat.initMod) initBonus += feat.initMod;
+
+    // ── AC bonus (Dodge +1) ───────────────────────
+    if (feat.acMod) acBonus += feat.acMod;
   }
+
+  // Apply weapon bonuses
   for (let wi = 0; wi < WEAPON_COUNT; wi++) {
-    if (atkBonuses[wi]) { set('wpn_feat_'+wi, atkBonuses[wi]); calcWeapon(wi); }
-    if (dmgBonuses[wi]) { set('wpn_dmg_feat_'+wi, dmgBonuses[wi]); calcWeapon(wi); }
+    set('wpn_feat_'+wi,     atkBonuses[wi] || '');
+    set('wpn_dmg_feat_'+wi, dmgBonuses[wi] || '');
+    calcWeapon(wi);
+  }
+
+  // Apply save bonuses — store in feat_save_misc hidden fields
+  // then add to the save misc fields
+  ['fort','ref','will'].forEach(s => {
+    const fieldId = s + '_misc';
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    // Track feat contribution separately using data attribute
+    const base = parseInt(el.dataset.noFeatBase !== undefined
+      ? el.dataset.noFeatBase : el.value) || 0;
+    if (el.dataset.noFeatBase === undefined) el.dataset.noFeatBase = el.value || '0';
+    el.value = (parseInt(el.dataset.noFeatBase) || 0) + saveBonuses[s];
+  });
+  if (saveBonuses.fort || saveBonuses.ref || saveBonuses.will) calcSaves();
+
+  // Apply initiative bonus
+  if (initBonus) {
+    const initEl = document.getElementById('init_misc');
+    if (initEl) {
+      if (initEl.dataset.noFeatBase === undefined) initEl.dataset.noFeatBase = initEl.value || '0';
+      initEl.value = (parseInt(initEl.dataset.noFeatBase) || 0) + initBonus;
+      calcInit();
+    }
+  }
+
+  // Apply AC dodge bonus
+  if (acBonus) {
+    const acEl = document.getElementById('ac_misc');
+    if (acEl) {
+      if (acEl.dataset.noFeatBase === undefined) acEl.dataset.noFeatBase = acEl.value || '0';
+      acEl.value = (parseInt(acEl.dataset.noFeatBase) || 0) + acBonus;
+      calcAC();
+    }
   }
 }
 
@@ -2177,6 +2245,8 @@ function restoreFeatData(feats) {
     set('feat_wpn_'+i,  f.wpn ||'');
     onFeatTypeChange(i);
   });
+  // Apply all feat bonuses after restoring
+  setTimeout(updateWeaponFeatBonuses, 100);
 }
 
 function buildClassAbilitiesSection(classKey, level) {
