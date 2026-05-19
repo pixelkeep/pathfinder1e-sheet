@@ -824,6 +824,19 @@ function calcSkills() {
 }
 
 // ── WEAPONS ────────────────────────────────────────────────────────
+function buildMaterialOptions() {
+  if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
+  return Object.keys(WEAPON_MATERIALS)
+    .map(m => `<option value="${m}">${m}</option>`)
+    .join('');
+}
+
+function getMaterialNote(i) {
+  if (typeof WEAPON_MATERIALS === 'undefined') return { dmgMod: 0, note: '' };
+  const mat = val(`wpn_material_${i}`) || 'Normal';
+  return WEAPON_MATERIALS[mat] || { dmgMod: 0, note: '' };
+}
+
 function buildWeapons() {
   const container = document.getElementById('weapons-container');
   container.innerHTML = '';
@@ -1062,18 +1075,7 @@ function useWandCharge(i) {
 }
 
 
-function buildMaterialOptions() {
-  if (typeof WEAPON_MATERIALS === 'undefined') return '<option value="Normal">Normal</option>';
-  return Object.keys(WEAPON_MATERIALS)
-    .map(m => `<option value="${m}">${m}</option>`)
-    .join('');
-}
 
-function getMaterialNote(i) {
-  if (typeof WEAPON_MATERIALS === 'undefined') return { dmgMod: 0, note: '' };
-  const mat = val(`wpn_material_${i}`) || 'Normal';
-  return WEAPON_MATERIALS[mat] || { dmgMod: 0, note: '' };
-}
 
 function calcWeapon(i) {
   const bab       = parseInt(val('bab'))               || 0;
