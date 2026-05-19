@@ -561,11 +561,17 @@ function calcMod(ability) {
   set(`${ability}_mod`,      mod);
   set(`${ability}_temp_mod`, tempMod !== '' ? tempMod : '');
 
-  // Show item bonus visually next to the score
+  // Show item bonus badge inline next to the mod field
   const bonusEl = document.getElementById(`${ability}_item_badge`);
   if (bonusEl) {
-    bonusEl.textContent = itemBonus > 0 ? `+${itemBonus}` : '';
-    bonusEl.style.display = itemBonus > 0 ? 'inline' : 'none';
+    if (itemBonus > 0) {
+      bonusEl.textContent = `+${itemBonus}`;
+      bonusEl.style.display = 'inline-block';
+      bonusEl.title = `Item bonus: +${itemBonus} ${ability.toUpperCase()} (enhancement)`;
+    } else {
+      bonusEl.textContent = '';
+      bonusEl.style.display = 'none';
+    }
   }
 
   // cascade
@@ -1226,17 +1232,16 @@ function set(id, value) {
 }
 
 function getEffectiveMod(ability) {
-  // Always compute from score directly — never rely on readonly display fields
-  // This ensures calcWeapon/calcSaves/etc always see current values
+  // If a manual temp score is set, use that (overrides everything)
   const tempScore = val(`${ability}_temp`);
   if (tempScore !== '') {
     const ts = parseInt(tempScore);
     if (!isNaN(ts)) return abilityMod(ts);
   }
-  const score = val(`${ability}_score`);
-  if (score === '' || score === null) return 0;
-  const s = parseInt(score);
-  return isNaN(s) ? 0 : abilityMod(s);
+  // Base score + item bonus (e.g. Belt of Giant Strength +2)
+  const score = parseInt(val(`${ability}_score`)) || 0;
+  const itemBonus = parseInt(document.getElementById('item_bonus_'+ability)?.value || '0') || 0;
+  return abilityMod(score + itemBonus);
 }
 
 // ── COLLECT ALL DATA ───────────────────────────────────────────────
