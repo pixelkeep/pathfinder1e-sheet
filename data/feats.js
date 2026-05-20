@@ -9,7 +9,8 @@ const FEATS_DB = [
   // ── COMBAT — Power Attack chain ────────────────
   { name:'Power Attack',          type:'combat', prereqs:'STR 13, BAB +1',
     benefit:'–1 atk/+2 dmg (–2/+4 two-handed). Scales: –1/+2 per 4 BAB above +1.',
-    attackMod:-1, damageMod:2, scalingNote:'–1 atk/+2 dmg per 4 BAB' },
+    scalingNote:'Apply manually via Misc fields when using PA',
+    conditional:true },
   { name:'Furious Focus',         type:'combat', prereqs:'STR 13, Power Attack, BAB +1',
     benefit:'No Power Attack penalty on FIRST attack each turn with two-handed weapon.' },
   { name:'Cleave',                type:'combat', prereqs:'STR 13, Power Attack, BAB +1',
