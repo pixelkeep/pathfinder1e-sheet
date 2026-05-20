@@ -2397,3 +2397,17 @@ input[id^="wand_dc_"][id$="_3"] {
   margin-left: 2px;
   cursor: help;
 }
+
+/* ══════════════════════════════════════════════════
+   WEAPON BREAKDOWN INLINE HINT
+   ══════════════════════════════════════════════════ */
+.wpn-breakdown {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-left: 6px;
+  white-space: nowrap;
+  align-self: flex-end;
+  padding-bottom: 2px;
+  font-style: italic;
+}

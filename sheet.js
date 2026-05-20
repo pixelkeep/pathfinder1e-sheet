@@ -883,6 +883,7 @@ function buildWeapons() {
           <label class="bd-cell">Misc<br><input type="number" id="wpn_misc_atk_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">=</span>
           <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_atk_${i}" class="num small-num atk-total" readonly></label>
+          <span id="wpn_atk_breakdown_${i}" class="wpn-breakdown"></span>
         </div>
         <div class="weapon-breakdown-row">
           <span class="breakdown-label">Damage</span>
@@ -898,6 +899,7 @@ function buildWeapons() {
           <label class="bd-cell">Misc<br><input type="number" id="wpn_dmg_misc_${i}" class="num small-num" oninput="calcWeapon(${i})"></label>
           <span class="breakdown-op">=</span>
           <label class="bd-cell total-cell">Total<br><input type="text" id="wpn_dmg_${i}" style="width:60px" class="atk-total" readonly placeholder="1d8+5"></label>
+          <span id="wpn_dmg_breakdown_${i}" class="wpn-breakdown"></span>
           <span id="wpn_sacred_note_${i}" class="wpn-sacred-note"></span>
           <span id="wpn_material_note_${i}" class="wpn-material-note"></span>
         </div>
@@ -1126,6 +1128,32 @@ function calcWeapon(i) {
   const dice     = val(`wpn_dmg_dice_${i}`) || '—';
   const dmgMod   = strDmg + enh + dmgFeat + dmgMisc + matDmg;
   set(`wpn_dmg_${i}`, dmgMod !== 0 ? `${dice}${dmgMod >= 0 ? '+' : ''}${dmgMod}` : dice);
+
+  // ── Attack breakdown ───────────────────────────
+  const atkBreakEl = document.getElementById(`wpn_atk_breakdown_${i}`);
+  if (atkBreakEl) {
+    const ap = [];
+    ap.push(`BAB +${bab}`);
+    if (atkAbil) ap.push(`${ranged?'DEX':'STR'} ${atkAbil>=0?'+':''}${atkAbil}`);
+    if (enh)     ap.push(`Enh +${enh}`);
+    if (mwBonus) ap.push('MW +1');
+    if (feat)    ap.push(`Feat ${feat>=0?'+':''}${feat}`);
+    if (miscAtk) ap.push(`Misc ${miscAtk>=0?'+':''}${miscAtk}`);
+    atkBreakEl.textContent = ap.join(' · ');
+  }
+
+  // ── Damage breakdown ───────────────────────────
+  const dmgBreakEl = document.getElementById(`wpn_dmg_breakdown_${i}`);
+  if (dmgBreakEl) {
+    const dp = [];
+    const multLabel = twoHanded ? '×1½' : offHand ? '×½' : '';
+    if (strDmg)  dp.push(`STR${multLabel} ${strDmg>=0?'+':''}${strDmg}`);
+    if (enh)     dp.push(`Enh +${enh}`);
+    if (dmgFeat) dp.push(`Feat +${dmgFeat}`);
+    if (dmgMisc) dp.push(`Misc ${dmgMisc>=0?'+':''}${dmgMisc}`);
+    if (matDmg)  dp.push(`${matData.note?.split('.')[0] || 'Mat'} ${matDmg>=0?'+':''}${matDmg}`);
+    dmgBreakEl.textContent = dp.length ? dp.join(' · ') : '';
+  }
 
   // Material note
   const matNoteEl = document.getElementById(`wpn_material_note_${i}`);
@@ -2173,6 +2201,9 @@ function updateWeaponFeatBonuses() {
     if (!feat) continue;
 
     // ── Weapon-linked feats (attack/damage) ───────
+    // Skip conditional feats (Power Attack etc — user applies manually)
+    if (feat.conditional) continue;
+
     const wpnSlot = val('feat_wpn_'+fi);
     if (wpnSlot !== '' && !isNaN(parseInt(wpnSlot))) {
       const si = parseInt(wpnSlot);
