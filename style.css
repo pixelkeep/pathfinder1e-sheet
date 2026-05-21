@@ -2414,3 +2414,29 @@ input[id^="wand_dc_"][id$="_3"] {
   padding-bottom: 2px;
   font-style: italic;
 }
+
+/* ══════════════════════════════════════════════════
+   WAND CHARGES — simplified display
+   ══════════════════════════════════════════════════ */
+.wand-remaining-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent2);
+  margin: 0 4px;
+}
+.wand-remaining-badge.wand-low  { color: #b8860b; }
+.wand-remaining-badge.wand-empty { color: var(--accent); }
+
+.wand-use-btn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  color: var(--accent);
+  padding: 1px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.wand-use-btn:hover { background: rgba(139,26,26,.08); }

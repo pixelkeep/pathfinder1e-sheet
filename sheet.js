@@ -168,8 +168,8 @@ function buildMagicItemLookup() {
       <label style="font-family:var(--font-mono);font-size:9px;display:flex;align-items:center;gap:3px">
         Fill to
         <select id="mi_lookup_target" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px 4px">
-          <option value="ac">AC Items table</option>
-          <option value="gear">Gear list</option>
+          <option value="ac_auto">AC Items — first empty slot</option>
+          <option value="gear_auto">Gear — first empty slot</option>
         </select>
         Slot
         <select id="mi_lookup_acslot" style="font-family:var(--font-mono);font-size:9px;border:1px solid var(--border-light);padding:2px 4px">
@@ -1063,22 +1063,21 @@ function calcAllWands() {
   for (let i = 0; i < WAND_COUNT; i++) calcWand(i);
 }
 
-function updateWandDots(i) {
-  const max  = parseInt(val('wand_charges_max_'  + i)) || 0;
-  const used = parseInt(val('wand_charges_used_' + i)) || 0;
-  const remaining = Math.max(0, max - used);
-  const remEl = document.getElementById('wand_remaining_' + i);
-  if (remEl) remEl.textContent = max > 0 ? remaining + '/' + max : '';
-  const dotsEl = document.getElementById('wand_dots_' + i);
-  if (!dotsEl || max === 0) { if (dotsEl) dotsEl.innerHTML = ''; return; }
-  const show = Math.min(max, 25);
-  const usedDots = Math.round((used / max) * show);
-  let html = '';
-  for (let d = 0; d < show; d++) {
-    const cls = d < (show - usedDots) ? 'mi-dot-full' : 'mi-dot-used';
-    html += '<span class="mi-dot ' + cls + '" onclick="useWandCharge(' + i + ')" title="Click to use charge"></span>';
+function updateWandDots(i) { updateWandCharges(i); }
+
+function updateWandCharges(i) {
+  const max  = parseInt(val('wand_charges_max_'+i))  || 0;
+  const used = parseInt(val('wand_charges_used_'+i)) || 0;
+  const rem  = Math.max(0, max - used);
+  const el   = document.getElementById('wand_remaining_'+i);
+  if (!el) return;
+  if (max > 0) {
+    el.textContent = rem + ' left';
+    el.className = 'wand-remaining-badge' +
+      (rem === 0 ? ' wand-empty' : rem <= Math.ceil(max*0.2) ? ' wand-low' : '');
+  } else {
+    el.textContent = '';
   }
-  dotsEl.innerHTML = html;
 }
 
 function useWandCharge(i) {
@@ -1637,7 +1636,14 @@ function populateData(data) {
     const classKey = (val('charClass') || '').toLowerCase();
     const level    = parseInt(val('charLevel')) || 1;
     buildAdaptivePage2(classKey, level);
-    setTimeout(() => restoreFeatData(data.feats_structured), 100);
+    // Restore feats then recalc all bonuses
+    setTimeout(() => {
+      restoreFeatData(data.feats_structured);
+      setTimeout(() => {
+        updateWeaponFeatBonuses();
+        calcAllWeapons();
+      }, 150);
+    }, 200);
   }
 
   // ── Magic Items ────────────────────────────────
@@ -2070,6 +2076,112 @@ function afterApplySetup(classKey, level) {
   buildClassSpecificBlock(classKey, level);
   buildPage4Spells(classKey, level);
   fillResourcePools(classKey, level);
+  fillSpellSlots(classKey, level);
+}
+
+function getSpellTable(classKey) {
+  const tables = {
+    warpriest: {1:[3,0,0,0],2:[4,0,0,0],3:[4,1,0,0],4:[4,2,0,0],5:[4,3,0,0],
+                6:[4,3,1,0],7:[4,4,2,1],8:[4,4,3,2],9:[5,4,3,2],10:[5,4,4,3],
+                11:[5,5,4,3],12:[5,5,4,4],13:[5,5,5,4],14:[5,5,5,4],15:[6,5,5,5],
+                16:[6,6,5,5],17:[6,6,6,5],18:[6,6,6,6],19:[6,6,6,6],20:[6,6,6,6]},
+    cleric:    {1:[3,1],2:[4,2],3:[4,2,1],4:[4,3,2],5:[4,3,2,1],6:[4,3,3,2],
+                7:[4,4,3,2,1],8:[4,4,3,3,2],9:[4,4,4,3,2,1],10:[4,4,4,3,3,2],
+                11:[4,4,4,4,3,2,1],12:[4,4,4,4,3,3,2],13:[4,4,4,4,4,3,2,1],
+                14:[4,4,4,4,4,3,3,2],15:[4,4,4,4,4,4,3,2,1],16:[4,4,4,4,4,4,3,3,2],
+                17:[4,4,4,4,4,4,4,3,2],18:[4,4,4,4,4,4,4,3,3],
+                19:[4,4,4,4,4,4,4,4,3],20:[4,4,4,4,4,4,4,4,4]},
+    paladin:   {1:[],2:[],3:[],4:[1],5:[1],6:[1],7:[1,0],8:[1,1],9:[2,1],
+                10:[2,1,0],11:[2,1,1],12:[2,2,1],13:[3,2,1,0],14:[3,2,1,1],
+                15:[3,2,2,1],16:[3,3,2,1],17:[4,3,2,1],18:[4,3,2,2],
+                19:[4,3,3,2],20:[4,4,3,2]},
+    ranger:    {4:[0],5:[1],6:[1],7:[1,0],8:[1,1],9:[2,1],10:[2,1,0],
+                11:[2,1,1],12:[2,2,1],13:[3,2,1,0],14:[3,2,1,1],
+                15:[3,2,2,1],16:[3,3,2,1],17:[4,3,2,1],18:[4,3,2,2],
+                19:[4,3,3,2],20:[4,4,3,2]},
+    wizard:    {1:[3,1],2:[4,2],3:[4,2,1],4:[4,3,2],5:[4,3,2,1],6:[4,3,3,2],
+                7:[4,4,3,2,1],8:[4,4,3,3,2],9:[4,4,4,3,2,1],10:[4,4,4,3,3,2],
+                11:[4,4,4,4,3,2,1],12:[4,4,4,4,3,3,2],13:[4,4,4,4,4,3,2,1],
+                14:[4,4,4,4,4,3,3,2],15:[4,4,4,4,4,4,3,2,1],16:[4,4,4,4,4,4,3,3,2],
+                17:[4,4,4,4,4,4,4,3,2],18:[4,4,4,4,4,4,4,3,3],
+                19:[4,4,4,4,4,4,4,4,3],20:[4,4,4,4,4,4,4,4,4]},
+    sorcerer:  {1:[5],2:[6],3:[6,3],4:[6,4],5:[6,4,3],6:[6,5,4],7:[6,5,4,3],
+                8:[6,5,4,4],9:[6,5,5,4,3],10:[6,5,5,4,4],11:[6,5,5,5,4,3],
+                12:[6,5,5,5,4,4],13:[6,5,5,5,5,4,3],14:[6,5,5,5,5,4,4],
+                15:[6,5,5,5,5,5,4,3],16:[6,5,5,5,5,5,4,4],17:[6,5,5,5,5,5,5,4,3],
+                18:[6,5,5,5,5,5,5,4,4],19:[6,5,5,5,5,5,5,5,4],20:[6,5,5,5,5,5,5,5,5]},
+    druid:     {1:[3,1],2:[4,2],3:[4,2,1],4:[4,3,2],5:[4,3,2,1],6:[4,3,3,2],
+                7:[4,4,3,2,1],8:[4,4,3,3,2],9:[4,4,4,3,2,1],10:[4,4,4,3,3,2],
+                11:[4,4,4,4,3,2,1],12:[4,4,4,4,3,3,2],13:[4,4,4,4,4,3,2,1],
+                14:[4,4,4,4,4,3,3,2],15:[4,4,4,4,4,4,3,2,1],16:[4,4,4,4,4,4,3,3,2],
+                17:[4,4,4,4,4,4,4,3,2],18:[4,4,4,4,4,4,4,3,3],
+                19:[4,4,4,4,4,4,4,4,3],20:[4,4,4,4,4,4,4,4,4]},
+    oracle:    {1:[3,1],2:[4,2],3:[5,2,1],4:[5,3,2],5:[5,3,2,1],6:[5,3,3,2],
+                7:[6,4,3,2,1],8:[6,4,3,3,2],9:[6,4,4,3,2,1],10:[6,4,4,3,3,2],
+                11:[6,5,4,4,3,2,1],12:[6,5,4,4,3,3,2],13:[6,5,5,4,4,3,2,1],
+                14:[6,5,5,4,4,3,3,2],15:[6,5,5,5,4,4,3,2,1],16:[6,5,5,5,4,4,3,3,2],
+                17:[6,5,5,5,5,4,4,3,2],18:[6,5,5,5,5,4,4,3,3],
+                19:[6,5,5,5,5,5,4,4,3],20:[6,5,5,5,5,5,4,4,4]},
+    inquisitor:{1:[2,1],2:[3,2],3:[3,2,1],4:[3,3,2],5:[4,3,2,1],6:[4,3,3,2],
+                7:[4,4,3,2,1],8:[4,4,3,3,2],9:[5,4,4,3,2,1],10:[5,4,4,3,3,2],
+                11:[5,5,4,4,3,2,1],12:[5,5,4,4,3,3,2],13:[5,5,5,4,4,3,2,1],
+                14:[5,5,5,4,4,3,3,2],15:[5,5,5,5,4,4,3,2,1],16:[6,5,5,5,4,4,3,3,2],
+                17:[6,6,5,5,5,4,4,3,2],18:[6,6,5,5,5,4,4,3,3],
+                19:[6,6,6,5,5,5,4,4,3],20:[6,6,6,5,5,5,4,4,4]},
+    bard:      {1:[2,1],2:[3,2],3:[3,3],4:[3,3,1],5:[4,3,2],6:[4,4,3],
+                7:[4,4,3,1],8:[4,4,4,2],9:[5,4,4,3],10:[5,4,4,3,1],
+                11:[5,5,4,4,2],12:[5,5,5,4,3],13:[5,5,5,4,3,1],14:[5,5,5,4,4,2],
+                15:[5,5,5,5,4,3],16:[5,5,5,5,4,3,1],17:[5,5,5,5,4,4,2],
+                18:[5,5,5,5,5,4,3],19:[5,5,5,5,5,5,4],20:[5,5,5,5,5,5,5]},
+  };
+  // Aliases
+  const aliases = {witch:'wizard',arcanist:'wizard',shaman:'druid',hunter:'ranger',
+                   magus:'wizard',investigator:'alchemist',bloodrager:'sorcerer',
+                   summoner:'sorcerer',skald:'bard',psychic:'sorcerer',
+                   mesmerist:'bard',occultist:'inquisitor',medium:'inquisitor',
+                   spiritualist:'inquisitor',kineticist:null};
+  const key = aliases[classKey] !== undefined ? aliases[classKey] : classKey;
+  if (!key) return null;
+  return tables[key] || null;
+}
+
+function getBonusSpells(abilityMod, maxLevel) {
+  // Returns array of bonus spells per spell level (index 0 = level 1)
+  const bonus = [];
+  for (let sl = 1; sl <= maxLevel; sl++) {
+    bonus.push(abilityMod >= sl ? 1 : 0);  // simplified: +1 if mod >= spell level
+    // Full bonus spell rules: +1 at mod 1-3, +2 at 4-6, etc. per level
+    // This is the simplified version for display
+  }
+  return bonus;
+}
+
+function fillSpellSlots(classKey, level) {
+  const table = getSpellTable(classKey);
+  if (!table) return;
+  const slots = table[level];
+  if (!slots) return;
+
+  const cls = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  const spellAbility = (cls && cls.spellAbility) ? cls.spellAbility : val('spell_ability');
+  const abMod = typeof getEffectiveMod !== 'undefined' ?
+    getEffectiveMod(spellAbility.toLowerCase().substring(0,3)) : 0;
+
+  for (let sl = 1; sl <= 9; sl++) {
+    const base = slots[sl-1] || 0;
+    // Bonus spell: +1 per spell level if abMod >= spell level (simplified)
+    const bonusSpell = (base > 0 && abMod >= sl) ? 1 : 0;
+    // Only set if currently empty
+    if (!val(`spl_perday_${sl}`) || val(`spl_perday_${sl}`) === '0') {
+      set(`spl_perday_${sl}`, base || '');
+    }
+    if (!val(`spl_bonus_${sl}`)) {
+      set(`spl_bonus_${sl}`, bonusSpell || '');
+    }
+  }
+  // Orisons (level 0) — unlimited, mark as ∞
+  const orisonEl = document.getElementById('spl_perday_0');
+  if (orisonEl && !orisonEl.value) orisonEl.value = '∞';
 }
 
 function fillResourcePools(classKey, level) {
@@ -2513,10 +2625,18 @@ function applyMagicItemLookup() {
     // Auto-apply item bonuses to ability scores / skills / saves
     registerItemBonus(_selectedMagicItem, acSlot);
   } else {
+    // gear_auto: find first empty gear slot
     for (let i=0; i<GEAR_COUNT; i++) {
-      if (!val('gear_name_'+i)) { set('gear_name_'+i,_selectedMagicItem); set('gear_wt_'+i,item.weight||0); calcGear(); return; }
+      if (!val('gear_name_'+i)) {
+        set('gear_name_'+i, _selectedMagicItem);
+        set('gear_wt_'+i, item.weight||0);
+        calcGear();
+        _selectedMagicItem = null;
+        searchMagicItemUI();
+        return;
+      }
     }
-    alert('No empty gear slots.');
+    alert('No empty gear slots. Clear one first.');
   }
   _selectedMagicItem = null;
   searchMagicItemUI();
