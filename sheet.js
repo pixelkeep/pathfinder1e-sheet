@@ -1585,13 +1585,40 @@ function populateData(data) {
   if (data.acItems) {
     data.acItems.forEach((a, i) => {
       set(`aci_name_${i}`,    a.name   || '');
-      set(`aci_bonus_${i}`,   a.bonus  || '');
       set(`aci_type_${i}`,    a.type   || '');
       set(`aci_maxdex_${i}`,  a.maxDex || '');
       set(`aci_check_${i}`,   a.check  || '');
       set(`aci_sf_${i}`,      a.sf     || '');
       set(`aci_wt_${i}`,      a.wt     || '');
       set(`aci_props_${i}`,   a.props  || '');
+      // If bonus is missing/zero but item name is known armor, auto-lookup
+      const savedBonus = a.bonus !== undefined && a.bonus !== '' && a.bonus !== '0'
+        ? a.bonus : null;
+      if (savedBonus) {
+        set(`aci_bonus_${i}`, savedBonus);
+      } else if (a.name && typeof ARMOR !== 'undefined') {
+        // Try to find in ARMOR database
+        const armorKey = Object.keys(ARMOR).find(k =>
+          k.toLowerCase() === (a.name || '').toLowerCase() ||
+          (a.name || '').toLowerCase().startsWith(k.toLowerCase())
+        );
+        if (armorKey) {
+          const armorData = ARMOR[armorKey];
+          set(`aci_bonus_${i}`, (armorData.acBonus || armorData.bonus || 0));
+          if (!a.maxDex && armorData.maxDex !== undefined)
+            set(`aci_maxdex_${i}`, armorData.maxDex);
+          if (!a.check)
+            set(`aci_check_${i}`, armorData.checkPen || armorData.check || '');
+          if (!a.sf)
+            set(`aci_sf_${i}`, armorData.spellFail || armorData.sf || '');
+          if (!a.type)
+            set(`aci_type_${i}`, armorData.armorType || armorData.type || '');
+        } else {
+          set(`aci_bonus_${i}`, a.bonus || '');
+        }
+      } else {
+        set(`aci_bonus_${i}`, a.bonus || '');
+      }
     });
     calcACItems();
   }
@@ -1724,7 +1751,8 @@ function populateData(data) {
     calcAllWeapons();
     calcACItems();
     calcAC();
-  }, 400);
+    updateWeaponFeatBonuses();
+  }, 500);
   calcSaves();
   calcCombat();
   calcACItems();

@@ -2385,7 +2385,9 @@ input[id^="wand_dc_"][id$="_3"] {
    ITEM BONUS BADGE on ability mod
    ══════════════════════════════════════════════════ */
 .item-score-badge {
-  display: inline-block;
+  position: absolute;
+  top: -5px;
+  right: -6px;
   font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 700;
@@ -2393,9 +2395,10 @@ input[id^="wand_dc_"][id$="_3"] {
   background: var(--accent2);
   border-radius: 3px;
   padding: 0 3px;
-  vertical-align: middle;
-  margin-left: 2px;
   cursor: help;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* ══════════════════════════════════════════════════
