@@ -499,9 +499,12 @@
           </tfoot>
         </table>
         <div class="load-table">
-          <span>Light: <input type="text" id="load_light" class="short-text"> lbs</span>
-          <span>Medium: <input type="text" id="load_medium" class="short-text"> lbs</span>
-          <span>Heavy: <input type="text" id="load_heavy" class="short-text"> lbs</span>
+          <span id="current_load_status" class="load-status load-light">— lbs</span>
+          <span class="load-thresholds">
+            Light ≤<input type="text" id="load_light" class="short-text" readonly> ·
+            Medium ≤<input type="text" id="load_medium" class="short-text" readonly> ·
+            Heavy ≤<input type="text" id="load_heavy" class="short-text" readonly> lbs
+          </span>
         </div>
       </div>
     </div>

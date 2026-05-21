@@ -2440,3 +2440,38 @@ input[id^="wand_dc_"][id$="_3"] {
   border-radius: 2px;
 }
 .wand-use-btn:hover { background: rgba(139,26,26,.08); }
+
+/* ══════════════════════════════════════════════════
+   LOAD STATUS & ENHANCE BUTTON
+   ══════════════════════════════════════════════════ */
+.load-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.load-light  { color: var(--accent2); background: rgba(42,74,107,.08); }
+.load-medium { color: #8b6a00; background: rgba(139,106,0,.08); }
+.load-heavy  { color: var(--accent); background: rgba(139,26,26,.08); }
+.load-over   { color: #fff; background: var(--accent); }
+
+.load-thresholds {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+}
+
+.enhance-btn {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  background: var(--section-bg);
+  border: 1px solid var(--accent2);
+  color: var(--accent2);
+  padding: 1px 4px;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.enhance-btn:hover { background: rgba(42,74,107,.1); }
