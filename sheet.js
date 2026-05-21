@@ -592,40 +592,57 @@ function enhanceACItem(slot) {
    WARPRIEST BLESSINGS UI
    ══════════════════════════════════════════════════ */
 
-function buildBlessingsBlock() {
-  const container = document.getElementById('blessings-container');
+function buildBlessingsBlock(container, level) {
+  if (!container) container = document.getElementById('class-specific-block');
   if (!container) return;
+  if (typeof WARPRIEST_BLESSINGS === 'undefined') return;
 
-  // Check if class is warpriest
-  const cls = (val('charClass') || '').toLowerCase();
-  if (!cls.includes('warpriest')) {
-    container.style.display = 'none';
-    return;
-  }
-  container.style.display = '';
-
-  const level = parseInt(val('charLevel')) || 1;
+  level = level || parseInt(val('charLevel')) || 1;
   const hasMajor = level >= 10;
 
+  // Get deity domains to pre-filter blessings
+  const deityName = val('deity') || '';
+  const deityRow  = typeof DEITIES !== 'undefined' ? DEITIES.find(d => d[0] === deityName) : null;
+  const deityDomains = deityRow ? deityRow[2].split(',').map(s => s.trim()) : [];
+
+  // Build domain hint
+  let domainHint = '';
+  if (deityDomains.length) {
+    const matching = deityDomains.filter(d => WARPRIEST_BLESSINGS[d]);
+    domainHint = matching.length
+      ? `<span class="section-note">Deity domains: <strong>${matching.join(', ')}</strong> — these are your eligible blessings</span>`
+      : `<span class="section-note">Deity: ${deityName} — domains: ${deityDomains.join(', ')}</span>`;
+  }
+
   container.innerHTML = `
-    <div class="section-title">Blessings
-      <span class="section-note">Choose 2 from your deity's domains · ${level >= 10 ? 'Minor + Major unlocked' : 'Minor powers only (Major unlocks at level 10)'}</span>
-    </div>
-    <div class="blessings-grid">
-      ${buildBlessingSlot(1, hasMajor)}
-      ${buildBlessingSlot(2, hasMajor)}
+    <div class="section-box">
+      <div class="section-title">Blessings ${domainHint}</div>
+      <div class="section-note" style="margin-bottom:4px">
+        ${hasMajor ? '✅ Minor + Major powers unlocked' : 'Minor power only at this level (Major unlocks at level 10)'}
+        · Uses: <strong>${3 + Math.floor(level/2)}/day</strong>
+        · Swift action
+      </div>
+      <div class="blessings-grid">
+        ${buildBlessingSlot(1, hasMajor, deityDomains)}
+        ${buildBlessingSlot(2, hasMajor, deityDomains)}
+      </div>
     </div>`;
 }
 
-function buildBlessingSlot(slot, hasMajor) {
+function buildBlessingSlot(slot, hasMajor, deityDomains) {
+  deityDomains = deityDomains || [];
   const saved = val('blessing' + slot + '_name') || '';
+  const domainHint = deityDomains.length
+    ? `e.g. ${deityDomains.filter(d => typeof WARPRIEST_BLESSINGS !== 'undefined' && WARPRIEST_BLESSINGS[d]).slice(0,3).join(', ')}…`
+    : 'e.g. Good, War, Protection…';
   return `
     <div class="blessing-slot">
       <div class="blessing-search-wrap" style="position:relative">
         <input type="text" id="blessing${slot}_name" class="blessing-name-input"
                value="${saved.replace(/"/g,'&quot;')}"
-               placeholder="Choose blessing (e.g. Good, War, Protection…)"
-               oninput="onBlessingSearch(${slot})" autocomplete="off">
+               placeholder="${domainHint}"
+               oninput="onBlessingSearch(${slot})" autocomplete="off"
+               data-deity-domains="${deityDomains.join(',')}">
         <div id="blessing${slot}_suggestions" class="feat-suggestions"></div>
       </div>
       <div id="blessing${slot}_details" class="blessing-details">
@@ -637,31 +654,45 @@ function buildBlessingSlot(slot, hasMajor) {
 function renderBlessingDetails(name, hasMajor) {
   if (typeof WARPRIEST_BLESSINGS === 'undefined') return '';
   const b = WARPRIEST_BLESSINGS[name];
-  if (!b) return '';
+  if (!b) return `<span class="helper-text">Blessing not found: ${name}</span>`;
   return `
     <div class="blessing-power">
       <span class="blessing-power-label">Minor</span>
       <span class="blessing-power-text">${b.minor}</span>
     </div>
-    ${hasMajor ? `<div class="blessing-power blessing-major">
+    <div class="blessing-power ${hasMajor ? 'blessing-major' : 'blessing-major-locked'}">
       <span class="blessing-power-label">Major</span>
-      <span class="blessing-power-text">${b.major}</span>
-    </div>` : `<div class="blessing-power blessing-major-locked">
-      <span class="blessing-power-label">Major</span>
-      <span class="blessing-power-text locked">Unlocks at level 10</span>
-    </div>`}`;
+      <span class="blessing-power-text">${hasMajor ? b.major : '<em style="color:var(--border)">Unlocks at level 10: ' + b.major + '</em>'}</span>
+    </div>`;
 }
 
 function onBlessingSearch(slot) {
-  const query = val('blessing' + slot + '_name');
+  const input = document.getElementById('blessing' + slot + '_name');
+  const query = input ? input.value : '';
   const sug   = document.getElementById('blessing' + slot + '_suggestions');
   if (!sug || typeof WARPRIEST_BLESSINGS === 'undefined') return;
-  if (query.length < 1) { sug.style.display = 'none'; return; }
 
-  const results = typeof searchBlessings !== 'undefined' ?
-    searchBlessings(query) :
-    Object.entries(WARPRIEST_BLESSINGS).filter(([n]) =>
-      n.toLowerCase().startsWith(query.toLowerCase()));
+  // Get deity domains from input data attribute
+  const deityDomains = (input && input.dataset.deityDomains)
+    ? input.dataset.deityDomains.split(',').filter(Boolean) : [];
+
+  // If no query and deity has domains, show deity domains first
+  const allResults = Object.entries(WARPRIEST_BLESSINGS);
+  let results;
+  if (!query) {
+    // Show deity-relevant blessings first if available, else all
+    if (deityDomains.length) {
+      const deityMatches = allResults.filter(([n]) => deityDomains.includes(n));
+      const others = allResults.filter(([n]) => !deityDomains.includes(n));
+      results = [...deityMatches, ...others];
+    } else {
+      results = allResults;
+    }
+  } else {
+    results = allResults.filter(([n]) =>
+      n.toLowerCase().startsWith(query.toLowerCase()) ||
+      n.toLowerCase().includes(query.toLowerCase()));
+  }
 
   if (!results.length) { sug.style.display = 'none'; return; }
   sug._blessingResults = results;
@@ -2290,10 +2321,11 @@ function afterApplySetup(classKey, level) {
 
 function getSpellTable(classKey) {
   const tables = {
-    warpriest: {1:[3,0,0,0],2:[4,0,0,0],3:[4,1,0,0],4:[4,2,0,0],5:[4,3,0,0],
-                6:[4,3,1,0],7:[4,4,2,1],8:[4,4,3,2],9:[5,4,3,2],10:[5,4,4,3],
-                11:[5,5,4,3],12:[5,5,4,4],13:[5,5,5,4],14:[5,5,5,4],15:[6,5,5,5],
-                16:[6,6,5,5],17:[6,6,6,5],18:[6,6,6,6],19:[6,6,6,6],20:[6,6,6,6]},
+    warpriest: {1:[3,1,0,0,0,0],2:[4,2,0,0,0,0],3:[4,2,1,0,0,0],4:[4,3,2,0,0,0],
+                5:[4,3,2,1,0,0],6:[4,3,3,2,0,0],7:[4,4,3,2,1,0],8:[4,4,3,3,2,0],
+                9:[4,4,4,3,2,1],10:[4,4,4,3,3,2],11:[4,4,4,4,3,2],12:[4,4,4,4,3,3],
+                13:[4,4,4,4,4,3],14:[4,4,4,4,4,4],15:[4,4,4,4,4,4],16:[4,4,4,4,4,4],
+                17:[4,4,4,4,4,4],18:[4,4,4,4,4,4],19:[4,4,4,4,4,4],20:[4,4,4,4,4,4]},
     cleric:    {1:[3,1],2:[4,2],3:[4,2,1],4:[4,3,2],5:[4,3,2,1],6:[4,3,3,2],
                 7:[4,4,3,2,1],8:[4,4,3,3,2],9:[4,4,4,3,2,1],10:[4,4,4,3,3,2],
                 11:[4,4,4,4,3,2,1],12:[4,4,4,4,3,3,2],13:[4,4,4,4,4,3,2,1],
@@ -2702,7 +2734,10 @@ function buildClassAbilitiesSection(classKey, level) {
 function buildClassSpecificBlock(classKey, level) {
   const container = document.getElementById('class-specific-block');
   if (!container) return;
-  container.innerHTML = '';  // simplified — full warpriest block omitted for brevity
+  container.innerHTML = '';
+  if (classKey === 'warpriest') {
+    buildBlessingsBlock(container, level);
+  }
 }
 
 function buildPage4Spells(classKey, level) {
