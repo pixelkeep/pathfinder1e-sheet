@@ -573,3 +573,51 @@ function getResourcePools(className, level, abilityMods) {
       max:   r.formula(level, abilityMods),
     }));
 }
+
+
+// ══════════════════════════════════════════════════
+// WARPRIEST BLESSINGS
+// Source: ACG p.60 — each blessing has minor (1st level) and major (10th level)
+// ══════════════════════════════════════════════════
+const WARPRIEST_BLESSINGS = {
+  "Air":         { minor: "Lightning Arc: touch one creature, 1d6+½ level electricity (Ref neg).", major: "Storm Blast: 20-ft cone, 1d6/2 levels electricity + push 5 ft (Ref half)." },
+  "Animal":      { minor: "Animal Fury: gain claws/bite 1d6 for 1 min.", major: "Beast Form: wild shape as druid for 1 min/level." },
+  "Artifice":    { minor: "Animate Weapon: touched weapon fights for you for 1 min.", major: "Golem Form: become construct-type, DR 5/adamantine for 1 min." },
+  "Chaos":       { minor: "Chaos Surge: +1d4 luck on next attack/save/skill.", major: "Unholy Ground: random effects on enemies entering 20-ft area." },
+  "Charm":       { minor: "Charming Presence: +2 morale on CHA checks for 1 min.", major: "Captivating Presence: daze one creature (Will neg)." },
+  "Community":   { minor: "Unity: grant adjacent ally a reroll on failed attack/save/skill.", major: "Protective Aura: allies in 30 ft gain +2 sacred AC and saves for 1 min." },
+  "Darkness":    { minor: "Blind: touched creature blinded 1 round (Fort neg).", major: "Dark Shroud: 30-ft radius darkness for 1 min, enemies –2 attacks." },
+  "Death":       { minor: "Deadly Touch: 1d6+½ level negative energy damage.", major: "Bleeding Wound: target bleeds for level rounds on hit." },
+  "Destruction": { minor: "Destructive Smite: +½ level damage on one attack (swift).", major: "Destructive Aura: allies in 30 ft deal +level damage for 1 min." },
+  "Earth":       { minor: "Acid Dart: ranged touch, 1d6+½ level acid damage.", major: "Stone Blades: melee attacks count as adamantine for 1 min." },
+  "Evil":        { minor: "Touch of Evil: touched target sickened 1 round/2 levels (Fort neg).", major: "Evil Aura: undead and evil creatures ignore you unless provoked." },
+  "Fire":        { minor: "Fire Bolt: ranged touch, 1d6+½ level fire damage.", major: "Wall of Fire: 20-ft wall deals 2d6+level fire damage." },
+  "Glory":       { minor: "Holy Strike: +1d6 holy damage vs evil (swift).", major: "Aura of Glory: evil creatures in 30 ft frightened for 1 min." },
+  "Good":        { minor: "Holy Strike: +1d6 holy damage vs evil on one attack (swift).", major: "Holy Aura: +4 sacred AC and saves vs evil for 1 min." },
+  "Healing":     { minor: "Healer's Blessing: +50% healing from cure spells for 1 min.", major: "Greater Healing: cure serious wounds as spell-like ability." },
+  "Knowledge":   { minor: "Lore Keeper: ask one question, get answer as divination.", major: "Remote Viewing: clairvoyance/clairaudience at range." },
+  "Law":         { minor: "Touch of Law: target treated as rolling 11 on next d20.", major: "Iron Aura: attackers must pass concentration check to use magic." },
+  "Liberation":  { minor: "Liberation: ignore impediments to movement for 1 round.", major: "Freedom: freedom of movement for 1 min/level." },
+  "Luck":        { minor: "Bit of Luck: reroll one d20, take better result (swift).", major: "Good Fortune: two creatures reroll saves vs one attack/spell." },
+  "Madness":     { minor: "Vision of Madness: +2 or –2 on attack/save for 1 round.", major: "Aura of Madness: confused creatures in 30 ft for 1 min." },
+  "Magic":       { minor: "Spell Snare: counter one spell as immediate action.", major: "Wild Magic: 50% chance spells randomly alter in 60-ft area." },
+  "Nobility":    { minor: "Inspiring Word: +2 morale on attacks/saves/skills for 1 rd.", major: "Leadership: allies in 30 ft gain +4 morale for 1 min." },
+  "Plant":       { minor: "Wooden Fist: unarmed 1d6+½ level, count as magic for 1 min.", major: "Entangle: area entanglement, plants grasp foes." },
+  "Protection":  { minor: "Deflection Aura: +2 deflection AC in 10 ft for 1 min.", major: "Aura of Protection: resist 10 and +1 sacred AC for 1 min." },
+  "Repose":      { minor: "Gentle Rest: touched creature staggered 1 round (Fort neg).", major: "Ward Against Death: immune to death effects in 30 ft for 1 min." },
+  "Rune":        { minor: "Blast Rune: adjacent rune explodes 1d6+½ level when triggered.", major: "Warding Rune: permanent magic circle vs alignment." },
+  "Strength":    { minor: "Strength Surge: +level to one STR check or CMB (immediate).", major: "Strength of the Lion: +4 enhancement to STR for 1 min." },
+  "Sun":         { minor: "Sun's Blessing: undead take +level divine damage from channel.", major: "Nimbus of Light: 30-ft daylight, +level divine damage to undead." },
+  "Travel":      { minor: "Agile Feet: ignore difficult terrain for 1 round.", major: "Dimensional Hop: teleport as dimension door once per round." },
+  "Trickery":    { minor: "Copycat: create mirror image (1/2 level images) for 1 min.", major: "Master's Illusion: mass suggestion for 1 min/level." },
+  "Void":        { minor: "Void Embrace: cold 5 and electricity 5 resistance for 1 min.", major: "Starfield: 30-ft stardust cloud, foes blinded within." },
+  "War":         { minor: "Battle Rage: touched creature +level melee damage for 1 round.", major: "War Mind: allies in 30 ft +1 attack and damage for 1 min." },
+  "Water":       { minor: "Cold Blast: ranged touch, 1d6+½ level cold damage.", major: "Icy Prison: target paralyzed in ice (Fort neg)." },
+  "Weather":     { minor: "Storm Burst: ranged touch, 1d6+½ level dmg + –2 attack 1 rd.", major: "Storm Frenzy: ranged –4, flying creatures grounded in 30 ft." },
+};
+function searchBlessings(query) {
+  const q = (query || '').toLowerCase();
+  return Object.entries(WARPRIEST_BLESSINGS)
+    .filter(([name]) => !q || name.toLowerCase().startsWith(q))
+    .slice(0, 20);
+}
