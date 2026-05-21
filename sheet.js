@@ -587,6 +587,116 @@ function enhanceACItem(slot) {
   }
   calcACItems();
 }
+
+/* ══════════════════════════════════════════════════
+   WARPRIEST BLESSINGS UI
+   ══════════════════════════════════════════════════ */
+
+function buildBlessingsBlock() {
+  const container = document.getElementById('blessings-container');
+  if (!container) return;
+
+  // Check if class is warpriest
+  const cls = (val('charClass') || '').toLowerCase();
+  if (!cls.includes('warpriest')) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+
+  const level = parseInt(val('charLevel')) || 1;
+  const hasMajor = level >= 10;
+
+  container.innerHTML = `
+    <div class="section-title">Blessings
+      <span class="section-note">Choose 2 from your deity's domains · ${level >= 10 ? 'Minor + Major unlocked' : 'Minor powers only (Major unlocks at level 10)'}</span>
+    </div>
+    <div class="blessings-grid">
+      ${buildBlessingSlot(1, hasMajor)}
+      ${buildBlessingSlot(2, hasMajor)}
+    </div>`;
+}
+
+function buildBlessingSlot(slot, hasMajor) {
+  const saved = val('blessing' + slot + '_name') || '';
+  return `
+    <div class="blessing-slot">
+      <div class="blessing-search-wrap" style="position:relative">
+        <input type="text" id="blessing${slot}_name" class="blessing-name-input"
+               value="${saved.replace(/"/g,'&quot;')}"
+               placeholder="Choose blessing (e.g. Good, War, Protection…)"
+               oninput="onBlessingSearch(${slot})" autocomplete="off">
+        <div id="blessing${slot}_suggestions" class="feat-suggestions"></div>
+      </div>
+      <div id="blessing${slot}_details" class="blessing-details">
+        ${saved ? renderBlessingDetails(saved, hasMajor) : ''}
+      </div>
+    </div>`;
+}
+
+function renderBlessingDetails(name, hasMajor) {
+  if (typeof WARPRIEST_BLESSINGS === 'undefined') return '';
+  const b = WARPRIEST_BLESSINGS[name];
+  if (!b) return '';
+  return `
+    <div class="blessing-power">
+      <span class="blessing-power-label">Minor</span>
+      <span class="blessing-power-text">${b.minor}</span>
+    </div>
+    ${hasMajor ? `<div class="blessing-power blessing-major">
+      <span class="blessing-power-label">Major</span>
+      <span class="blessing-power-text">${b.major}</span>
+    </div>` : `<div class="blessing-power blessing-major-locked">
+      <span class="blessing-power-label">Major</span>
+      <span class="blessing-power-text locked">Unlocks at level 10</span>
+    </div>`}`;
+}
+
+function onBlessingSearch(slot) {
+  const query = val('blessing' + slot + '_name');
+  const sug   = document.getElementById('blessing' + slot + '_suggestions');
+  if (!sug || typeof WARPRIEST_BLESSINGS === 'undefined') return;
+  if (query.length < 1) { sug.style.display = 'none'; return; }
+
+  const results = typeof searchBlessings !== 'undefined' ?
+    searchBlessings(query) :
+    Object.entries(WARPRIEST_BLESSINGS).filter(([n]) =>
+      n.toLowerCase().startsWith(query.toLowerCase()));
+
+  if (!results.length) { sug.style.display = 'none'; return; }
+  sug._blessingResults = results;
+  sug.innerHTML = results.map(([name, b], idx) =>
+    `<div class="feat-suggestion-item" onmousedown="event.preventDefault();selectBlessing(${slot},${idx})">
+      <span class="feat-sug-name">${name}</span>
+      <span class="feat-sug-benefit">${b.minor.substring(0,60)}…</span>
+    </div>`
+  ).join('');
+  sug.style.display = 'block';
+}
+
+function selectBlessing(slot, idx) {
+  const sugId = 'blessing' + slot + '_suggestions';
+  const sug   = document.getElementById(sugId);
+  if (!sug || !sug._blessingResults) return;
+  const [name] = sug._blessingResults[idx];
+  set('blessing' + slot + '_name', name);
+  sug.style.display = 'none';
+
+  // Render details
+  const level = parseInt(val('charLevel')) || 1;
+  const detailsEl = document.getElementById('blessing' + slot + '_details');
+  if (detailsEl) detailsEl.innerHTML = renderBlessingDetails(name, level >= 10);
+}
+
+// Close blessing suggestions on outside click
+document.addEventListener('mousedown', e => {
+  if (!e.target.closest('.blessing-search-wrap')) {
+    document.querySelectorAll('[id$="_suggestions"]').forEach(el => {
+      if (el.id.startsWith('blessing')) el.style.display = 'none';
+    });
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   // Run each builder independently so one failure doesn't block the rest
   const safe = (fn, name) => {
@@ -2175,6 +2285,7 @@ function afterApplySetup(classKey, level) {
   buildPage4Spells(classKey, level);
   fillResourcePools(classKey, level);
   fillSpellSlots(classKey, level);
+  buildBlessingsBlock();
 }
 
 function getSpellTable(classKey) {
@@ -2270,8 +2381,10 @@ function fillSpellSlots(classKey, level) {
     if (!base) continue;
     // Full bonus spell rules per spell level
     // +1 bonus spell at mod 1-3, +2 at 4-6, etc.
-    const bonusSpell = Math.max(0, Math.floor((abMod - sl) / 3) + (abMod >= sl ? 1 : 0));
-    const capped = Math.min(bonusSpell, 3); // max +3 bonus spells per level
+    // Official PF1e bonus spells: +1 per level if mod >= level,
+    // additional +1 for each 4 points mod exceeds level
+    const bonusSpell = abMod >= sl ? 1 + Math.floor((abMod - sl) / 4) : 0;
+    const capped = bonusSpell;
     // Calc DC: 10 + spell level + ability mod
     const dc = 10 + sl + abMod;
     // Write to spell overview table (HTML IDs: sp1_perday, sp1_bonus, sp1_dc)
@@ -2595,8 +2708,96 @@ function buildClassSpecificBlock(classKey, level) {
 function buildPage4Spells(classKey, level) {
   const page = document.getElementById('page4-spells');
   if (!page) return;
-  const nonCasters = ['fighter','barbarian','rogue','monk','gunslinger','swashbuckler','slayer','cavalier','samurai'];
-  page.style.display = nonCasters.includes(classKey) ? 'none' : '';
+  const nonCasters = ['fighter','barbarian','rogue','monk','gunslinger',
+    'swashbuckler','slayer','cavalier','samurai','ninja','kineticist'];
+  if (nonCasters.includes(classKey)) { page.style.display = 'none'; return; }
+  page.style.display = '';
+
+  const content = document.getElementById('page4-spells-content');
+  if (!content) return;
+
+  const table = getSpellTable ? getSpellTable(classKey) : null;
+  const slots = table ? (table[level] || []) : [];
+  const cls   = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  const ab    = cls ? (cls.spellAbility || 'wis') : 'wis';
+  const abMod = typeof getEffectiveMod !== 'undefined' ? getEffectiveMod(ab.substring(0,3)) : 0;
+
+  // Determine max spell level
+  const maxLevel = slots.reduce((max, s, i) => s > 0 ? i+1 : max, 0);
+
+  let html = `
+    <div class="spell-tracker-header">
+      <span class="spell-tracker-class">${cls ? cls.name : classKey} level ${level}</span>
+      <span class="spell-tracker-ability">Spellcasting: ${ab.toUpperCase()} mod ${abMod >= 0 ? '+' : ''}${abMod}</span>
+    </div>`;
+
+  // Level 0 orisons
+  html += buildSpellLevelBlock(classKey, 0, 0, abMod, 6);
+
+  // Spell levels 1-9
+  for (let sl = 1; sl <= 9; sl++) {
+    const base = slots[sl-1] || 0;
+    if (!base && sl > maxLevel + 1) break;
+    const bonus = base > 0 && abMod >= sl ? 1 + Math.floor((abMod - sl) / 4) : 0;
+    const totalSlots = base + bonus;
+    const dc = 10 + sl + abMod;
+    html += buildSpellLevelBlock(classKey, sl, dc, abMod, totalSlots > 0 ? totalSlots : (sl <= maxLevel ? 4 : 0));
+  }
+
+  content.innerHTML = html;
+
+  // Attach spell autocomplete to all spell name inputs
+  content.querySelectorAll('[id^="spl_name_"]').forEach(input => {
+    buildSpellAutocomplete(input.id, null);
+  });
+}
+
+function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
+  if (slotCount === 0 && sl > 0) return '';
+  const isOrison = sl === 0;
+  const slotDots = isOrison ? '' : buildSpellSlotDots(sl, slotCount);
+  const spellRows = [];
+  const rowCount = Math.max(isOrison ? 6 : slotCount + 2, isOrison ? 6 : 4);
+
+  for (let i = 0; i < rowCount; i++) {
+    spellRows.push(`
+      <div class="spell-row">
+        <input type="checkbox" class="spell-prep-cb" id="spl_prep_${sl}_${i}"
+               title="Prepared" onchange="this.nextElementSibling.classList.toggle('spell-prepared',this.checked)">
+        <input type="text" id="spl_name_${sl}_${i}" class="spell-name-input"
+               placeholder="${isOrison ? 'Orison…' : 'Spell name…'}"
+               oninput="onSpellNameInput('spl_name_${sl}_${i}')">
+        <span class="spell-row-note" id="spl_note_${sl}_${i}"></span>
+      </div>`);
+  }
+
+  return `
+    <div class="spell-level-section">
+      <div class="spell-level-header">
+        <span class="spell-level-badge">${isOrison ? 'Orisons (0)' : `Level ${sl}`}</span>
+        ${!isOrison ? `<span class="spell-dc-badge">DC ${dc}</span>` : ''}
+        ${slotDots}
+      </div>
+      <div class="spell-rows">${spellRows.join('')}</div>
+    </div>`;
+}
+
+function buildSpellSlotDots(sl, total) {
+  if (!total) return '';
+  const dots = Array.from({length: Math.min(total, 12)}, (_, i) =>
+    `<span class="spell-slot-dot" id="slot_${sl}_${i}"
+           onclick="toggleSpellSlot(${sl},${i})" title="Click to mark used"></span>`
+  ).join('');
+  return `<div class="spell-slots-dots">${dots}</div>`;
+}
+
+function toggleSpellSlot(sl, i) {
+  const dot = document.getElementById(`slot_${sl}_${i}`);
+  if (dot) dot.classList.toggle('used');
+}
+
+function onSpellNameInput(inputId) {
+  buildSpellAutocomplete(inputId, null);
 }
 
 function buildSpellAutocomplete(inputId, onSelect) {
