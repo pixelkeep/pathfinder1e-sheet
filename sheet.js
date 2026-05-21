@@ -539,23 +539,52 @@ function initItemBonusWatchers() {
    ══════════════════════════════════════════════════ */
 function enhanceACItem(slot) {
   const name    = val('aci_name_' + slot);
+  if (!name) { alert('Fill in the item name first.'); return; }
   const current = parseInt(val('aci_bonus_' + slot)) || 0;
-  const enh     = parseInt(prompt(`Enhance "${name || 'this item'}" — enter enhancement bonus (+1 to +5):`, '1')) || 0;
-  if (!enh || enh < 1 || enh > 5) return;
 
-  // Lookup base armor to get its base bonus
-  let baseName = name.replace(/ \+\d$/, '').trim();  // strip existing +X suffix
+  // Ask what to do
+  const choice = prompt(
+    `"${name}" — choose:
+` +
+    `  m = Masterwork (+0 bonus, no check penalty reduction for armor)
+` +
+    `  1-5 = Enhancement bonus (+1 to +5, implies masterwork)
+` +
+    `  a = Adamantine (DR 2/—)
+` +
+    `  s = Mithral (counts as lighter category)
+`,
+    '1'
+  );
+  if (!choice) return;
+
+  // Lookup base armor data
+  const baseName = name.replace(/\s*[+]\d+\s*$/, '').replace(/\s*[(]MW[)]\s*$/, '').trim();
   const armorData = typeof ARMOR !== 'undefined' ? ARMOR[baseName] : null;
   const baseBonus = armorData ? (armorData.acBonus || armorData.bonus || 0) : current;
+  const baseCheck = armorData ? (armorData.checkPen || armorData.check || 0) : 0;
 
-  set('aci_bonus_' + slot, baseBonus + enh);
-  // Update name if not already showing enhancement
-  if (!name.match(/\+\d$/)) {
-    set('aci_name_' + slot, name + ' +' + enh);
+  if (choice.toLowerCase() === 'm') {
+    // Masterwork: reduce check penalty by 1
+    set('aci_name_' + slot, baseName + ' (MW)');
+    if (baseCheck < 0) set('aci_check_' + slot, baseCheck + 1);
+    const props = val('aci_props_' + slot);
+    if (!props.includes('Masterwork')) set('aci_props_' + slot, (props ? props + '; ' : '') + 'Masterwork');
+  } else if (choice.toLowerCase() === 'a') {
+    set('aci_name_' + slot, 'Adamantine ' + baseName);
+    const dr = baseName.toLowerCase().includes('full') ? 3 : baseName.toLowerCase().includes('plate') ? 3 : 2;
+    set('aci_props_' + slot, `Adamantine — DR ${dr}/—`);
+  } else if (choice.toLowerCase() === 's') {
+    set('aci_name_' + slot, 'Mithral ' + baseName);
+    set('aci_props_' + slot, 'Mithral — counts as ' + (baseBonus >= 6 ? 'medium' : 'light') + ' armor. No arcane failure for divine.');
+    if (baseCheck < 0) set('aci_check_' + slot, Math.min(0, baseCheck + 3)); // mithral reduces check pen by 3
   } else {
+    const enh = parseInt(choice);
+    if (isNaN(enh) || enh < 1 || enh > 5) { alert('Enter m, a, s, or a number 1-5.'); return; }
+    set('aci_bonus_' + slot, baseBonus + enh);
     set('aci_name_' + slot, baseName + ' +' + enh);
+    if (baseCheck < 0) set('aci_check_' + slot, baseCheck + 1); // masterwork implied
   }
-  // Make masterwork (enhancement implies it)
   calcACItems();
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -2238,18 +2267,23 @@ function fillSpellSlots(classKey, level) {
 
   for (let sl = 1; sl <= 9; sl++) {
     const base = slots[sl-1] || 0;
-    // Bonus spell: +1 per spell level if abMod >= spell level (simplified)
-    const bonusSpell = (base > 0 && abMod >= sl) ? 1 : 0;
-    // Only set if currently empty
-    if (!val(`spl_perday_${sl}`) || val(`spl_perday_${sl}`) === '0') {
-      set(`spl_perday_${sl}`, base || '');
-    }
-    if (!val(`spl_bonus_${sl}`)) {
-      set(`spl_bonus_${sl}`, bonusSpell || '');
-    }
+    if (!base) continue;
+    // Full bonus spell rules per spell level
+    // +1 bonus spell at mod 1-3, +2 at 4-6, etc.
+    const bonusSpell = Math.max(0, Math.floor((abMod - sl) / 3) + (abMod >= sl ? 1 : 0));
+    const capped = Math.min(bonusSpell, 3); // max +3 bonus spells per level
+    // Calc DC: 10 + spell level + ability mod
+    const dc = 10 + sl + abMod;
+    // Write to spell overview table (HTML IDs: sp1_perday, sp1_bonus, sp1_dc)
+    set(`sp${sl}_perday`, base);
+    set(`sp${sl}_bonus`,  capped || '');
+    set(`sp${sl}_dc`,     dc);
+    // Also write to page 4 spell tracker IDs for compatibility
+    set(`spl_perday_${sl}`, base);
+    set(`spl_bonus_${sl}`,  capped || '');
   }
   // Orisons (level 0) — unlimited, mark as ∞
-  const orisonEl = document.getElementById('spl_perday_0');
+  const orisonEl = document.getElementById('sp0_perday_0');
   if (orisonEl && !orisonEl.value) orisonEl.value = '∞';
 }
 
@@ -2862,4 +2896,17 @@ function updateCarryWeight() {
   set('load_light',  cap.light);
   set('load_medium', cap.medium);
   set('load_heavy',  cap.heavy);
+}
+
+/* ══════════════════════════════════════════════════
+   XP PROGRESS BAR
+   ══════════════════════════════════════════════════ */
+function updateXPBar() {
+  const current  = parseInt(val('xp_current')) || 0;
+  const next     = parseInt(val('xp_next'))    || 0;
+  const bar      = document.getElementById('xp-progress-bar');
+  if (!bar || !next) return;
+  const pct = Math.min(100, Math.round((current / next) * 100));
+  bar.style.width = pct + '%';
+  bar.title = `${current.toLocaleString()} / ${next.toLocaleString()} XP (${pct}%)`;
 }
