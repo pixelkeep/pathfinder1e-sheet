@@ -1246,6 +1246,160 @@ const MAGIC_ITEMS = {
     note:'+3 light wooden shield. On command: fly 60 ft (good) for 5 min/day.',
     source:'CRB' },
 
+  // ══════════════════════════════════════════════════
+  // HEAD — additional (masks, helmets)
+  // ══════════════════════════════════════════════════
+  'Plague Mask': {
+    slot:'Head', cost:7500, weight:2,
+    saveBonus:{ fort:4 }, saveCondition:'vs disease only',
+    note:'+4 resistance bonus on saves vs disease. 1/day: remove disease (CL 5). Goggles detachable (can use eye slot item separately). CotCT campaign item.',
+    source:'UE' },
+
+  // ══════════════════════════════════════════════════
+  // POTIONS — common healing and buff potions
+  // These go in Gear list, not AC Items
+  // ══════════════════════════════════════════════════
+  'Potion of Cure Light Wounds': {
+    slot:'Potion', cost:50, weight:0,
+    note:'Heals 1d8+1 HP. Standard action to drink.',
+    source:'CRB' },
+  'Potion of Cure Moderate Wounds': {
+    slot:'Potion', cost:300, weight:0,
+    note:'Heals 2d8+3 HP. Standard action to drink.',
+    source:'CRB' },
+  'Potion of Cure Serious Wounds': {
+    slot:'Potion', cost:750, weight:0,
+    note:'Heals 3d8+5 HP. Standard action to drink.',
+    source:'CRB' },
+  "Potion of Bull's Strength": {
+    slot:'Potion', cost:300, weight:0,
+    note:'+4 enhancement to STR for 1 minute. Does NOT stack with Belt of Giant Strength.',
+    source:'CRB' },
+  'Potion of Barkskin': {
+    slot:'Potion', cost:300, weight:0,
+    note:'+2 natural armor bonus for 1 minute.',
+    source:'CRB' },
+  'Potion of Enlarge Person': {
+    slot:'Potion', cost:250, weight:0,
+    note:'Become Large for 1 minute. +2 STR, –2 DEX, –1 attack/AC, reach 10 ft.',
+    source:'CRB' },
+  'Potion of Invisibility': {
+    slot:'Potion', cost:300, weight:0,
+    note:'Invisible for 1 minute or until attack/cast.',
+    source:'CRB' },
+  'Potion of Heroism': {
+    slot:'Potion', cost:750, weight:0,
+    note:'+2 morale on attack, saves, skill checks for 10 minutes.',
+    source:'CRB' },
+  'Potion of Shield of Faith (+2)': {
+    slot:'Potion', cost:50, weight:0,
+    note:'+2 deflection bonus to AC for 1 minute.',
+    source:'CRB' },
+  'Potion of Resist Energy (Fire)': {
+    slot:'Potion', cost:300, weight:0,
+    note:'Fire resistance 10 for 10 minutes.',
+    source:'CRB' },
+  'Antitoxin': {
+    slot:'Potion', cost:50, weight:0,
+    note:'+5 alchemical bonus on Fortitude saves vs poison for 1 hour.',
+    source:'CRB' },
+  'Antiplague': {
+    slot:'Potion', cost:50, weight:0,
+    note:'+5 alchemical bonus on Fortitude saves vs disease for 1 hour.',
+    source:'APG' },
+
+  // ══════════════════════════════════════════════════
+  // SCROLLS — useful divine scrolls
+  // ══════════════════════════════════════════════════
+  'Scroll of Remove Disease': {
+    slot:'Scroll', cost:375, weight:0,
+    note:'Removes one disease from touched creature. CL 5.',
+    source:'CRB' },
+  'Scroll of Remove Curse': {
+    slot:'Scroll', cost:375, weight:0,
+    note:'Removes one curse from touched creature. CL 5.',
+    source:'CRB' },
+  'Scroll of Raise Dead': {
+    slot:'Scroll', cost:6125, weight:0,
+    note:'Restores life to dead creature. CL 9. Must be used within 1 day/level.',
+    source:'CRB' },
+  'Scroll of Restoration': {
+    slot:'Scroll', cost:800, weight:0,
+    note:'Restores ability damage, negative levels (1). CL 7.',
+    source:'CRB' },
+
+  // ══════════════════════════════════════════════════
+  // ADVENTURING GEAR — common equipment
+  // ══════════════════════════════════════════════════
+  "Healer's Kit": {
+    slot:'Gear', cost:50, weight:1,
+    note:'+2 circumstance on Heal checks. 10 uses.',
+    source:'CRB' },
+  'Holy Water (flask)': {
+    slot:'Gear', cost:25, weight:1,
+    note:'2d4 damage to undead/evil outsiders on hit. Treat as splash weapon.',
+    source:'CRB' },
+  "Alchemist's Fire (flask)": {
+    slot:'Gear', cost:20, weight:1,
+    note:'1d6 fire + 1d6 next round splash. Treat as splash weapon.',
+    source:'CRB' },
+  'Acid (flask)': {
+    slot:'Gear', cost:10, weight:1,
+    note:'1d6 acid damage splash weapon.',
+    source:'CRB' },
+  'Tanglefoot Bag': {
+    slot:'Gear', cost:50, weight:4,
+    note:'Reflex DC 15 or entangled. On fail: glued to floor (2d4 rounds).',
+    source:'CRB' },
+  'Thunderstone': {
+    slot:'Gear', cost:30, weight:1,
+    note:'Fort DC 15 or deafened 1 hour in 10-ft area.',
+    source:'CRB' },
+  'Sunrod': {
+    slot:'Gear', cost:2, weight:1,
+    note:'Glows as torch for 6 hours when struck.',
+    source:'CRB' },
+  'Rope (silk, 50 ft)': {
+    slot:'Gear', cost:10, weight:5,
+    note:'Break DC 24. +2 Climb checks.',
+    source:'CRB' },
+  'Grappling Hook': {
+    slot:'Gear', cost:1, weight:4,
+    note:'Thrown (DC varies by surface) to attach rope.',
+    source:'CRB' },
+  'Torch': {
+    slot:'Gear', cost:0.01, weight:1,
+    note:'Sheds light 20-ft radius, dim 40 ft. Burns 1 hour.',
+    source:'CRB' },
+  'Rations (1 day)': {
+    slot:'Gear', cost:0.5, weight:1,
+    note:'Trail rations for one day.',
+    source:'CRB' },
+  'Waterskin': {
+    slot:'Gear', cost:1, weight:4,
+    note:'Holds 1/2 gallon of liquid.',
+    source:'CRB' },
+  'Crowbar': {
+    slot:'Gear', cost:2, weight:5,
+    note:'+2 circumstance on STR checks to open doors/chests.',
+    source:'CRB' },
+  'Mirror (small steel)': {
+    slot:'Gear', cost:10, weight:0.5,
+    note:'Useful for checking around corners, signaling.',
+    source:'CRB' },
+  'Flint and Steel': {
+    slot:'Gear', cost:1, weight:0,
+    note:'Start fires. Takes 1 full round.',
+    source:'CRB' },
+  'Chalk (10 pieces)': {
+    slot:'Gear', cost:0.1, weight:0,
+    note:'Mark walls, floors.',
+    source:'CRB' },
+  'Smelling Salts': {
+    slot:'Gear', cost:25, weight:0,
+    note:'Wake unconscious creature. +4 vs inhaled poisons for 1 hour.',
+    source:'APG' },
+
 };
 
 // ── HELPERS ──────────────────────────────────────────
