@@ -155,7 +155,8 @@ function buildMagicItemLookup() {
   if (!container) return;
 
   const slotOpts = ['','Belt','Body','Chest','Eyes','Feet','Hands',
-    'Head','Headband','Neck','Ring','Shoulders','Slotless','Wrist','Armor','Shield']
+    'Head','Headband','Neck','Ring','Shoulders','Slotless','Wrist','Armor','Shield',
+    'Potion','Scroll','Gear']
     .map(s => `<option value="${s}">${s || '— all slots —'}</option>`).join('');
 
   container.innerHTML = `
@@ -422,12 +423,20 @@ function applyAllItemBonuses() {
   });
   if (Object.keys(saveBonuses).length) calcSaves();
 
-  // Apply speed bonus
+  // Apply speed bonus — always calculate from BASE race speed + item bonus
+  // Never accumulate from current field value
+  const raceKey = val('_applied_race');
+  const raceData = (raceKey && typeof RACES !== 'undefined') ? RACES[raceKey] : null;
+  const baseSpeed = raceData ? raceData.speed : 30;
   if (speedBonus > 0) {
-    const race = typeof RACES !== 'undefined' && _itemBonusRegistry['_race'] ?
-      RACES[_itemBonusRegistry['_race'].key] : null;
-    const baseSpeed = race ? race.speed : (parseInt(val('speed_land')) || 30);
     set('speed_land', baseSpeed + speedBonus);
+  } else {
+    // Ensure speed is correct even without boot bonus
+    const currentSpeed = parseInt(val('speed_land')) || 0;
+    if (currentSpeed > baseSpeed + 30) {
+      // Looks like accumulated — reset to base
+      set('speed_land', baseSpeed);
+    }
   }
 
   // Update item bonus display panel
@@ -523,6 +532,32 @@ function initItemBonusWatchers() {
   }
 }
 
+
+/* ══════════════════════════════════════════════════
+   ENHANCE EXISTING AC ITEM
+   Call from the AC Items table directly
+   ══════════════════════════════════════════════════ */
+function enhanceACItem(slot) {
+  const name    = val('aci_name_' + slot);
+  const current = parseInt(val('aci_bonus_' + slot)) || 0;
+  const enh     = parseInt(prompt(`Enhance "${name || 'this item'}" — enter enhancement bonus (+1 to +5):`, '1')) || 0;
+  if (!enh || enh < 1 || enh > 5) return;
+
+  // Lookup base armor to get its base bonus
+  let baseName = name.replace(/ \+\d$/, '').trim();  // strip existing +X suffix
+  const armorData = typeof ARMOR !== 'undefined' ? ARMOR[baseName] : null;
+  const baseBonus = armorData ? (armorData.acBonus || armorData.bonus || 0) : current;
+
+  set('aci_bonus_' + slot, baseBonus + enh);
+  // Update name if not already showing enhancement
+  if (!name.match(/\+\d$/)) {
+    set('aci_name_' + slot, name + ' +' + enh);
+  } else {
+    set('aci_name_' + slot, baseName + ' +' + enh);
+  }
+  // Make masterwork (enhancement implies it)
+  calcACItems();
+}
 document.addEventListener('DOMContentLoaded', () => {
   // Run each builder independently so one failure doesn't block the rest
   const safe = (fn, name) => {
@@ -1194,9 +1229,11 @@ function buildACItems() {
       <td><input type="text"   id="aci_name_${i}"    oninput="calcACItems()"></td>
       <td><input type="number" id="aci_bonus_${i}"   class="num small-num" oninput="calcACItems()"></td>
       <td><input type="text"   id="aci_type_${i}"    style="width:40px" oninput="calcACItems()"></td>
+      <td><input type="number" id="aci_maxdex_${i}"  class="num small-num"></td>
       <td><input type="number" id="aci_check_${i}"   class="num small-num" oninput="calcACItems()"></td>
       <td><input type="number" id="aci_sf_${i}"      class="num small-num" oninput="calcACItems()"></td>
-      <td><input type="number" id="aci_wt_${i}"      class="num small-num" oninput="calcACItems()"></td>
+      <td><input type="number" id="aci_wt_${i}"      class="num small-num" oninput="calcGear();calcACItems()"></td>
+      <td><button class="enhance-btn" onclick="enhanceACItem(${i})" title="Add or change enhancement bonus">+Enh</button></td>
     </tr>`;
   }
 }
@@ -1231,11 +1268,42 @@ function buildGear() {
 }
 
 function calcGear() {
-  let total = 0;
+  let gearWt = 0;
   for (let i = 0; i < GEAR_COUNT; i++) {
-    total += parseFloat(val(`gear_wt_${i}`)) || 0;
+    gearWt += parseFloat(val(`gear_wt_${i}`)) || 0;
   }
-  document.getElementById('gear_total_wt').textContent = total;
+  const el = document.getElementById('gear_total_wt');
+  if (el) el.textContent = gearWt.toFixed(1);
+
+  // Total carried weight = AC items + gear
+  let acWt = 0;
+  for (let i = 0; i < AC_ITEM_COUNT; i++) {
+    acWt += parseFloat(val(`aci_wt_${i}`)) || 0;
+  }
+  const totalWt = gearWt + acWt;
+
+  // Update carry weight display and thresholds
+  if (typeof getCarryCapacity !== 'undefined') {
+    const str = parseInt(val('str_score')) || 10;
+    const itemBonus = parseInt(document.getElementById('item_bonus_str')?.value || '0') || 0;
+    const cap = getCarryCapacity(str + itemBonus, val('size') || 'Medium');
+    set('load_light',  cap.light);
+    set('load_medium', cap.medium);
+    set('load_heavy',  cap.heavy);
+
+    // Show current load status
+    const loadEl = document.getElementById('current_load_status');
+    if (loadEl) {
+      const status = totalWt <= cap.light  ? `Light (${totalWt.toFixed(0)} lbs)` :
+                     totalWt <= cap.medium ? `Medium (${totalWt.toFixed(0)} lbs)` :
+                     totalWt <= cap.heavy  ? `Heavy (${totalWt.toFixed(0)} lbs)` :
+                                             `Overloaded! (${totalWt.toFixed(0)} lbs)`;
+      loadEl.textContent = status;
+      loadEl.className = 'load-status ' + (totalWt <= cap.light ? 'load-light' :
+                          totalWt <= cap.medium ? 'load-medium' :
+                          totalWt <= cap.heavy  ? 'load-heavy' : 'load-over');
+    }
+  }
 }
 
 // ── HP HELPER ──────────────────────────────────────────────────────
@@ -1935,7 +2003,8 @@ function applySetup() {
     set('will_base', saves.will);
     if (cls.spellAbility) set('spell_ability', cls.spellAbility.toUpperCase());
     set('caster_level', level);
-    const xp = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level) : 0;
+    // XP needed to reach NEXT level
+    const xp = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level + 1) : 0;
     if (xp) set('xp_next', xp);
     if (cls.classSkills) markClassSkills(cls.classSkills);
   }
