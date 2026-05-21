@@ -2656,15 +2656,32 @@ function onTraitSearch(slot) {
   if (query.length < 2) { sug.style.display='none'; return; }
   const results = searchTraits(query, null);
   if (!results.length) { sug.style.display='none'; return; }
-  sug.innerHTML = results.map(t => {
-    const sn = t.name.replace(/'/g,"&#39;");
-    return `<div class="feat-suggestion-item" onclick="selectTrait(${slot},'${sn}')">
+  // Store results for retrieval by index (avoids quoting issues with apostrophes)
+  sug._traitResults = results;
+  sug.innerHTML = results.map((t, idx) =>
+    `<div class="feat-suggestion-item" onclick="selectTraitByIndex(${slot},${idx})">
       <span class="feat-sug-name">${t.name}</span>
       <span class="feat-sug-type">${t.type}</span>
       <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
-    </div>`;
-  }).join('');
+    </div>`
+  ).join('');
   sug.style.display = 'block';
+}
+
+function clearTraitDesc(slot) {
+  const descEl = document.getElementById('trait' + slot + '_desc');
+  if (descEl) descEl.innerHTML = '';
+  const sug = document.getElementById('trait' + slot + '_suggestions');
+  if (sug) sug.style.display = 'none';
+}
+
+function selectTraitByIndex(slot, idx) {
+  const sugId = 'trait' + slot + '_suggestions';
+  const sug   = document.getElementById(sugId);
+  if (!sug || !sug._traitResults) return;
+  const trait = sug._traitResults[idx];
+  if (!trait) return;
+  selectTrait(slot, trait.name);
 }
 
 function selectTrait(slot, name) {

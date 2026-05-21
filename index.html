@@ -519,7 +519,7 @@
             <div class="trait-search-wrap">
               <input type="text" id="trait1_name" class="trait-name-input"
                      placeholder="Trait 1 — type to search…"
-                     oninput="onTraitSearch(1)" autocomplete="off">
+                     oninput="onTraitSearch(1); if(!this.value) clearTraitDesc(1);" autocomplete="off">
               <div id="trait1_suggestions" class="feat-suggestions"></div>
             </div>
             <div id="trait1_desc" class="trait-desc"></div>
@@ -528,7 +528,7 @@
             <div class="trait-search-wrap">
               <input type="text" id="trait2_name" class="trait-name-input"
                      placeholder="Trait 2 — type to search…"
-                     oninput="onTraitSearch(2)" autocomplete="off">
+                     oninput="onTraitSearch(2); if(!this.value) clearTraitDesc(2);" autocomplete="off">
               <div id="trait2_suggestions" class="feat-suggestions"></div>
             </div>
             <div id="trait2_desc" class="trait-desc"></div>
