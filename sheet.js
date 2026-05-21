@@ -2430,6 +2430,14 @@ document.addEventListener('click', e => {
     });
 });
 
+// Prevent trait suggestion div from closing on mousedown inside it
+document.addEventListener('mousedown', e => {
+  const sug = e.target.closest('[id$="_suggestions"]');
+  if (sug && sug.id.startsWith('trait')) {
+    e.preventDefault(); // prevent input blur which would close the dropdown
+  }
+});
+
 function updateWeaponFeatBonuses() {
   const atkBonuses = Array(WEAPON_COUNT).fill(0);
   const dmgBonuses = Array(WEAPON_COUNT).fill(0);
@@ -2659,7 +2667,7 @@ function onTraitSearch(slot) {
   // Store results for retrieval by index (avoids quoting issues with apostrophes)
   sug._traitResults = results;
   sug.innerHTML = results.map((t, idx) =>
-    `<div class="feat-suggestion-item" onclick="selectTraitByIndex(${slot},${idx})">
+    `<div class="feat-suggestion-item" onmousedown="event.preventDefault();selectTraitByIndex(${slot},${idx})">
       <span class="feat-sug-name">${t.name}</span>
       <span class="feat-sug-type">${t.type}</span>
       <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
