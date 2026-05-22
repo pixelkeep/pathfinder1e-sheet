@@ -2669,3 +2669,26 @@ input[id^="wand_dc_"][id$="_3"] {
 .blessing-major-locked .blessing-power-label { color: var(--border); }
 .locked { color: var(--border); font-style: italic; }
 .blessing-power-text { color: var(--ink-light); }
+
+/* ══════════════════════════════════════════════════
+   SPONTANEOUS CASTING NOTE
+   ══════════════════════════════════════════════════ */
+.spontaneous-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--effect-color);
+  padding: 4px 0 2px;
+  border-top: 1px dashed rgba(107,114,42,.3);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.spont-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--effect-color);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  display: block;
+  margin-bottom: 2px;
+}

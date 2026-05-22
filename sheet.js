@@ -1996,6 +1996,10 @@ function populateData(data) {
     calcACItems();
     calcAC();
     updateWeaponFeatBonuses();
+    // Refill spell slots now that item bonuses (headband etc.) are applied
+    const ck = (val('charClass') || '').toLowerCase();
+    const lv = parseInt(val('charLevel')) || 1;
+    if (ck) fillSpellSlots(ck, lv);
   }, 500);
   calcSaves();
   calcCombat();
@@ -2319,6 +2323,22 @@ function afterApplySetup(classKey, level) {
   buildBlessingsBlock();
 }
 
+
+function getSpontaneousCasting(classKey) {
+  const SL = (txt) => `<span class="spont-label">⚡ Spontaneous Casting:</span> ${txt}`;
+  const map = {
+    warpriest:  SL('Sacrifice any prepared spell to cast a <em>Cure</em> spell of the same level or lower. Cure spells: CLW (1), CMW (2), CSW (3), CCW (4), CLW Mass (5), CMW Mass (6).'),
+    cleric:     SL('Sacrifice any prepared spell to cast a <em>Cure</em> (good/neutral) or <em>Inflict</em> (evil) spell of the same level or lower.'),
+    druid:      SL("Sacrifice any prepared spell to cast a <em>Summon Nature's Ally</em> spell of the same level or lower."),
+    oracle:     SL('Oracle casts spontaneously from known spells — no sacrifice needed.'),
+    sorcerer:   SL('Sorcerer casts spontaneously from known spells — no sacrifice needed.'),
+    bard:       SL('Bard casts spontaneously from known spells — no sacrifice needed.'),
+    inquisitor: SL('Good inquisitors can convert to <em>Cure</em> spells, evil to <em>Inflict</em> spells.'),
+    shaman:     SL('Sacrifice any prepared spell to cast a <em>Cure</em> spell of the same level or lower.'),
+  };
+  return map[classKey] || null;
+}
+
 function getSpellTable(classKey) {
   const tables = {
     warpriest: {
@@ -2422,12 +2442,35 @@ function fillSpellSlots(classKey, level) {
     const dc = 10 + sl + abMod;
     // Write to spell overview table (HTML IDs: sp1_perday, sp1_bonus, sp1_dc)
     set(`sp${sl}_perday`, base);
-    set(`sp${sl}_bonus`,  capped || '');
+    set(`sp${sl}_bonus`,  capped > 0 ? capped : '');
     set(`sp${sl}_dc`,     dc);
     // Also write to page 4 spell tracker IDs for compatibility
     set(`spl_perday_${sl}`, base);
-    set(`spl_bonus_${sl}`,  capped || '');
+    set(`spl_bonus_${sl}`,  capped > 0 ? capped : '');
   }
+  // Show spontaneous casting info for relevant classes
+  const spontRow = document.getElementById('spontaneous-casting-row');
+  const spontNote = spontRow ? spontRow.querySelector('.spontaneous-note') : null;
+  if (spontNote) {
+    const spontInfo = getSpontaneousCasting(classKey);
+    if (spontInfo) {
+      spontRow.style.display = '';
+      spontNote.innerHTML = spontInfo;
+    } else {
+      spontRow.style.display = 'none';
+    }
+  }
+
+  // Clear spell levels with no base slots
+  for (let sl = 1; sl <= 9; sl++) {
+    const base = slots[sl-1] || 0;
+    if (!base) {
+      set(`sp${sl}_perday`, '');
+      set(`sp${sl}_bonus`, '');
+      set(`sp${sl}_dc`, '');
+    }
+  }
+
   // Orisons (level 0) — unlimited, mark as ∞
   const orisonEl = document.getElementById('sp0_perday_0');
   if (orisonEl && !orisonEl.value) orisonEl.value = '∞';
