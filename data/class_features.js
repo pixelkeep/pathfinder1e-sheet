@@ -580,40 +580,138 @@ function getResourcePools(className, level, abilityMods) {
 // Source: ACG p.60 — each blessing has minor (1st level) and major (10th level)
 // ══════════════════════════════════════════════════
 const WARPRIEST_BLESSINGS = {
-  "Air":         { minor: "Lightning Arc: touch one creature, 1d6+½ level electricity (Ref neg).", major: "Storm Blast: 20-ft cone, 1d6/2 levels electricity + push 5 ft (Ref half)." },
-  "Animal":      { minor: "Animal Fury: gain claws/bite 1d6 for 1 min.", major: "Beast Form: wild shape as druid for 1 min/level." },
-  "Artifice":    { minor: "Animate Weapon: touched weapon fights for you for 1 min.", major: "Golem Form: become construct-type, DR 5/adamantine for 1 min." },
-  "Chaos":       { minor: "Chaos Surge: +1d4 luck on next attack/save/skill.", major: "Unholy Ground: random effects on enemies entering 20-ft area." },
-  "Charm":       { minor: "Charming Presence: +2 morale on CHA checks for 1 min.", major: "Captivating Presence: daze one creature (Will neg)." },
-  "Community":   { minor: "Unity: grant adjacent ally a reroll on failed attack/save/skill.", major: "Protective Aura: allies in 30 ft gain +2 sacred AC and saves for 1 min." },
-  "Darkness":    { minor: "Blind: touched creature blinded 1 round (Fort neg).", major: "Dark Shroud: 30-ft radius darkness for 1 min, enemies –2 attacks." },
-  "Death":       { minor: "Deadly Touch: 1d6+½ level negative energy damage.", major: "Bleeding Wound: target bleeds for level rounds on hit." },
-  "Destruction": { minor: "Destructive Smite: +½ level damage on one attack (swift).", major: "Destructive Aura: allies in 30 ft deal +level damage for 1 min." },
-  "Earth":       { minor: "Acid Dart: ranged touch, 1d6+½ level acid damage.", major: "Stone Blades: melee attacks count as adamantine for 1 min." },
-  "Evil":        { minor: "Touch of Evil: touched target sickened 1 round/2 levels (Fort neg).", major: "Evil Aura: undead and evil creatures ignore you unless provoked." },
-  "Fire":        { minor: "Fire Bolt: ranged touch, 1d6+½ level fire damage.", major: "Wall of Fire: 20-ft wall deals 2d6+level fire damage." },
-  "Glory":       { minor: "Holy Strike: +1d6 holy damage vs evil (swift).", major: "Aura of Glory: evil creatures in 30 ft frightened for 1 min." },
-  "Good":        { minor: "Holy Strike: +1d6 holy damage vs evil on one attack (swift).", major: "Holy Aura: +4 sacred AC and saves vs evil for 1 min." },
-  "Healing":     { minor: "Healer's Blessing: +50% healing from cure spells for 1 min.", major: "Greater Healing: cure serious wounds as spell-like ability." },
-  "Knowledge":   { minor: "Lore Keeper: ask one question, get answer as divination.", major: "Remote Viewing: clairvoyance/clairaudience at range." },
-  "Law":         { minor: "Touch of Law: target treated as rolling 11 on next d20.", major: "Iron Aura: attackers must pass concentration check to use magic." },
-  "Liberation":  { minor: "Liberation: ignore impediments to movement for 1 round.", major: "Freedom: freedom of movement for 1 min/level." },
-  "Luck":        { minor: "Bit of Luck: reroll one d20, take better result (swift).", major: "Good Fortune: two creatures reroll saves vs one attack/spell." },
-  "Madness":     { minor: "Vision of Madness: +2 or –2 on attack/save for 1 round.", major: "Aura of Madness: confused creatures in 30 ft for 1 min." },
-  "Magic":       { minor: "Spell Snare: counter one spell as immediate action.", major: "Wild Magic: 50% chance spells randomly alter in 60-ft area." },
-  "Nobility":    { minor: "Inspiring Word: +2 morale on attacks/saves/skills for 1 rd.", major: "Leadership: allies in 30 ft gain +4 morale for 1 min." },
-  "Plant":       { minor: "Wooden Fist: unarmed 1d6+½ level, count as magic for 1 min.", major: "Entangle: area entanglement, plants grasp foes." },
-  "Protection":  { minor: "Deflection Aura: +2 deflection AC in 10 ft for 1 min.", major: "Aura of Protection: resist 10 and +1 sacred AC for 1 min." },
-  "Repose":      { minor: "Gentle Rest: touched creature staggered 1 round (Fort neg).", major: "Ward Against Death: immune to death effects in 30 ft for 1 min." },
-  "Rune":        { minor: "Blast Rune: adjacent rune explodes 1d6+½ level when triggered.", major: "Warding Rune: permanent magic circle vs alignment." },
-  "Strength":    { minor: "Strength Surge: +level to one STR check or CMB (immediate).", major: "Strength of the Lion: +4 enhancement to STR for 1 min." },
-  "Sun":         { minor: "Sun's Blessing: undead take +level divine damage from channel.", major: "Nimbus of Light: 30-ft daylight, +level divine damage to undead." },
-  "Travel":      { minor: "Agile Feet: ignore difficult terrain for 1 round.", major: "Dimensional Hop: teleport as dimension door once per round." },
-  "Trickery":    { minor: "Copycat: create mirror image (1/2 level images) for 1 min.", major: "Master's Illusion: mass suggestion for 1 min/level." },
-  "Void":        { minor: "Void Embrace: cold 5 and electricity 5 resistance for 1 min.", major: "Starfield: 30-ft stardust cloud, foes blinded within." },
-  "War":         { minor: "Battle Rage: touched creature +level melee damage for 1 round.", major: "War Mind: allies in 30 ft +1 attack and damage for 1 min." },
-  "Water":       { minor: "Cold Blast: ranged touch, 1d6+½ level cold damage.", major: "Icy Prison: target paralyzed in ice (Fort neg)." },
-  "Weather":     { minor: "Storm Burst: ranged touch, 1d6+½ level dmg + –2 attack 1 rd.", major: "Storm Frenzy: ranged –4, flying creatures grounded in 30 ft." },
+  "Air": {
+    minor: "Zephyr's Gift (minor): Touch one ally. For 1 min, the ally gains a +10-ft. enhancement bonus to its land speed and can move across liquid surfaces as if under water walk.",
+    major: "Wind Wall (major): Create a wind wall as the spell centered on you. The wall lasts 1 minute."
+  },
+  "Animal": {
+    minor: "Animal Fury (minor): Touch one ally. For 1 min, the ally gains two claw attacks (1d6 for Medium, 1d4 for Small) or one bite attack (1d8 for Medium, 1d6 for Small). Primary natural attacks.",
+    major: "Battle Companion (major): Summon Nature's Ally V (duration 1 min, one animal only). Every 2 levels beyond 10th, increases by one spell level (max Summon Nature's Ally IX at 18th)."
+  },
+  "Artifice": {
+    minor: "Crafter's Wrath (minor): Touch one melee weapon. For 1 min, whenever it deals damage to constructs or objects, it bypasses hardness and damage reduction.",
+    major: "Transfer Magic (major): Transfer a +1 or +2 weapon/armor special ability from one item to another (both bearers willing, touch both). Lasts 1 minute, then returns to source."
+  },
+  "Chaos": {
+    minor: "Anarchic Strike (minor): Touch one weapon. For 1 min, deals +1d6 damage against lawful creatures and is treated as chaotic for overcoming DR. Doesn't stack with anarchic weapon ability.",
+    major: "Battle Companion (major): Summon Monster IV (duration 1 min, one chaotic outsider or entropic animal only). Every 2 levels beyond 10th, increases by one spell level (max IX at 20th)."
+  },
+  "Charm": {
+    minor: "Charming Presence (minor): Touch one ally. For 1 min, ally functions as sanctuary (if ally attacks opponent, effect ends for that opponent). Mind-affecting effect.",
+    major: "Dominance Aura (major): 30-ft aura for 1 min. Once per round as swift action, issue command (as the command spell, Will negates) to one creature within 30 ft."
+  },
+  "Community": {
+    minor: "Communal Aid (minor): Touch one ally. For 1 min, whenever that ally uses aid another, the bonus granted increases to +4. Can use on self as swift action.",
+    major: "Fight as One (major): For 1 min, when you succeed at a melee/ranged attack, allies within 10 ft gain +2 insight bonus on attacks of the same type against that foe. +4 on a critical hit until your next turn."
+  },
+  "Darkness": {
+    minor: "Enshrouding Darkness (minor): Touch one ally. For 1 min, the ally gains concealment (20% miss chance) in combat. Creatures that see in supernatural darkness ignore this.",
+    major: "Darkened Vision (major): One foe within 30 ft, Will save or blinded for 1 minute (as blindness/deafness)."
+  },
+  "Death": {
+    minor: "From the Grave (minor): Take on a corpse-like visage for 1 min. Gain +4 bonus on Disguise/Intimidate checks and +2 profane bonus on saves vs. disease, mind-affecting, paralysis, poison, and stunning.",
+    major: "Death's Touch (major): Melee touch attack — inflict 1 temporary negative level for 1 min. Alternatively, swift action when hitting with melee attack. Negative levels stack. You gain no benefit."
+  },
+  "Destruction": {
+    minor: "Destructive Attacks (minor): Touch one ally. For 1 min, the ally gains a morale bonus on weapon damage rolls equal to half your warpriest level (minimum 1).",
+    major: "Heart of Carnage (major): Touch one ally. For 1 min, the ally gains +4 insight bonus to confirm critical hits and has 50% chance to treat any critical hit or sneak attack against it as a normal hit."
+  },
+  "Earth": {
+    minor: "Acid Strike (minor): Touch one weapon. For 1 min, deals +1d4 acid damage per hit. Doesn't stack with the corrosive weapon special ability.",
+    major: "Armor of Earth (major): Touch one ally. For 1 min, gains DR 1/—. Every 2 levels beyond 10th, DR increases by 1 (max DR 5/— at 18th). Doesn't stack with other DR."
+  },
+  "Evil": {
+    minor: "Unholy Strike (minor): Touch one weapon. For 1 min, deals +1d6 damage against good creatures and treated as evil for overcoming DR. Doesn't stack with unholy weapon ability.",
+    major: "Battle Companion (major): Summon Monster IV (duration 1 min, one evil outsider or fiendish animal only). Every 2 levels beyond 10th, increases by one spell level (max IX at 20th)."
+  },
+  "Fire": {
+    minor: "Fire Strike (minor): Touch one weapon. For 1 min, deals +1d4 fire damage per hit. Doesn't stack with flaming or flaming burst weapon ability.",
+    major: "Armor of Flame (major): Touch one ally to wreathe it in flames. Functions as fire shield (warm shield only), duration 1 minute."
+  },
+  "Glory": {
+    minor: "Glorious Presence (minor): Touch one ally. For 1 min, functions as sanctuary (if ally attacks opponent, effect ends for that opponent). Mind-affecting effect.",
+    major: "Demoralizing Glory (major): When you successfully damage an opponent with a melee attack or attack spell, as a swift action attempt to demoralize that opponent using your Intimidate ranks or warpriest level (whichever is higher)."
+  },
+  "Good": {
+    minor: "Holy Strike (minor): Touch one weapon. For 1 min, deals +1d6 damage against evil creatures and treated as good for overcoming DR. Doesn't stack with holy weapon ability.",
+    major: "Battle Companion (major): Summon Monster IV (duration 1 min, one good outsider or celestial animal only). Every 2 levels beyond 10th, increases by one spell level (max IX at 20th)."
+  },
+  "Healing": {
+    minor: "Powerful Healer (minor): Swift action — treat any cure spell as if empowered (Empower Spell feat), healing 50% more damage. Doesn't stack with itself or Empower Spell feat.",
+    major: "Fast Healing (major): Touch one ally, grant it fast healing 3 for 1 minute."
+  },
+  "Knowledge": {
+    minor: "Lore Keeper (minor): Successful touch attack — gain knowledge as if your Knowledge check result equaled 15 + your warpriest level + your Wisdom modifier.",
+    major: "Monster Lore (major): When you succeed at a Knowledge check against a foe (or lore keeper touch), as a swift action gain +2 insight bonus on attacks, saves, ability checks, skill checks, and AC against that creature for 1 minute."
+  },
+  "Law": {
+    minor: "Axiomatic Strike (minor): Touch one weapon. For 1 min, deals +1d6 damage against chaotic creatures and treated as lawful for overcoming DR. Doesn't stack with axiomatic weapon ability.",
+    major: "Battle Companion (major): Summon Monster IV (duration 1 min, one lawful outsider or resolute animal only). Every 2 levels beyond 10th, increases by one spell level (max IX at 20th)."
+  },
+  "Liberation": {
+    minor: "Liberation (minor): Swift action — ignore impediments to movement and effects that cause paralysis for 1 round (as freedom of movement). Can activate even if unable to take actions.",
+    major: "Freedom's Shout (major): Swift action — emit 30-ft aura for 1 round. All allies within gain the liberation minor blessing effect."
+  },
+  "Luck": {
+    minor: "Lucky Presence (minor): Touch one ally. The ally can roll any one ability check, attack roll, saving throw, or skill check twice and take the better result. Must declare before rolling. Lasts 1 minute or until used.",
+    major: "Unlucky Enemy (major): Immediate action — force an adjacent opponent to reroll an ability check, attack roll, saving throw, or skill check it just made; it must take the lower roll. Declare after roll but before result."
+  },
+  "Madness": {
+    minor: "Madness Supremacy (minor): Swift action — target a creature within 30 ft with a cowering/frightened/panicked/paralyzed condition. Condition suspended 1 round; creature gains confused (rerolls results other than 'attack self/nearest'). Then condition resumes.",
+    major: "Control Madness (major): Swift action — choose one behavior for all confused creatures within 30 ft for 1 round. Can use while confused yourself."
+  },
+  "Magic": {
+    minor: "Hand of the Acolyte (minor): Make a single melee weapon attack at range 30 ft (treated as ranged thrown weapon). Add Wisdom modifier to attack roll instead of Dexterity. Cannot use for combat maneuvers.",
+    major: "Blessed Magic (major): Cast one prepared warpriest spell without expending its slot. Spell must have 1-standard-action casting time and be at least 3 levels below your highest castable level. Must damage/penalize a creature."
+  },
+  "Nobility": {
+    minor: "Inspiring Word (minor): Creature within 30 ft gains +2 morale bonus on attack rolls, ability checks, skill checks, or saving throws (your choice) for 1 minute.",
+    major: "Lead by Example (major): Swift action — if next action you take is an attack or skill check, all allies within 30 ft who take the same action against the same foe on their next turn gain +4 morale bonus on that roll."
+  },
+  "Plant": {
+    minor: "Creeping Vines (minor): When you hit with a melee attack, as a swift action the creature you hit must succeed at a Reflex save or be entangled for 1 round.",
+    major: "Battle Companion (major): Summon Nature's Ally IV (duration 1 min, one creature whose type changes to plant). Every 2 levels beyond 10th, increases by one spell level (max IX at 20th)."
+  },
+  "Protection": {
+    minor: "Increased Defense (minor): Gain +1 sacred bonus on saving throws and +1 sacred bonus to AC for 1 minute. Bonus increases to +2 at 10th level and +3 at 20th level.",
+    major: "Aura of Protection (major): 30-ft aura for 1 min. You and allies gain resistance 10 vs. acid, cold, electricity, fire, and sonic. Increases to resistance 20 at 15th level."
+  },
+  "Repose": {
+    minor: "Gentle Rest (minor): Melee touch attack — living creature becomes staggered for 1 round (if already staggered, falls asleep for 1 round). Undead is staggered for rounds equal to your Wisdom modifier (min 1).",
+    major: "Back to the Grave (major): When channeling energy to heal living creatures, swift action on same turn to also deal damage to undead (half the amount healed; normal save for half)."
+  },
+  "Rune": {
+    minor: "Blast Rune (minor): Create a blast rune in an adjacent square. Creature entering takes 1d6 + ½ level damage (acid/cold/electricity/fire, chosen on creation). Lasts level rounds or until discharged. DC 26 Perception/Disable Device.",
+    major: "Spell Storing Weapon (major): Cast a spell into a magic weapon as if it had the spell storing special ability. If not used within 10 minutes, it dissipates."
+  },
+  "Strength": {
+    minor: "Strength Surge (minor): Swift action — gain enhancement bonus equal to ½ warpriest level (min +1) on melee attack rolls, CMB (Strength-based), Strength skill checks, and Strength checks for 1 round.",
+    major: "Strength of Will (major): Swift action — ignore movement penalties from medium/heavy armor or load for 1 min. Add Strength modifier on saves vs. entangled, staggered, or paralyzed."
+  },
+  "Sun": {
+    minor: "Blinding Strike (minor): One opponent is blinded for 1 round (Reflex save: dazzled instead). Light blindness/sensitivity creatures take −4 penalty on save. Light effect; sightless creatures unaffected.",
+    major: "Cleansing Fire (major): Touch a weapon and grant it flaming or undead-bane for 1 min. Spend two uses of blessing to grant both special abilities."
+  },
+  "Travel": {
+    minor: "Agile Feet (minor): Swift action — for 1 round, ignore all difficult terrain (including magical) and take no penalties for moving through it.",
+    major: "Dimensional Hop (major): Teleport up to 20 ft as a move action (line of sight required, no AoO). Each additional use spent adds 20 ft. Each additional willing creature transported costs 1 extra use."
+  },
+  "Trickery": {
+    minor: "Double (minor): Move action — create one illusory double (as mirror image) for level rounds, or until dispelled/destroyed. No more than one double at a time. Doesn't stack with mirror image.",
+    major: "Greater Invisibility (major): You become invisible (as greater invisibility) for 1 round per warpriest level. Unlike normal invisibility, this doesn't end when you attack."
+  },
+  "War": {
+    minor: "War Mind (minor): Swift action — gain a +1 insight bonus on attack rolls, a +1 insight bonus to AC, or a +1 insight bonus on saving throws for 1 min. At the start of each subsequent round, you can switch to a different bonus as a swift action.",
+    major: "Battle Lust (major): Touch one ally. For 1 min, the ally is affected by a status effect that compels it to fight. Its melee attacks deal +2d6 nonlethal damage, and it cannot take actions that don't involve attacking or moving toward opponents."
+  },
+  "Water": {
+    minor: "Ice Strike (minor): Touch one weapon. For 1 min, deals +1d4 cold damage per hit. Doesn't stack with the frost or icy burst weapon special ability.",
+    major: "Armor of Ice (major): Touch one ally to cover it in protective ice. Functions as fire shield (chill shield only), duration 1 minute."
+  },
+  "Weather": {
+    minor: "Storm Strike (minor): Touch one weapon. For 1 min, deals +1d4 electricity damage per hit. Doesn't stack with the shock or shocking burst weapon special ability.",
+    major: "Wind Wall (major): Create a wind wall as the spell. The wall lasts 1 minute."
+  },
 };
 function searchBlessings(query) {
   const q = (query || '').toLowerCase();
