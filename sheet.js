@@ -728,6 +728,71 @@ document.addEventListener('mousedown', e => {
   }
 });
 
+
+/* ══════════════════════════════════════════════════
+   RACIAL TRAITS & SPECIAL ABILITIES AS CARDS
+   ══════════════════════════════════════════════════ */
+
+function renderRacialTraitCards() {
+  const container = document.getElementById('racial-traits-cards');
+  if (!container) return;
+
+  // Get race data
+  const raceKey = val('_applied_race') || val('charRace') || '';
+  const raceData = (raceKey && typeof RACES !== 'undefined') ? RACES[raceKey] : null;
+  const traits = raceData ? raceData.traits : [];
+
+  if (!traits || !traits.length) {
+    container.innerHTML = '<span class="helper-text">Apply Setup to see racial traits</span>';
+    return;
+  }
+
+  container.innerHTML = traits.map(t => `
+    <div class="ability-card">
+      <div class="ability-card-name">${t.name}</div>
+      <div class="ability-card-text">${t.desc}</div>
+    </div>`).join('');
+}
+
+function renderDeityObedienceCard() {
+  const box  = document.getElementById('deity-obedience-box');
+  const card = document.getElementById('deity-obedience-card');
+  if (!box || !card) return;
+
+  const deityName = val('deity') || '';
+  if (!deityName || typeof DEITY_PERKS === 'undefined') { box.style.display = 'none'; return; }
+
+  const perk = DEITY_PERKS[deityName];
+  if (!perk) { box.style.display = 'none'; return; }
+
+  box.style.display = '';
+  card.innerHTML = `
+    <div class="ability-card deity-card">
+      <div class="ability-card-name">Deity Obedience — ${deityName}</div>
+      <div class="ability-card-text">${perk.benefit || perk.text || ''}</div>
+      ${perk.requirement ? `<div class="ability-card-req">⚠ Requires: ${perk.requirement}</div>` : ''}
+    </div>`;
+}
+
+function renderSpecialAbilityCards() {
+  // Show extra notes textarea — for anything else the user wants to note
+  const ta = document.getElementById('special_abilities_extra');
+  if (!ta) return;
+  // Also sync from old special_abilities field on first load
+  const oldTa = document.getElementById('special_abilities');
+  if (oldTa && oldTa.value && !ta.value) {
+    // Extract non-racial, non-deity content
+    const lines = oldTa.value.split('\n');
+    const extra = lines.filter(l =>
+      !l.startsWith('--- Racial') &&
+      !l.startsWith('[Deity') &&
+      !l.startsWith('[Trait:') &&
+      !l.match(/^(Darkvision|Defensive Training|Greed|Hatred|Hardy|Slow and|Stability|Stonecunning|Weapon Familiarity)/)
+    ).join('\n').trim();
+    if (extra) ta.value = extra;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Run each builder independently so one failure doesn't block the rest
   const safe = (fn, name) => {
@@ -2321,8 +2386,42 @@ function afterApplySetup(classKey, level) {
   fillResourcePools(classKey, level);
   fillSpellSlots(classKey, level);
   buildBlessingsBlock();
+  renderRacialTraitCards();
+  renderDeityObedienceCard();
+  renderSpecialAbilityCards();
+  showSpontaneousCasting(classKey);
+  showXPLevelSummary(classKey, level);
 }
 
+
+
+function showSpontaneousCasting(classKey) {
+  const row  = document.getElementById('spontaneous-casting-row');
+  const note = document.getElementById('spontaneous-casting-note');
+  if (!row || !note) return;
+  const info = getSpontaneousCasting(classKey);
+  if (info) {
+    row.style.display = '';
+    note.innerHTML = info;
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+function showXPLevelSummary(classKey, level) {
+  const el = document.getElementById('xp-level-summary');
+  if (!el) return;
+  const xpNext = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level + 1) : 0;
+  if (!xpNext) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="xp-summary-inner">
+      <span class="xp-sum-label">Level ${level}</span>
+      <span class="xp-sum-sep">→</span>
+      <span class="xp-sum-label">Level ${level+1}</span>
+      <span class="xp-sum-xp">Needs ${xpNext.toLocaleString()} XP <span class="xp-sum-track">(Medium)</span></span>
+    </div>`;
+}
 
 function getSpontaneousCasting(classKey) {
   const SL = (txt) => `<span class="spont-label">⚡ Spontaneous Casting:</span> ${txt}`;
@@ -2448,18 +2547,7 @@ function fillSpellSlots(classKey, level) {
     set(`spl_perday_${sl}`, base);
     set(`spl_bonus_${sl}`,  capped > 0 ? capped : '');
   }
-  // Show spontaneous casting info for relevant classes
-  const spontRow = document.getElementById('spontaneous-casting-row');
-  const spontNote = spontRow ? spontRow.querySelector('.spontaneous-note') : null;
-  if (spontNote) {
-    const spontInfo = getSpontaneousCasting(classKey);
-    if (spontInfo) {
-      spontRow.style.display = '';
-      spontNote.innerHTML = spontInfo;
-    } else {
-      spontRow.style.display = 'none';
-    }
-  }
+  // Show spontaneous casting — handled by showSpontaneousCasting()
 
   // Clear spell levels with no base slots
   for (let sl = 1; sl <= 9; sl++) {
@@ -2784,6 +2872,35 @@ function buildClassSpecificBlock(classKey, level) {
   }
 }
 
+
+function addSpellRow(sl) {
+  const container = document.getElementById('spell-rows-' + sl);
+  if (!container) return;
+  const rows = container.querySelectorAll('.spell-row');
+  const i = rows.length;
+  const div = document.createElement('div');
+  div.className = 'spell-row';
+  div.innerHTML = `
+    <input type="checkbox" class="spell-prep-cb" id="spl_prep_${sl}_${i}"
+           title="Prepared" onchange="toggleSpellPrepared(${sl},${i},this.checked)">
+    <input type="checkbox" class="spell-cast-cb" id="spl_cast_${sl}_${i}"
+           title="Cast today">
+    <input type="text" id="spl_name_${sl}_${i}" class="spell-name-input"
+           placeholder="Spell name…"
+           oninput="onSpellNameInput('spl_name_${sl}_${i}')">
+    <span class="spell-row-desc" id="spl_desc_${sl}_${i}"></span>`;
+  container.appendChild(div);
+  buildSpellAutocomplete('spl_name_' + sl + '_' + i, null);
+}
+
+function removeSpellRow(sl) {
+  const container = document.getElementById('spell-rows-' + sl);
+  if (!container) return;
+  const rows = container.querySelectorAll('.spell-row');
+  if (rows.length <= 1) return;
+  rows[rows.length - 1].remove();
+}
+
 function buildPage4Spells(classKey, level) {
   const page = document.getElementById('page4-spells');
   if (!page) return;
@@ -2808,6 +2925,10 @@ function buildPage4Spells(classKey, level) {
     <div class="spell-tracker-header">
       <span class="spell-tracker-class">${cls ? cls.name : classKey} level ${level}</span>
       <span class="spell-tracker-ability">Spellcasting: ${ab.toUpperCase()} mod ${abMod >= 0 ? '+' : ''}${abMod}</span>
+      <span class="spell-cb-legend">
+        <span class="spell-cb-demo prep"></span> Prepared
+        <span class="spell-cb-demo cast"></span> Cast today
+      </span>
     </div>`;
 
   // Level 0 orisons
@@ -2842,22 +2963,30 @@ function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
     spellRows.push(`
       <div class="spell-row">
         <input type="checkbox" class="spell-prep-cb" id="spl_prep_${sl}_${i}"
-               title="Prepared" onchange="this.nextElementSibling.classList.toggle('spell-prepared',this.checked)">
+               title="Prepared — check when you prepare this spell"
+               onchange="toggleSpellPrepared(${sl},${i},this.checked)">
+        <input type="checkbox" class="spell-cast-cb" id="spl_cast_${sl}_${i}"
+               title="Cast — check when used today; resets on rest">
         <input type="text" id="spl_name_${sl}_${i}" class="spell-name-input"
                placeholder="${isOrison ? 'Orison…' : 'Spell name…'}"
                oninput="onSpellNameInput('spl_name_${sl}_${i}')">
-        <span class="spell-row-note" id="spl_note_${sl}_${i}"></span>
+        <span class="spell-row-desc" id="spl_desc_${sl}_${i}"></span>
       </div>`);
   }
 
+  const slKey = `spell_rows_${sl}`;
   return `
     <div class="spell-level-section">
       <div class="spell-level-header">
         <span class="spell-level-badge">${isOrison ? 'Orisons (0)' : `Level ${sl}`}</span>
         ${!isOrison ? `<span class="spell-dc-badge">DC ${dc}</span>` : ''}
         ${slotDots}
+        <span class="spell-row-controls no-print">
+          <button onclick="addSpellRow(${sl})" class="spell-row-btn" title="Add spell slot">+</button>
+          <button onclick="removeSpellRow(${sl})" class="spell-row-btn" title="Remove last slot">−</button>
+        </span>
       </div>
-      <div class="spell-rows">${spellRows.join('')}</div>
+      <div class="spell-rows" id="spell-rows-${sl}">${spellRows.join('')}</div>
     </div>`;
 }
 
@@ -2875,8 +3004,32 @@ function toggleSpellSlot(sl, i) {
   if (dot) dot.classList.toggle('used');
 }
 
+function toggleSpellPrepared(sl, i, prepared) {
+  const nameEl = document.getElementById(`spl_name_${sl}_${i}`);
+  if (nameEl) nameEl.classList.toggle('spell-prepared', prepared);
+}
+
 function onSpellNameInput(inputId) {
   buildSpellAutocomplete(inputId, null);
+  // Parse sl and i from inputId: spl_name_SL_I
+  const parts = inputId.split('_');
+  const sl = parseInt(parts[2]);
+  const i  = parseInt(parts[3]);
+  const name = val(inputId);
+  if (!name) return;
+  const spell = typeof SPELLS_DB !== 'undefined' ?
+    SPELLS_DB.find(s => s.name.toLowerCase() === name.toLowerCase()) : null;
+  const descEl = document.getElementById(`spl_desc_${sl}_${i}`);
+  if (descEl && spell) {
+    const lvlStr = Object.entries(spell.level||{}).map(([k,v])=>`${k} ${v}`).join(', ');
+    descEl.innerHTML = `<span class="spell-desc-school">${spell.school||''}</span>`
+      + (spell.castingTime ? ` · ${spell.castingTime}` : '')
+      + (spell.range ? ` · ${spell.range}` : '')
+      + (spell.duration ? ` · ${spell.duration}` : '')
+      + (spell.description ? ` — ${spell.description.substring(0,120)}${spell.description.length>120?'…':''}` : '');
+  } else if (descEl) {
+    descEl.innerHTML = '';
+  }
 }
 
 function buildSpellAutocomplete(inputId, onSelect) {

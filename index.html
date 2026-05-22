@@ -510,6 +510,7 @@
     </div>
 
     <div class="p3-notes-col">
+      <!-- CHARACTER TRAITS -->
       <div class="section-box">
         <div class="section-title">Character Traits
           <span class="section-note">Choose 2 at character creation (one may be a campaign trait)</span>
@@ -535,13 +536,32 @@
           </div>
         </div>
       </div>
-      <div class="section-box flex-grow">
-        <div class="section-title">Special Abilities &amp; Racial Traits</div>
-        <textarea id="special_abilities" class="big-textarea special-abilities-textarea" placeholder="Class features, racial traits, deity obedience..."></textarea>
-      </div>
+
+      <!-- RACIAL TRAITS — rendered as cards by JS -->
       <div class="section-box">
-        <div class="section-title">Notes</div>
-        <textarea id="notes" class="medium-textarea" placeholder="Campaign notes, house rules..."></textarea>
+        <div class="section-title">Racial Traits</div>
+        <div id="racial-traits-cards" class="ability-cards-grid">
+          <!-- Filled by renderRacialTraitCards() on Apply Setup -->
+          <textarea id="special_abilities" class="big-textarea special-abilities-textarea"
+                    placeholder="Racial traits auto-filled on Apply Setup…" style="display:none"></textarea>
+        </div>
+      </div>
+
+      <!-- DEITY OBEDIENCE — rendered as card by JS -->
+      <div class="section-box" id="deity-obedience-box" style="display:none">
+        <div class="section-title">Deity Obedience</div>
+        <div id="deity-obedience-card" class="ability-cards-grid"></div>
+      </div>
+
+      <!-- CLASS SPECIAL ABILITIES — rendered as cards by JS -->
+      <div class="section-box" id="class-abilities-box">
+        <div class="section-title">Special Abilities
+          <span class="section-note" id="special-abilities-note"></span>
+        </div>
+        <div id="special-abilities-cards" class="ability-cards-grid">
+          <textarea id="special_abilities_extra" class="big-textarea"
+                    placeholder="Additional notes…"></textarea>
+        </div>
       </div>
     </div>
 
@@ -573,7 +593,12 @@
         <label class="mt4" style="font-family:var(--font-mono);font-size:8px;color:var(--border)">Domain / School
           <input type="text" id="domain_school" class="full-width-input" placeholder="Good, Protection…">
         </label>
-        <textarea id="spell_list" class="medium-textarea mt4" placeholder="Spell list by level..."></textarea>
+        <!-- Spontaneous casting note — shown for relevant classes -->
+        <div id="spontaneous-casting-row" style="display:none">
+          <div class="spontaneous-note" id="spontaneous-casting-note"></div>
+        </div>
+        <!-- XP & Level summary -->
+        <div id="xp-level-summary" class="xp-level-summary" style="display:none"></div>
       </div>
     </div>
 
