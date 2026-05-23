@@ -1538,7 +1538,8 @@ function calcGear() {
     // Show current load status
     const loadEl = document.getElementById('current_load_status');
     if (loadEl) {
-      const status = totalWt <= cap.light  ? `Light (${totalWt.toFixed(0)} lbs)` :
+      const status = totalWt === 0 ? `Light (0 lbs)` :
+                     totalWt <= cap.light  ? `Light (${totalWt.toFixed(0)} lbs)` :
                      totalWt <= cap.medium ? `Medium (${totalWt.toFixed(0)} lbs)` :
                      totalWt <= cap.heavy  ? `Heavy (${totalWt.toFixed(0)} lbs)` :
                                              `Overloaded! (${totalWt.toFixed(0)} lbs)`;
@@ -2466,14 +2467,15 @@ function showXPLevelSummary(classKey, level) {
   const el = document.getElementById('xp-level-summary');
   if (!el) return;
   const xpNext = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level + 1) : 0;
+  const xpCurrent = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level) : 0;
   if (!xpNext) { el.style.display = 'none'; return; }
   el.style.display = '';
   el.innerHTML = `
     <div class="xp-summary-inner">
-      <span class="xp-sum-label">Level ${level}</span>
-      <span class="xp-sum-sep">→</span>
       <span class="xp-sum-label">Level ${level+1}</span>
-      <span class="xp-sum-xp">Needs ${xpNext.toLocaleString()} XP <span class="xp-sum-track">(Medium)</span></span>
+      <span class="xp-sum-sep">requires</span>
+      <span class="xp-sum-xp">${xpNext.toLocaleString()} XP</span>
+      <span class="xp-sum-track">(Medium track)</span>
     </div>`;
 }
 
