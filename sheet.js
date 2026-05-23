@@ -3030,38 +3030,41 @@ function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
   if (slotCount === 0 && sl > 0) return '';
   const isOrison = sl === 0;
   const slotDots = isOrison ? '' : buildSpellSlotDots(sl, slotCount);
-  const slotsLabel = (!isOrison && slotCount > 0) ? `<span class="slot-dots-label">Slots/day — click to mark used</span>` : '';
-  const spellRows = [];
   const rowCount = Math.max(isOrison ? 6 : slotCount + 2, isOrison ? 6 : 4);
+  const spellRows = [];
 
   for (let i = 0; i < rowCount; i++) {
     spellRows.push(`
       <div class="spell-row">
         <input type="checkbox" class="spell-prep-cb" id="spl_prep_${sl}_${i}"
-               title="Prepared — check when you prepare this spell"
+               title="Prepared"
                onchange="toggleSpellPrepared(${sl},${i},this.checked)">
-        <input type="checkbox" class="spell-cast-cb" id="spl_cast_${sl}_${i}"
-               title="Cast — check when used today; resets on rest">
         <input type="text" id="spl_name_${sl}_${i}" class="spell-name-input"
                placeholder="${isOrison ? 'Orison…' : 'Spell name…'}"
                oninput="onSpellNameInput('spl_name_${sl}_${i}')">
-        <span class="spell-row-desc" id="spl_desc_${sl}_${i}"></span>
+        <div class="spell-row-details" id="spl_details_${sl}_${i}"></div>
       </div>`);
   }
 
   const slKey = `spell_rows_${sl}`;
+  const slotNote = (!isOrison && slotCount > 0)
+    ? `<span class="slot-dots-label">klik = gebruikt</span>` : '';
+
   return `
     <div class="spell-level-section">
       <div class="spell-level-header">
-        <span class="spell-level-badge">${isOrison ? 'Orisons (0)' : `Level ${sl}`}</span>
+        <span class="spell-level-badge">${isOrison ? 'Orisons' : `Level ${sl}`}</span>
         ${!isOrison ? `<span class="spell-dc-badge">DC ${dc}</span>` : ''}
-        ${slotDots}
-        ${slotsLabel || ''}
+        ${slotDots}${slotNote}
         <span class="spell-row-controls no-print">
-          <button onclick="removeSpellRow(${sl})" class="slot-btn slot-btn-minus" title="Remove last row">−</button>
-          <span class="slot-count-display" id="spell-row-count-${sl}"></span>
-          <button onclick="addSpellRow(${sl})" class="slot-btn slot-btn-plus" title="Add spell row">+</button>
+          <button onclick="removeSpellRow(${sl})" class="slot-btn slot-btn-minus">−</button>
+          <button onclick="addSpellRow(${sl})" class="slot-btn slot-btn-plus">+</button>
         </span>
+      </div>
+      <div class="spell-col-header-row">
+        <span class="sch-prep">Prep</span>
+        <span class="sch-name">Spell name</span>
+        <span class="sch-desc">School · Casting time · Range · Duration · Effect</span>
       </div>
       <div class="spell-rows" id="spell-rows-${sl}">${spellRows.join('')}</div>
     </div>`;
@@ -3088,24 +3091,30 @@ function toggleSpellPrepared(sl, i, prepared) {
 
 function onSpellNameInput(inputId) {
   buildSpellAutocomplete(inputId, null);
-  // Parse sl and i from inputId: spl_name_SL_I
   const parts = inputId.split('_');
   const sl = parseInt(parts[2]);
   const i  = parseInt(parts[3]);
-  const name = val(inputId);
-  if (!name) return;
-  const spell = typeof SPELLS_DB !== 'undefined' ?
-    SPELLS_DB.find(s => s.name.toLowerCase() === name.toLowerCase()) : null;
-  const descEl = document.getElementById(`spl_desc_${sl}_${i}`);
-  if (descEl && spell) {
-    const lvlStr = Object.entries(spell.level||{}).map(([k,v])=>`${k} ${v}`).join(', ');
-    descEl.innerHTML = `<span class="spell-desc-school">${spell.school||''}</span>`
-      + (spell.castingTime ? ` · ${spell.castingTime}` : '')
-      + (spell.range ? ` · ${spell.range}` : '')
-      + (spell.duration ? ` · ${spell.duration}` : '')
-      + (spell.description ? ` — ${spell.description.substring(0,120)}${spell.description.length>120?'…':''}` : '');
-  } else if (descEl) {
-    descEl.innerHTML = '';
+  const name = (val(inputId) || '').trim();
+  const detailEl = document.getElementById(`spl_details_${sl}_${i}`);
+  if (!detailEl) return;
+
+  if (!name) { detailEl.innerHTML = ''; detailEl.classList.remove('open'); return; }
+
+  const spell = typeof SPELLS_DB !== 'undefined'
+    ? SPELLS_DB.find(s => s.name.toLowerCase() === name.toLowerCase())
+    : null;
+
+  if (spell) {
+    detailEl.innerHTML =
+      `<span class="sd-school">${spell.school || ''}</span>` +
+      (spell.castingTime ? `<span class="sd-item">⏱ ${spell.castingTime}</span>` : '') +
+      (spell.range       ? `<span class="sd-item">📍 ${spell.range}</span>` : '') +
+      (spell.duration    ? `<span class="sd-item">⏳ ${spell.duration}</span>` : '') +
+      (spell.description ? `<span class="sd-desc">${spell.description}</span>` : '');
+    detailEl.classList.add('open');
+  } else {
+    detailEl.innerHTML = '';
+    detailEl.classList.remove('open');
   }
 }
 
