@@ -501,9 +501,9 @@
         <div class="load-table">
           <span id="current_load_status" class="load-status load-light">— lbs</span>
           <span class="load-thresholds">
-            Light&nbsp;≤<input type="text" id="load_light" class="short-text" readonly>&nbsp;·
-            Med&nbsp;≤<input type="text" id="load_medium" class="short-text" readonly>&nbsp;·
-            Heavy&nbsp;≤<input type="text" id="load_heavy" class="short-text" readonly>&nbsp;lbs
+            Light&nbsp;≤<input type="text" id="load_light" style="width:32px;font-size:8px;padding:0 2px" readonly>&nbsp;·
+            Med&nbsp;≤<input type="text" id="load_medium" style="width:32px;font-size:8px;padding:0 2px" readonly>&nbsp;·
+            Heavy&nbsp;≤<input type="text" id="load_heavy" style="width:32px;font-size:8px;padding:0 2px" readonly>&nbsp;lbs
           </span>
         </div>
       </div>
@@ -568,7 +568,6 @@
           <label>CP <input type="number" id="money_cp" class="num"></label>
         </div>
       </div>
-<!-- XP moved to bottom of page 1 -->
       <div class="section-box flex-grow">
         <div class="section-title">Spell Overview</div>
         <table class="spell-table">
@@ -590,12 +589,35 @@
         <div id="spontaneous-casting-row" style="display:none">
           <div class="spontaneous-note" id="spontaneous-casting-note"></div>
         </div>
-        <!-- XP & Level summary -->
-        <div id="xp-level-summary" class="xp-level-summary" style="display:none"></div>
       </div>
     </div>
 
   </div><!-- /p3-grid -->
+
+  <!-- ══════════════════════════════════════════════
+       EXPERIENCE POINTS — own section box, bottom of page 3
+       ══════════════════════════════════════════════ -->
+  <div class="section-box xp-own-section">
+    <div class="section-title">Experience Points
+      <span class="section-note">Medium progression</span>
+    </div>
+    <div class="xp-fields-row">
+      <label class="xp-field-label">Current XP
+        <input type="number" id="xp_current" class="num xp-num" placeholder="0"
+               oninput="updateXPBar()">
+      </label>
+      <span class="xp-arrow">→</span>
+      <label class="xp-field-label">Next level
+        <input type="number" id="xp_next" class="num xp-num" readonly>
+      </label>
+      <div class="xp-bar-wrap">
+        <div id="xp-progress-bar" class="xp-bar"></div>
+      </div>
+      <span id="xp-pct" class="xp-pct"></span>
+    </div>
+    <div id="xp-level-summary" class="xp-level-inline" style="display:none"></div>
+  </div>
+
 
 </div><!-- /page3 -->
 

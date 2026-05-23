@@ -1472,7 +1472,7 @@ function buildACItems() {
     tbody.innerHTML += `<tr>
       <td><input type="text"   id="aci_name_${i}"    oninput="calcACItems()"></td>
       <td><input type="number" id="aci_bonus_${i}"   class="num small-num" oninput="calcACItems()"></td>
-      <td><input type="text"   id="aci_type_${i}"    style="width:40px" oninput="calcACItems()"></td>
+      <td><input type="text"   id="aci_type_${i}"    style="width:72px" oninput="calcACItems()"></td>
       <td><input type="number" id="aci_maxdex_${i}"  class="num small-num"></td>
       <td><input type="number" id="aci_check_${i}"   class="num small-num" oninput="calcACItems()"></td>
       <td><input type="number" id="aci_sf_${i}"      class="num small-num" oninput="calcACItems()"></td>
@@ -2464,19 +2464,30 @@ function getSpontaneousCastingFull(classKey) {
 }
 
 function showXPLevelSummary(classKey, level) {
+  // Fill xp_next field
+  const xpNext = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level + 1) : 0;
+  if (xpNext) set('xp_next', xpNext);
+
+  // Update progress bar
+  updateXPBar();
+
+  // Show inline level note
   const el = document.getElementById('xp-level-summary');
   if (!el) return;
-  const xpNext = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level + 1) : 0;
-  const xpCurrent = typeof getXPForLevel !== 'undefined' ? getXPForLevel(level) : 0;
   if (!xpNext) { el.style.display = 'none'; return; }
   el.style.display = '';
-  el.innerHTML = `
-    <div class="xp-summary-inner">
-      <span class="xp-sum-label">Level ${level+1}</span>
-      <span class="xp-sum-sep">requires</span>
-      <span class="xp-sum-xp">${xpNext.toLocaleString()} XP</span>
-      <span class="xp-sum-track">(Medium track)</span>
-    </div>`;
+  el.textContent = `Level ${level} → ${level+1} needs ${xpNext.toLocaleString()} XP`;
+}
+
+function updateXPBar() {
+  const current = parseInt(val('xp_current')) || 0;
+  const next    = parseInt(val('xp_next'))    || 0;
+  const bar     = document.getElementById('xp-progress-bar');
+  const pct     = document.getElementById('xp-pct');
+  if (!bar) return;
+  const p = next > 0 ? Math.min(100, Math.round((current / next) * 100)) : 0;
+  bar.style.width = p + '%';
+  if (pct) pct.textContent = next > 0 ? p + '%' : '';
 }
 
 function getSpontaneousCasting(classKey) {
