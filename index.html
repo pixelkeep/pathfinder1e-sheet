@@ -553,16 +553,9 @@
         <div id="deity-obedience-card" class="ability-cards-grid"></div>
       </div>
 
-      <!-- CLASS SPECIAL ABILITIES — rendered as cards by JS -->
-      <div class="section-box" id="class-abilities-box">
-        <div class="section-title">Special Abilities
-          <span class="section-note" id="special-abilities-note"></span>
-        </div>
-        <div id="special-abilities-cards" class="ability-cards-grid">
-          <textarea id="special_abilities_extra" class="big-textarea"
-                    placeholder="Additional notes…"></textarea>
-        </div>
-      </div>
+      <!-- Hidden field to preserve special_abilities data for backward compat -->
+      <textarea id="special_abilities" style="display:none"></textarea>
+      <textarea id="special_abilities_extra" style="display:none"></textarea>
     </div>
 
     <div class="p3-money-col">

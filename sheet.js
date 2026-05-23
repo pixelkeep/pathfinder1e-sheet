@@ -734,23 +734,26 @@ document.addEventListener('mousedown', e => {
    ══════════════════════════════════════════════════ */
 
 function renderRacialTraitCards() {
+  // Racial traits shown on page 2 in the class-specific block style
+  // Find the racial-traits section in the class abilities sidebar
   const container = document.getElementById('racial-traits-cards');
   if (!container) return;
 
-  // Get race data
-  const raceKey = val('_applied_race') || val('charRace') || '';
+  const raceKey = val('_applied_race') || '';
   const raceData = (raceKey && typeof RACES !== 'undefined') ? RACES[raceKey] : null;
   const traits = raceData ? raceData.traits : [];
 
   if (!traits || !traits.length) {
-    container.innerHTML = '<span class="helper-text">Apply Setup to see racial traits</span>';
+    container.innerHTML = '<span class="helper-text" style="font-size:9px;color:var(--border)">Apply Setup to populate racial traits</span>';
     return;
   }
 
+  // Use same pill/card style as class abilities
   container.innerHTML = traits.map(t => `
-    <div class="ability-card">
-      <div class="ability-card-name">${t.name}</div>
-      <div class="ability-card-text">${t.desc}</div>
+    <div class="class-ability-row">
+      <span class="ca-badge ca-badge-gen">Race</span>
+      <span class="ca-name">${t.name}</span>
+      <span class="ca-desc">${t.desc}</span>
     </div>`).join('');
 }
 
@@ -1964,6 +1967,15 @@ function populateData(data) {
     const b = data.blessings;
     set('blessing1_name',  b.b1name  || ''); set('blessing1_minor', b.b1minor || ''); set('blessing1_major', b.b1major || '');
     set('blessing2_name',  b.b2name  || ''); set('blessing2_minor', b.b2minor || ''); set('blessing2_major', b.b2major || '');
+    // Re-render blessing details from saved names
+    setTimeout(() => {
+      const cls = (val('charClass') || '').toLowerCase();
+      if (cls.includes('warpriest')) {
+        const level = parseInt(val('charLevel')) || 1;
+        const container = document.getElementById('class-specific-block');
+        buildBlessingsBlock(container, level);
+      }
+    }, 300);
     set('sacred_weapon_name',    b.sacredWeaponName    || '');
     set('sacred_weapon_enh',     b.sacredWeaponEnh     || '');
     set('sacred_weapon_dmg',     b.sacredWeaponDmg     || '');
@@ -2396,16 +2408,57 @@ function afterApplySetup(classKey, level) {
 
 
 function showSpontaneousCasting(classKey) {
+  // Show in spell overview column (page 3)
   const row  = document.getElementById('spontaneous-casting-row');
   const note = document.getElementById('spontaneous-casting-note');
-  if (!row || !note) return;
-  const info = getSpontaneousCasting(classKey);
-  if (info) {
-    row.style.display = '';
-    note.innerHTML = info;
-  } else {
-    row.style.display = 'none';
+  if (row && note) {
+    const info = getSpontaneousCasting(classKey);
+    if (info) { row.style.display = ''; note.innerHTML = info; }
+    else { row.style.display = 'none'; }
   }
+  // Also show on spell page (page 4) with full cure spell list
+  const p4note = document.getElementById('p4-spontaneous-note');
+  if (p4note) {
+    const fullInfo = getSpontaneousCastingFull(classKey);
+    if (fullInfo) { p4note.style.display = ''; p4note.innerHTML = fullInfo; }
+    else { p4note.style.display = 'none'; }
+  }
+}
+
+function getSpontaneousCastingFull(classKey) {
+  const cureLevels = {
+    1: 'Cure Light Wounds (1d8+CL, max +5)',
+    2: 'Cure Moderate Wounds (2d8+CL, max +10)',
+    3: 'Cure Serious Wounds (3d8+CL, max +15)',
+    4: 'Cure Critical Wounds (4d8+CL, max +20)',
+    5: 'Cure Light Wounds, Mass (1d8+CL per target, max +25)',
+    6: 'Cure Moderate Wounds, Mass (2d8+CL per target, max +30)',
+  };
+  const inflictLevels = {
+    1: 'Inflict Light Wounds (1d8+CL, max +5)',
+    2: 'Inflict Moderate Wounds (2d8+CL, max +10)',
+    3: 'Inflict Serious Wounds (3d8+CL, max +15)',
+    4: 'Inflict Critical Wounds (4d8+CL, max +20)',
+    5: 'Inflict Light Wounds, Mass',
+    6: 'Inflict Moderate Wounds, Mass',
+  };
+  if (['cleric','warpriest','inquisitor','shaman'].includes(classKey)) {
+    const rows = Object.entries(cureLevels)
+      .map(([sl, name]) => `<tr><td class="sc-lvl">${sl}</td><td class="sc-spell">${name}</td></tr>`)
+      .join('');
+    return `<div class="spont-cast-block">
+      <div class="spont-cast-title">⚡ Spontaneous Casting — Cure Spells</div>
+      <div class="spont-cast-note">Sacrifice any prepared spell to cast the corresponding Cure spell. No need to prepare these.</div>
+      <table class="spont-cast-table">${rows}</table>
+    </div>`;
+  }
+  if (classKey === 'druid') {
+    return `<div class="spont-cast-block">
+      <div class="spont-cast-title">⚡ Spontaneous Casting — Summon Nature's Ally</div>
+      <div class="spont-cast-note">Sacrifice any prepared spell to cast Summon Nature's Ally of the same level or lower.</div>
+    </div>`;
+  }
+  return null;
 }
 
 function showXPLevelSummary(classKey, level) {
@@ -2924,11 +2977,12 @@ function buildPage4Spells(classKey, level) {
   let html = `
     <div class="spell-tracker-header">
       <span class="spell-tracker-class">${cls ? cls.name : classKey} level ${level}</span>
-      <span class="spell-tracker-ability">Spellcasting: ${ab.toUpperCase()} mod ${abMod >= 0 ? '+' : ''}${abMod}</span>
-      <span class="spell-cb-legend">
-        <span class="spell-cb-demo prep"></span> Prepared
-        <span class="spell-cb-demo cast"></span> Cast today
-      </span>
+      <span class="spell-tracker-ability"> · Spellcasting: ${ab.toUpperCase()} mod ${abMod >= 0 ? '+' : ''}${abMod}</span>
+    </div>
+    <div class="spell-col-headers no-print">
+      <span class="spell-col-prep">✓ Prep</span>
+      <span class="spell-col-name">Spell</span>
+      <span class="spell-col-desc">Description</span>
     </div>`;
 
   // Level 0 orisons
@@ -2944,6 +2998,12 @@ function buildPage4Spells(classKey, level) {
     html += buildSpellLevelBlock(classKey, sl, dc, abMod, totalSlots > 0 ? totalSlots : (sl <= maxLevel ? 4 : 0));
   }
 
+  // Add spontaneous casting block after main content
+  const cls2 = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  const spontFull = getSpontaneousCastingFull(classKey);
+  if (spontFull) {
+    html = `<div id="p4-spontaneous-note" class="p4-spont-block">${spontFull}</div>` + html;
+  }
   content.innerHTML = html;
 
   // Attach spell autocomplete to all spell name inputs
@@ -2956,6 +3016,7 @@ function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
   if (slotCount === 0 && sl > 0) return '';
   const isOrison = sl === 0;
   const slotDots = isOrison ? '' : buildSpellSlotDots(sl, slotCount);
+  const slotsLabel = (!isOrison && slotCount > 0) ? `<span class="slot-dots-label">Slots/day — click to mark used</span>` : '';
   const spellRows = [];
   const rowCount = Math.max(isOrison ? 6 : slotCount + 2, isOrison ? 6 : 4);
 
@@ -2981,9 +3042,11 @@ function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
         <span class="spell-level-badge">${isOrison ? 'Orisons (0)' : `Level ${sl}`}</span>
         ${!isOrison ? `<span class="spell-dc-badge">DC ${dc}</span>` : ''}
         ${slotDots}
+        ${slotsLabel || ''}
         <span class="spell-row-controls no-print">
-          <button onclick="addSpellRow(${sl})" class="spell-row-btn" title="Add spell slot">+</button>
-          <button onclick="removeSpellRow(${sl})" class="spell-row-btn" title="Remove last slot">−</button>
+          <button onclick="removeSpellRow(${sl})" class="slot-btn slot-btn-minus" title="Remove last row">−</button>
+          <span class="slot-count-display" id="spell-row-count-${sl}"></span>
+          <button onclick="addSpellRow(${sl})" class="slot-btn slot-btn-plus" title="Add spell row">+</button>
         </span>
       </div>
       <div class="spell-rows" id="spell-rows-${sl}">${spellRows.join('')}</div>

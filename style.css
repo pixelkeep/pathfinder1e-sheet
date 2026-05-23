@@ -2817,3 +2817,111 @@ input[id^="wand_dc_"][id$="_3"] {
   color: var(--effect-color);
   font-weight: 600;
 }
+
+/* ══════════════════════════════════════════════════
+   SPELL PAGE — FIXES v3.11
+   ══════════════════════════════════════════════════ */
+
+/* Column headers */
+.spell-col-headers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 6px;
+}
+.spell-col-prep { min-width: 20px; }
+.spell-col-name { min-width: 160px; }
+.spell-col-desc { flex: 1; }
+
+/* Slot dots label */
+.slot-dots-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Spontaneous casting on page 4 */
+.p4-spont-block { margin-bottom: 12px; }
+.spont-cast-block {
+  background: rgba(107,114,42,.06);
+  border: 1px solid rgba(107,114,42,.3);
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+.spont-cast-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--effect-color);
+  margin-bottom: 2px;
+}
+.spont-cast-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  margin-bottom: 4px;
+  font-style: italic;
+}
+.spont-cast-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+}
+.spont-cast-table td { padding: 1px 4px; }
+.sc-lvl {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent2);
+  width: 20px;
+}
+.sc-spell { color: var(--ink-light); }
+.spont-cast-table tr:nth-child(even) { background: rgba(0,0,0,.03); }
+
+/* Spell tracker header — no gap between class and spellcasting */
+.spell-tracker-header {
+  display: flex;
+  align-items: center;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+}
+.spell-tracker-class { font-weight: 700; color: var(--ink); }
+.spell-tracker-ability { color: var(--border); }
+
+/* Spell +/- consistent with weapon slots */
+.spell-row-controls { margin-left: auto; display: flex; align-items: center; gap: 3px; }
+
+/* Racial traits in class-ability style */
+.racial-traits-section {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 6px;
+}
+.racial-traits-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--border);
+  margin-bottom: 4px;
+}
+
+/* Deity obedience card — match ability card style */
+.deity-card {
+  border-left: 3px solid var(--accent) !important;
+}
