@@ -2,7 +2,7 @@
    Source: aonprd.com */
 'use strict';
 
-const SHEET_VERSION = '3.11.0';
+const SHEET_VERSION = '3.11.1';
 const SHEET_DATE    = '2026-05-17';
 
 // ── BAB PROGRESSIONS (per level 1-20) ─────────────
