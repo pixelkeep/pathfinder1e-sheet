@@ -749,12 +749,18 @@ function renderRacialTraitCards() {
   }
 
   // Use same pill/card style as class abilities
-  container.innerHTML = traits.map(t => `
-    <div class="class-ability-row">
+  container.innerHTML = traits.map(t => {
+    // traits are strings like "Darkvision: 60 ft."
+    const str = typeof t === 'string' ? t : (t.name ? t.name + (t.desc ? ': ' + t.desc : '') : String(t));
+    const colonIdx = str.indexOf(':');
+    const name = colonIdx > -1 ? str.substring(0, colonIdx) : str;
+    const desc = colonIdx > -1 ? str.substring(colonIdx + 1).trim() : '';
+    return `<div class="class-ability-row">
       <span class="ca-badge ca-badge-gen">Race</span>
-      <span class="ca-name">${t.name}</span>
-      <span class="ca-desc">${t.desc}</span>
-    </div>`).join('');
+      <span class="ca-name">${name}</span>
+      <span class="ca-desc">${desc}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderDeityObedienceCard() {
@@ -772,8 +778,8 @@ function renderDeityObedienceCard() {
   card.innerHTML = `
     <div class="ability-card deity-card">
       <div class="ability-card-name">Deity Obedience — ${deityName}</div>
-      <div class="ability-card-text">${perk.benefit || perk.text || ''}</div>
-      ${perk.requirement ? `<div class="ability-card-req">⚠ Requires: ${perk.requirement}</div>` : ''}
+      <div class="ability-card-text">${perk.perk || perk.benefit || perk.text || ''}</div>
+      ${perk.obedience ? `<div class="ability-card-req">⚠ Ritual: ${perk.obedience}</div>` : ''}
     </div>`;
 }
 
@@ -2408,14 +2414,9 @@ function afterApplySetup(classKey, level) {
 
 
 function showSpontaneousCasting(classKey) {
-  // Show in spell overview column (page 3)
-  const row  = document.getElementById('spontaneous-casting-row');
-  const note = document.getElementById('spontaneous-casting-note');
-  if (row && note) {
-    const info = getSpontaneousCasting(classKey);
-    if (info) { row.style.display = ''; note.innerHTML = info; }
-    else { row.style.display = 'none'; }
-  }
+  // Spontaneous casting is shown on page 4 only — keep row hidden on page 3
+  const row = document.getElementById('spontaneous-casting-row');
+  if (row) row.style.display = 'none';
   // Also show on spell page (page 4) with full cure spell list
   const p4note = document.getElementById('p4-spontaneous-note');
   if (p4note) {
