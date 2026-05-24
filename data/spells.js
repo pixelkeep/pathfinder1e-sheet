@@ -2080,11 +2080,6 @@ const SPELLS_DB = [
   castingTime:'1 standard', range:'Touch', duration:'1 min/level',
   description:'Weapon automatically confirms critical hits vs evil creatures. Aligned as good for DR.' },
 
-{ name:'Virtue', school:'Transmutation',
-  level:{cleric:0,warpriest:0,druid:0,paladin:0},
-  castingTime:'1 standard', range:'Touch', duration:'1 minute',
-  description:'Subject gains 1 temporary hp.' },
-
 { name:'Litany of Defense', school:'Transmutation',
   level:{paladin:2},
   castingTime:'1 swift', range:'Personal', duration:'1 round',

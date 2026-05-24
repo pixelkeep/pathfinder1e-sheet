@@ -701,8 +701,8 @@ const WARPRIEST_BLESSINGS = {
     major: "Greater Invisibility (major): You become invisible (as greater invisibility) for 1 round per warpriest level. Unlike normal invisibility, this doesn't end when you attack."
   },
   "War": {
-    minor: "War Mind (minor): Swift action — gain a +1 insight bonus on attack rolls, a +1 insight bonus to AC, or a +1 insight bonus on saving throws for 1 min. At the start of each subsequent round, you can switch to a different bonus as a swift action.",
-    major: "Battle Lust (major): Touch one ally. For 1 min, the ally is affected by a status effect that compels it to fight. Its melee attacks deal +2d6 nonlethal damage, and it cannot take actions that don't involve attacking or moving toward opponents."
+    minor: "War Mind (minor): Swift action (affects YOU only). Gain a +1 insight bonus on one of the following: attack rolls, AC, or saving throws for 1 minute. At the start of each subsequent round, you can switch to a different type of bonus as a free swift action.",
+    major: "Battle Lust (major): Touch one ALLY (not yourself). For 1 minute, the ally gains a +2 morale bonus on attack rolls and a +2 morale bonus to AC, and its melee attacks deal an additional 1d6 damage. However, the ally must make a melee attack each round if possible."
   },
   "Water": {
     minor: "Ice Strike (minor): Touch one weapon. For 1 min, deals +1d4 cold damage per hit. Doesn't stack with the frost or icy burst weapon special ability.",
