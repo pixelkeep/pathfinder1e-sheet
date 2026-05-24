@@ -2979,144 +2979,188 @@ function buildPage4Spells(classKey, level) {
   const content = document.getElementById('page4-spells-content');
   if (!content) return;
 
-  const table = getSpellTable ? getSpellTable(classKey) : null;
-  const slots = table ? (table[level] || []) : [];
-  const cls   = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
-  const ab    = cls ? (cls.spellAbility || 'wis') : 'wis';
-  const abMod = typeof getEffectiveMod !== 'undefined' ? getEffectiveMod(ab.substring(0,3)) : 0;
+  const cls    = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
+  const ab     = cls ? (cls.spellAbility || 'wis') : 'wis';
+  const abMod  = typeof getEffectiveMod !== 'undefined' ? getEffectiveMod(ab.substring(0,3)) : 0;
+  const table  = typeof getSpellTable !== 'undefined' ? getSpellTable(classKey) : null;
+  const slots  = table ? (table[level] || []) : [];
+  const maxSL  = slots.reduce((max, s, i) => s > 0 ? i + 1 : max, 0);
+  const modStr = (abMod >= 0 ? '+' : '') + abMod;
 
-  // Determine max spell level
-  const maxLevel = slots.reduce((max, s, i) => s > 0 ? i+1 : max, 0);
+  // Spontaneous casting block at top
+  const spontHTML = typeof getSpontaneousCastingFull !== 'undefined'
+    ? (getSpontaneousCastingFull(classKey) || '') : '';
 
-  let html = `
-    <div class="spell-tracker-header">
-      <span class="spell-tracker-class">${cls ? cls.name : classKey} level ${level}</span>
-      <span class="spell-tracker-ability"> · Spellcasting: ${ab.toUpperCase()} mod ${abMod >= 0 ? '+' : ''}${abMod}</span>
-    </div>
-    <div class="spell-col-headers no-print">
-      <span class="spell-col-prep">✓ Prep</span>
-      <span class="spell-col-name">Spell</span>
-      <span class="spell-col-desc">Description</span>
-    </div>`;
+  let html = spontHTML;
 
-  // Level 0 orisons
-  html += buildSpellLevelBlock(classKey, 0, 0, abMod, 6);
+  // Orison block (level 0)
+  html += buildSpellBlock(0, 0, 6);
 
-  // Spell levels 1-9
+  // Spell level blocks 1-9
   for (let sl = 1; sl <= 9; sl++) {
-    const base = slots[sl-1] || 0;
-    if (!base && sl > maxLevel + 1) break;
-    const bonus = base > 0 && abMod >= sl ? 1 + Math.floor((abMod - sl) / 4) : 0;
-    const totalSlots = base + bonus;
-    const dc = 10 + sl + abMod;
-    html += buildSpellLevelBlock(classKey, sl, dc, abMod, totalSlots > 0 ? totalSlots : (sl <= maxLevel ? 4 : 0));
+    const base  = slots[sl - 1] || 0;
+    if (!base && sl > maxSL) break;
+    const bonus = (base > 0 && abMod >= sl) ? 1 + Math.floor((abMod - sl) / 4) : 0;
+    const total = base + bonus;
+    const dc    = 10 + sl + abMod;
+    if (total > 0) html += buildSpellBlock(sl, dc, total + 2);
   }
 
-  // Add spontaneous casting block after main content
-  const cls2 = typeof CLASSES !== 'undefined' ? CLASSES[classKey] : null;
-  const spontFull = getSpontaneousCastingFull(classKey);
-  if (spontFull) {
-    html = `<div id="p4-spontaneous-note" class="p4-spont-block">${spontFull}</div>` + html;
-  }
   content.innerHTML = html;
-
-  // Attach spell autocomplete to all spell name inputs
-  content.querySelectorAll('[id^="spl_name_"]').forEach(input => {
-    buildSpellAutocomplete(input.id, null);
-  });
 }
 
-function buildSpellLevelBlock(classKey, sl, dc, abMod, slotCount) {
-  if (slotCount === 0 && sl > 0) return '';
+function buildSpellBlock(sl, dc, rowCount) {
   const isOrison = sl === 0;
-  const slotDots = isOrison ? '' : buildSpellSlotDots(sl, slotCount);
-  const rowCount = Math.max(isOrison ? 6 : slotCount + 2, isOrison ? 6 : 4);
-  const spellRows = [];
+  const label    = isOrison ? 'Orisons' : 'Level ' + sl;
 
-  for (let i = 0; i < rowCount; i++) {
-    spellRows.push(`
-      <div class="spell-row">
-        <input type="checkbox" class="spell-prep-cb" id="spl_prep_${sl}_${i}"
-               title="Prepared"
-               onchange="toggleSpellPrepared(${sl},${i},this.checked)">
-        <input type="text" id="spl_name_${sl}_${i}" class="spell-name-input"
-               placeholder="${isOrison ? 'Orison…' : 'Spell name…'}"
-               oninput="onSpellNameInput('spl_name_${sl}_${i}')">
-        <div class="spell-row-details" id="spl_details_${sl}_${i}"></div>
-      </div>`);
+  // Slot dots (not for orisons)
+  let dots = '';
+  if (!isOrison) {
+    const slotCount = rowCount - 2; // base slots
+    for (let d = 0; d < Math.min(slotCount, 12); d++) {
+      dots += `<span class="spell-dot" id="sdot_${sl}_${d}" onclick="toggleSpellDot(${sl},${d})" title="Slot ${d+1}"></span>`;
+    }
   }
 
-  const slKey = `spell_rows_${sl}`;
-  const slotNote = (!isOrison && slotCount > 0)
-    ? `<span class="slot-dots-label">klik = gebruikt</span>` : '';
-
-  return `
-    <div class="spell-level-section">
-      <div class="spell-level-header">
-        <span class="spell-level-badge">${isOrison ? 'Orisons' : `Level ${sl}`}</span>
-        ${!isOrison ? `<span class="spell-dc-badge">DC ${dc}</span>` : ''}
-        ${slotDots}${slotNote}
-        <span class="spell-row-controls no-print">
-          <button onclick="removeSpellRow(${sl})" class="slot-btn slot-btn-minus">−</button>
-          <button onclick="addSpellRow(${sl})" class="slot-btn slot-btn-plus">+</button>
-        </span>
-      </div>
-      <div class="spell-col-header-row">
-        <span class="sch-prep">Prep</span>
-        <span class="sch-name">Spell name</span>
-        <span class="sch-desc">School · Casting time · Range · Duration · Effect</span>
-      </div>
-      <div class="spell-rows" id="spell-rows-${sl}">${spellRows.join('')}</div>
+  // Spell rows
+  let rows = '';
+  for (let i = 0; i < rowCount; i++) {
+    rows += `<div class="srow" id="srow_${sl}_${i}">
+      <input type="checkbox" class="srow-prep" id="sprep_${sl}_${i}"
+             onchange="onSpellPrepChange(${sl},${i},this.checked)"
+             title="Prepared for today">
+      <input type="text" class="srow-name" id="sname_${sl}_${i}"
+             placeholder="${isOrison ? 'Orison…' : 'Spell name…'}"
+             oninput="onSpellNameType(${sl},${i})"
+             autocomplete="off">
+      <div class="srow-suggest" id="ssug_${sl}_${i}"></div>
+      <div class="srow-detail" id="sdetail_${sl}_${i}"></div>
     </div>`;
+  }
+
+  return `<div class="spellblock">
+    <div class="spellblock-header">
+      <span class="sb-label">${label}</span>
+      ${!isOrison ? `<span class="sb-dc">DC ${dc}</span>` : ''}
+      <span class="sb-dots">${dots}</span>
+      ${!isOrison ? `<span class="sb-dotlabel">klik = gebruikt</span>` : ''}
+      <span class="sb-controls no-print">
+        <button onclick="removeSpellRowFrom(${sl})" class="slot-btn slot-btn-minus">−</button>
+        <button onclick="addSpellRowTo(${sl})" class="slot-btn slot-btn-plus">+</button>
+      </span>
+    </div>
+    <div class="spellblock-cols">
+      <span class="sbc-prep">✓</span>
+      <span class="sbc-name">Spell</span>
+      <span class="sbc-detail">Beschrijving</span>
+    </div>
+    <div class="spellblock-rows" id="sbrows_${sl}">${rows}</div>
+  </div>`;
 }
 
-function buildSpellSlotDots(sl, total) {
-  if (!total) return '';
-  const dots = Array.from({length: Math.min(total, 12)}, (_, i) =>
-    `<span class="spell-slot-dot" id="slot_${sl}_${i}"
-           onclick="toggleSpellSlot(${sl},${i})" title="Click to mark used"></span>`
-  ).join('');
-  return `<div class="spell-slots-dots">${dots}</div>`;
-}
-
-function toggleSpellSlot(sl, i) {
-  const dot = document.getElementById(`slot_${sl}_${i}`);
+function toggleSpellDot(sl, i) {
+  const dot = document.getElementById(`sdot_${sl}_${i}`);
   if (dot) dot.classList.toggle('used');
 }
 
-function toggleSpellPrepared(sl, i, prepared) {
-  const nameEl = document.getElementById(`spl_name_${sl}_${i}`);
-  if (nameEl) nameEl.classList.toggle('spell-prepared', prepared);
+function onSpellPrepChange(sl, i, checked) {
+  const nameEl = document.getElementById(`sname_${sl}_${i}`);
+  if (nameEl) nameEl.classList.toggle('spell-prepared', checked);
+}
+
+function onSpellNameType(sl, i) {
+  const inputEl  = document.getElementById(`sname_${sl}_${i}`);
+  const sugEl    = document.getElementById(`ssug_${sl}_${i}`);
+  const detailEl = document.getElementById(`sdetail_${sl}_${i}`);
+  if (!inputEl || !sugEl) return;
+
+  const query = inputEl.value.trim();
+
+  // Clear detail if name empty
+  if (!query) {
+    sugEl.innerHTML = '';
+    sugEl.style.display = 'none';
+    detailEl.innerHTML = '';
+    return;
+  }
+
+  // Show suggestions
+  if (typeof SPELLS_DB !== 'undefined') {
+    const results = SPELLS_DB.filter(s =>
+      s.name.toLowerCase().startsWith(query.toLowerCase()) ||
+      s.name.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 8);
+
+    if (results.length && query.length >= 2) {
+      sugEl.innerHTML = results.map((s, idx) =>
+        `<div class="spell-sug-item" onmousedown="event.preventDefault();pickSpell(${sl},${i},'${s.name.replace(/'/g,"\'")}')">${s.name} <span class="sug-school">${s.school||''}</span></div>`
+      ).join('');
+      sugEl.style.display = 'block';
+    } else {
+      sugEl.style.display = 'none';
+    }
+
+    // If exact match, show detail
+    const exact = SPELLS_DB.find(s => s.name.toLowerCase() === query.toLowerCase());
+    showSpellDetail(detailEl, exact);
+  }
+}
+
+function pickSpell(sl, i, name) {
+  const inputEl  = document.getElementById(`sname_${sl}_${i}`);
+  const sugEl    = document.getElementById(`ssug_${sl}_${i}`);
+  const detailEl = document.getElementById(`sdetail_${sl}_${i}`);
+  if (inputEl)  inputEl.value = name;
+  if (sugEl)  { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
+  const spell = typeof SPELLS_DB !== 'undefined'
+    ? SPELLS_DB.find(s => s.name === name) : null;
+  showSpellDetail(detailEl, spell);
+}
+
+function showSpellDetail(el, spell) {
+  if (!el) return;
+  if (!spell) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    `<span class="sd-school">${spell.school || ''}</span>` +
+    (spell.castingTime ? `<span class="sd-item">${spell.castingTime}</span>` : '') +
+    (spell.range       ? `<span class="sd-item">${spell.range}</span>` : '') +
+    (spell.duration    ? `<span class="sd-item">${spell.duration}</span>` : '') +
+    (spell.description ? `<div class="sd-desc">${spell.description}</div>` : '');
+}
+
+function addSpellRowTo(sl) {
+  const container = document.getElementById('sbrows_' + sl);
+  if (!container) return;
+  const i = container.querySelectorAll('.srow').length;
+  const div = document.createElement('div');
+  div.className = 'srow';
+  div.id = `srow_${sl}_${i}`;
+  div.innerHTML = `
+    <input type="checkbox" class="srow-prep" id="sprep_${sl}_${i}"
+           onchange="onSpellPrepChange(${sl},${i},this.checked)" title="Prepared">
+    <input type="text" class="srow-name" id="sname_${sl}_${i}"
+           placeholder="Spell name…" oninput="onSpellNameType(${sl},${i})" autocomplete="off">
+    <div class="srow-suggest" id="ssug_${sl}_${i}"></div>
+    <div class="srow-detail" id="sdetail_${sl}_${i}"></div>`;
+  container.appendChild(div);
+}
+
+function removeSpellRowFrom(sl) {
+  const container = document.getElementById('sbrows_' + sl);
+  if (!container) return;
+  const rows = container.querySelectorAll('.srow');
+  if (rows.length <= 1) return;
+  rows[rows.length - 1].remove();
 }
 
 function onSpellNameInput(inputId) {
-  buildSpellAutocomplete(inputId, null);
+  // Legacy compat — map old IDs to new function
   const parts = inputId.split('_');
   const sl = parseInt(parts[2]);
   const i  = parseInt(parts[3]);
-  const name = (val(inputId) || '').trim();
-  const detailEl = document.getElementById(`spl_details_${sl}_${i}`);
-  if (!detailEl) return;
-
-  if (!name) { detailEl.innerHTML = ''; detailEl.classList.remove('open'); return; }
-
-  const spell = typeof SPELLS_DB !== 'undefined'
-    ? SPELLS_DB.find(s => s.name.toLowerCase() === name.toLowerCase())
-    : null;
-
-  if (spell) {
-    detailEl.innerHTML =
-      `<span class="sd-school">${spell.school || ''}</span>` +
-      (spell.castingTime ? `<span class="sd-item">⏱ ${spell.castingTime}</span>` : '') +
-      (spell.range       ? `<span class="sd-item">📍 ${spell.range}</span>` : '') +
-      (spell.duration    ? `<span class="sd-item">⏳ ${spell.duration}</span>` : '') +
-      (spell.description ? `<span class="sd-desc">${spell.description}</span>` : '');
-    detailEl.classList.add('open');
-  } else {
-    detailEl.innerHTML = '';
-    detailEl.classList.remove('open');
-  }
+  onSpellNameType(sl, i);
 }
+
 
 function buildSpellAutocomplete(inputId, onSelect) {
   const input = document.getElementById(inputId);
