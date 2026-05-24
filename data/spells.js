@@ -165,7 +165,7 @@ const SPELLS_DB = [
 { name:'Bless', school:'Enchantment [mind-affecting]',
   level:{cleric:1,warpriest:1,paladin:1,inquisitor:1},
   castingTime:'1 standard', range:'50 ft', duration:'1 min/level',
-  description:'+1 morale bonus on attack rolls and saves vs fear for allies within 50-ft burst.' },
+  description:'+1 morale bonus on all attack rolls and on saving throws against fear effects for all allied creatures within a 50-ft burst centered on you. Bless counters and dispels bane.' },
 
 { name:"Bless Water", school:'Transmutation [good]',
   level:{cleric:1,warpriest:1,paladin:1},
@@ -1369,7 +1369,7 @@ const SPELLS_DB = [
 { name:'Magic Aura', school:'Illusion [glamer]',
   level:{sorcerer:1,wizard:1,bard:1},
   castingTime:'1 standard', range:'Touch', duration:'1 day/level',
-  description:'Alters object\'s magic aura. Can make magical items appear nonmagical or vice versa.' },
+  description:"Alters object\'s magic aura. Can make magical items appear nonmagical or vice versa." },
 
 { name:"Negate Aroma", school:'Transmutation',
   level:{druid:1,ranger:1},
@@ -2165,6 +2165,255 @@ const SPELLS_DB = [
   level:{inquisitor:4},
   castingTime:'1 minute', range:'Touch', duration:'1 day/level',
   description:'If reduced to 0 hp, subject gains +4 morale on saves, +4 on attack rolls, and 3 temporary hp/level for 3 rounds.' },
+
+  // ══════════════════════════════════════════════════════
+  // APG SPELLS — Cleric/Warpriest/Inquisitor
+  // ══════════════════════════════════════════════════════
+
+  // Level 1
+  { name:"Knight's Calling", school:'Enchantment [compulsion, mind-affecting]',
+    level:{cleric:1,warpriest:1,paladin:1},
+    castingTime:'1 standard', range:'Close', duration:'1 round',
+    description:'Forces a creature to move toward you and attack you in melee. The target must attempt to move adjacent to you and make a single melee attack. Will negates.' },
+
+  { name:'Litany of Sloth', school:'Enchantment [compulsion, mind-affecting]',
+    level:{inquisitor:1},
+    castingTime:'1 swift', range:'Close', duration:'1 round',
+    description:'Target can make only one attack per round and cannot make attacks of opportunity. Swift action to cast. Does not stack with itself.' },
+
+  { name:'Sun Metal', school:'Transmutation [fire]',
+    level:{cleric:1,warpriest:1,paladin:1},
+    castingTime:'1 standard', range:'Touch', duration:'1 round/level',
+    description:'The target weapon bursts into flames. The weapon deals an additional 1d4 fire damage on each hit. This fire does not harm the wielder.' },
+
+  { name:'Wartrain Mount', school:'Enchantment [mind-affecting]',
+    level:{paladin:1,ranger:1},
+    castingTime:'1 standard', range:'Touch', duration:'1 hour/level',
+    description:'Your mount is treated as if it had the war-trained special quality for the duration of the spell.' },
+
+  // Level 2
+  { name:'Bloodhound', school:'Transmutation',
+    level:{inquisitor:2,ranger:1},
+    castingTime:'1 standard', range:'Personal', duration:'1 hour/level',
+    description:'+10 enhancement bonus on Perception checks made to track by scent. You gain the scent ability if you do not already have it. Enhanced Tracking.' },
+
+  { name:'Castigate', school:'Enchantment [compulsion, fear, mind-affecting]',
+    level:{inquisitor:2},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'Causes the target to be overcome with shame and embarrassment. Target is shaken and must move away from you. Will negates.' },
+
+  { name:'Defending Bone', school:'Necromancy',
+    level:{cleric:2,warpriest:2},
+    castingTime:'1 standard', range:'Touch', duration:'1 hour/level or until discharged',
+    description:'Transforms a bone into a shield-like ward granting +4 shield bonus to AC. When the wielder would take damage that reduces to 0 hp or below, the bone shatters, negating all damage.' },
+
+  { name:'Ghostbane Dirge', school:'Transmutation',
+    level:{bard:2,cleric:2,warpriest:2,inquisitor:2,paladin:2},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'The target incorporeal creature is forced to take physical form, losing its incorporeal quality. It gains a -4 penalty on saves. While in this state, it is fully vulnerable to physical attacks.' },
+
+  { name:'Ironskin', school:'Transmutation',
+    level:{druid:2,shaman:2},
+    castingTime:'1 standard', range:'Personal', duration:'10 min/level',
+    description:'Your skin hardens and takes on the color and texture of rough iron. You gain a +3 natural armor bonus to AC. This bonus increases by +1 for every four caster levels above 3rd (max +7 at 19th).' },
+
+  { name:'Litany of Defense', school:'Transmutation',
+    level:{paladin:2},
+    castingTime:'1 swift', range:'Personal', duration:'1 round',
+    description:'Doubles the armor bonus of any armor you are wearing for 1 round. Swift action to cast. Does not stack with itself.' },
+
+  { name:'Pilfering Hand', school:'Evocation [force]',
+    level:{bard:2,cleric:2,warpriest:2,sorcerer:2,wizard:2},
+    castingTime:'1 standard', range:'Close', duration:'Concentration',
+    description:'Create an invisible telekinetic force that can disarm, steal items (CMB = caster level + CHA/INT), or retrieve items within range. You control the hand as a move action.' },
+
+  // Level 3
+  { name:"Archon's Aura", school:'Evocation [good, lawful]',
+    level:{cleric:3,warpriest:3,paladin:3},
+    castingTime:'1 standard', range:'10 ft', duration:'1 round/level',
+    description:'You surround yourself with a 10-ft aura of menace. Evil creatures in the aura take a -2 penalty on attack rolls, AC, and saves (Will negates). This penalty refreshes each round they begin their turn in the aura.' },
+
+  { name:'Channel Vigor', school:'Transmutation',
+    level:{cleric:3,warpriest:3,inquisitor:3},
+    castingTime:'1 standard', range:'Personal', duration:'1 round/level',
+    description:'You focus divine power into one part of your body. Choose head (+4 Perception and Sense Motive, +2 initiative), arms (+2 attack and damage, +2 Strength CMB), torso (fast healing 2), or legs (+20 ft speed, +4 Acrobatics, immune to difficult terrain).' },
+
+  { name:'Deadly Juggernaut', school:'Necromancy [death, evil]',
+    level:{cleric:3,warpriest:3,inquisitor:3,paladin:3},
+    castingTime:'1 standard', range:'Personal', duration:'1 round/level',
+    description:'With each killing blow you make, you become increasingly powerful. Each kill grants a cumulative +1 profane bonus (max +5) on attack rolls, damage, saves, and a +1 natural armor bonus. The bonuses last for 24 hours after the most recent killing blow.' },
+
+  { name:'Holy Javelin', school:'Conjuration [creation, good]',
+    level:{cleric:3,warpriest:3},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'You create a glowing javelin of holy energy. It functions as a +1 javelin that deals an additional 1d6 damage to evil creatures. As a standard action, you can hurl it dealing 2d6+1 damage (3d6+1 vs evil, 4d6+1 vs evil outsiders).' },
+
+  { name:'Litany of Righteousness', school:'Evocation [good]',
+    level:{paladin:3},
+    castingTime:'1 swift', range:'Close', duration:'1 round',
+    description:'A single evil creature becomes more vulnerable to the attacks of good creatures. The target takes double damage from attacks made by good creatures for 1 round. Only one litany spell may affect a target at a time.' },
+
+  { name:'Sacred Bond', school:'Conjuration [healing]',
+    level:{cleric:3,warpriest:3,paladin:2},
+    castingTime:'1 round', range:'Touch', duration:'10 min/level',
+    description:'You form a bond with a willing creature. While the bond persists, as a standard action you can take any damage or condition currently affecting the bonded creature upon yourself (or transfer your damage/condition to them if willing).' },
+
+  { name:'Versatile Weapon', school:'Transmutation',
+    level:{bard:2,ranger:2,sorcerer:2,wizard:2},
+    castingTime:'1 standard', range:'Close', duration:'1 min/level',
+    description:'The target weapon transforms to act as any other type of weapon for bypassing damage reduction. You choose the damage type (piercing, slashing, or bludgeoning) when you cast the spell, and the weapon counts as that material for DR purposes.' },
+
+  // Level 4
+  { name:'Blessing of Fervor', school:'Transmutation',
+    level:{cleric:4,warpriest:4},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'Each round for the duration, each affected creature can choose to gain one of: +2 effective level for one attack, +2 natural armor bonus, +2 attack rolls, extra move action, or move at full speed without triggering attacks of opportunity.' },
+
+  { name:'Brand of Tracking', school:'Divination [evil]',
+    level:{inquisitor:4},
+    castingTime:'1 standard', range:'Touch', duration:'1 day/level',
+    description:'You mark a target with an invisible brand. For the duration, you know the direction and distance to the target as long as it is on the same plane. You can suppress or restore the brand as a swift action.' },
+
+  { name:'Conjure Deadfall', school:'Conjuration [creation]',
+    level:{druid:4,ranger:3},
+    castingTime:'1 standard', range:'Medium', duration:'Instantaneous',
+    description:'You create a massive falling object in a 10x10 ft area. All creatures in the area take 6d6 bludgeoning damage (Reflex half). Creatures that fail the save are also pinned until they succeed at a DC 20 Strength check or Escape Artist check.' },
+
+  { name:'Death Ward', school:'Necromancy',
+    level:{cleric:4,warpriest:4,druid:5,paladin:4},
+    castingTime:'1 standard', range:'Touch', duration:'1 min/level',
+    description:'The subject is immune to all death spells, magical death effects, energy drain, and any negative energy effects. This includes the ability damage from shadow touch and similar effects.' },
+
+  { name:'Holy Sword', school:'Evocation [good]',
+    level:{paladin:4},
+    castingTime:'1 standard', range:'Touch', duration:'1 round/level',
+    description:'This spell allows you to channel holy power into your sword, or any other melee weapon you choose. The weapon acts as a +5 holy weapon (+5 enhancement bonus, deals +2d6 damage against evil creatures). It also emits a magic circle against evil effect.' },
+
+  { name:'Litany of Thunder', school:'Evocation [sonic]',
+    level:{paladin:4},
+    castingTime:'1 swift', range:'Close', duration:'See text',
+    description:'You thunder at a single target, deafening them for 1 minute and dealing 4d6 sonic damage (Will partial: deafened 1 round, no damage). Only one litany may be active at a time.' },
+
+  { name:'Judgment Light', school:'Evocation [good]',
+    level:{inquisitor:4},
+    castingTime:'1 standard', range:'40 ft', duration:'1 round/level',
+    description:'You pour your divine judgment into a beam of blazing light. Any evil creature in the area must make a Will save each round or be blinded for 1 round. Good creatures in the area gain fast healing 1.' },
+
+  // Level 5
+  { name:'Castigate, Mass', school:'Enchantment [compulsion, fear, mind-affecting]',
+    level:{inquisitor:5},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:"As castigate, but affects multiple targets. All targets within a 20-ft burst must save or become shaken and be forced to flee. Will negates." },
+
+  { name:'Divine Pursuit', school:'Transmutation',
+    level:{inquisitor:5,paladin:4},
+    castingTime:'1 standard', range:'Personal', duration:'1 round/level',
+    description:'You can follow a creature you designate across any terrain. Your speed doubles and you can move through any terrain without penalty. You also gain the scent ability for tracking the designated creature.' },
+
+  { name:'Raise Animal Companion', school:'Conjuration [healing]',
+    level:{druid:5,ranger:4},
+    castingTime:'1 minute', range:'Touch', duration:'Instantaneous',
+    description:'This spell functions like raise dead, but it can only be used on animal companions or familiars. The animal companion is restored to life with 1 negative level (removed after 24 hours if it survives).' },
+
+  { name:'Spell Immunity, Greater', school:'Abjuration',
+    level:{cleric:5,warpriest:5},
+    castingTime:'1 standard', range:'Touch', duration:'10 min/level',
+    description:'As spell immunity, but the subject is also immune to spells and effects of 8th level or lower. You must specify individual spells — up to one spell per four caster levels, max 10 spells.' },
+
+  // Level 6
+  { name:'Bolt of Glory', school:'Evocation [good]',
+    level:{cleric:6,warpriest:6},
+    castingTime:'1 standard', range:'Close', duration:'Instantaneous',
+    description:'You fire a ray of positive energy at a target. Against evil outsiders, deals 1d12/level (max 20d12). Against undead, deals 1d6/level (max 20d6). Against other creatures, deals 1d6/level (max 20d6). Ranged touch attack; no save.' },
+
+  { name:"Eagle's Splendor, Mass", school:'Transmutation',
+    level:{bard:6,cleric:6,warpriest:6,sorcerer:6,wizard:6},
+    castingTime:'1 standard', range:'Close', duration:'1 min/level',
+    description:"As eagle's splendor, but affects one creature per level in a 30-ft area. +4 enhancement to Charisma for all targets." },
+
+  { name:'Invoke Deity', school:'Evocation',
+    level:{cleric:6,warpriest:6},
+    castingTime:'1 standard', range:'Personal', duration:'1 round/level',
+    description:"You channel your deity's power through yourself. Based on your deity's alignment: good (allies in 30 ft gain fast healing 5), evil (enemies in 30 ft take 3d6 damage/rd, Will half), law (all in 30 ft move in slow motion, half speed), chaos (all in 30 ft roll twice on d20s and take worse result)." },
+
+  { name:'Litany of Vengeance', school:'Evocation [evil]',
+    level:{paladin:5},
+    castingTime:'1 swift', range:'Close', duration:'1 round',
+    description:'The next time the target takes damage from a good-aligned creature before this spell ends, the target takes an additional 5d6 damage. Swift action to cast. Only one litany may be active on a target at once.' },
+
+  // ══════════════════════════════════════════════════════
+  // ADDITIONAL UM/UC SPELLS
+  // ══════════════════════════════════════════════════════
+  { name:'Aspect of the Bear', school:'Transmutation [polymorph]',
+    level:{druid:2,ranger:2},
+    castingTime:'1 standard', range:'Personal', duration:'1 minute/level',
+    description:'+2 natural armor and a +2 enhancement bonus to your Strength, and you gain two claws as primary natural attacks that each deal 1d6 points of damage.' },
+
+  { name:'Barbed Chains', school:'Conjuration [evil]',
+    level:{cleric:3,warpriest:3},
+    castingTime:'1 standard', range:'30 ft', duration:'Instantaneous',
+    description:'Spiky chains rise from the ground in a 10-ft burst. All creatures in the area take 4d6 piercing damage and are entangled for 1 round (Reflex halves, no entangle on successful save). Evil outsiders take no damage.' },
+
+  { name:'Divine Favor', school:'Evocation',
+    level:{cleric:1,warpriest:1,paladin:1,inquisitor:1},
+    castingTime:'1 standard', range:'Personal', duration:'1 minute',
+    description:'Calling upon the strength and wisdom of a deity, you gain a luck bonus of +1 per three caster levels (maximum +3) on attack rolls and weapon damage rolls.' },
+
+  { name:'Forbid Action, Greater', school:'Enchantment [compulsion, mind-affecting]',
+    level:{inquisitor:3},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'As forbid action, but affecting all creatures in a 20-ft burst. All creatures in the area must save or be unable to perform the chosen action type for the duration. Will negates per creature.' },
+
+  { name:'Forced Repentance', school:'Enchantment [compulsion, mind-affecting]',
+    level:{paladin:4},
+    castingTime:'1 standard', range:'Close', duration:'1 round/level',
+    description:'Target evil creature falls to its knees and begs for forgiveness for 1 round. The creature is staggered and cannot take any offensive actions. Will negates (DC 10 + ½ paladin level + CHA modifier).' },
+
+  { name:'Gusting Sphere', school:'Evocation [air]',
+    level:{druid:2,sorcerer:2,wizard:2},
+    castingTime:'1 standard', range:'Medium', duration:'1 round/level',
+    description:'A 5-ft ball of wind rolls at your direction. As a move action, you roll it up to 30 ft. Creatures it hits take 3d6 bludgeoning damage and must succeed at a Fortitude save or be knocked prone.' },
+
+  { name:"Hunter's Howl", school:'Necromancy [fear, mind-affecting]',
+    level:{ranger:1},
+    castingTime:'1 standard', range:'30 ft', duration:'1 round/level',
+    description:'You let loose a terrifying howl that shakes the resolve of those who hear it. All enemies within range must succeed at a Will save or treat you as though you were using the favored enemy ability against them.' },
+
+  { name:'Lead Blades', school:'Transmutation',
+    level:{ranger:1},
+    castingTime:'1 standard', range:'Personal', duration:'1 minute/level',
+    description:'Your melee weapons deal damage as if one size category larger than they actually are. Two-handed weapons deal damage as if one size larger.' },
+
+  { name:'Malediction', school:'Necromancy',
+    level:{witch:1},
+    castingTime:'1 standard', range:'Close', duration:'1 round',
+    description:'You drain power from the target, bestowing a –1 penalty on attack rolls, saving throws, ability checks, and skill checks for 1 round. Fort negates.' },
+
+  { name:'Regenerate', school:'Conjuration [healing]',
+    level:{cleric:7,warpriest:7,druid:7},
+    castingTime:'3 full rounds', range:'Touch', duration:'Instantaneous',
+    description:"The subject's severed body members are restored (if the severed member is not present). Any nonlethal damage is healed. Additionally, cures 4d8 hit points +1/level (max +35)." },
+
+  { name:'Resist Energy, Communal', school:'Abjuration',
+    level:{cleric:3,warpriest:3,druid:3,ranger:3,sorcerer:3,wizard:3},
+    castingTime:'1 standard', range:'Touch', duration:'10 min/level',
+    description:"As resist energy, but you may divide the duration among creatures touched. Each creature gains resist 10 (20 at CL 7, 30 at CL 11) against one energy type of your choice." },
+
+  { name:'Shield of Faith, Mass', school:'Abjuration',
+    level:{cleric:4,warpriest:4},
+    castingTime:'1 standard', range:'Close', duration:'1 min/level',
+    description:"As shield of faith, but affects one creature per level within close range. Each target gains a deflection bonus to AC equal to +2, +1 per six levels (max +5)." },
+
+  { name:'Weapon of Awe', school:'Transmutation',
+    level:{cleric:2,warpriest:2,inquisitor:2,paladin:2},
+    castingTime:'1 standard', range:'Touch', duration:'1 minute/level',
+    description:'You transform a single weapon into an awe-inspiring instrument. The weapon gains a +2 sacred bonus on damage rolls. Critical hits with the weapon cause the target to be shaken for 1 round (Will negates).' },
+
+  { name:'Winds of Vengeance', school:'Evocation [air]',
+    level:{cleric:9,warpriest:9,druid:9},
+    castingTime:'1 standard', range:'Personal', duration:'1 round/level',
+    description:'You surround yourself with a shroud of cyclonic winds. You can fly at 60 ft with perfect maneuverability. You are immune to harmful gases and airborne toxins. Any ranged attack against you has a 50% miss chance. Melee attackers take 2d6 bludgeoning damage.' },
+
 
 ];
 
