@@ -2239,7 +2239,7 @@ const SPELLS_DB = [
     description:'You focus divine power into one part of your body. Choose head (+4 Perception and Sense Motive, +2 initiative), arms (+2 attack and damage, +2 Strength CMB), torso (fast healing 2), or legs (+20 ft speed, +4 Acrobatics, immune to difficult terrain).' },
 
   { name:'Deadly Juggernaut', school:'Necromancy [death, evil]',
-    level:{cleric:3,warpriest:3,inquisitor:3,paladin:3},
+    level:{cleric:3,inquisitor:3,paladin:3,antipaladin:3},
     castingTime:'1 standard', range:'Personal', duration:'1 round/level',
     description:'With each killing blow you make, you become increasingly powerful. Each kill grants a cumulative +1 profane bonus (max +5) on attack rolls, damage, saves, and a +1 natural armor bonus. The bonuses last for 24 hours after the most recent killing blow.' },
 
