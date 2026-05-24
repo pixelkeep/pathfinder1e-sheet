@@ -3304,3 +3304,16 @@ input[id^="wand_dc_"][id$="_3"] {
   color: var(--ink);
   line-height: 1.4;
 }
+
+/* Spell suggestion — class filter indicators */
+.sug-warn {
+  font-size: 9px;
+  margin-right: 4px;
+  font-family: var(--font-mono);
+}
+.sug-warn:not(.sug-lvl) { color: var(--accent); }
+.sug-lvl { color: #b8860b; font-weight: 700; }
+.sug-off-list {
+  opacity: 0.6;
+}
+.sug-off-list:hover { opacity: 1; }

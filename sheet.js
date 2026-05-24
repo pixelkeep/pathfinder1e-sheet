@@ -1774,12 +1774,24 @@ function collectData() {
   // ── Spell levels (page 4) ──────────────────────
   data.spellLevels = [];
   for (let lvl = 0; lvl <= 9; lvl++) {
-    const names = [];
-    for (let i = 0; i < 12; i++) names.push(val(`spl_name_${lvl}_${i}`));
+    const rows = [];
+    const container = document.getElementById('sbrows_' + lvl);
+    if (container) {
+      container.querySelectorAll('.srow').forEach((row, i) => {
+        const nameEl = row.querySelector('.srow-name');
+        const prepEl = row.querySelector('.srow-prep');
+        rows.push({
+          name: nameEl ? nameEl.value : '',
+          prep: prepEl ? prepEl.checked : false,
+        });
+      });
+    }
     data.spellLevels.push({
       perday: val(`spl_perday_${lvl}`),
       bonus:  val(`spl_bonus_${lvl}`),
-      names:  names,
+      rows:   rows,
+      // legacy compat
+      names:  rows.map(r => r.name),
     });
   }
 
@@ -2020,11 +2032,33 @@ function populateData(data) {
 
   // ── Spell levels ───────────────────────────────
   if (data.spellLevels) {
-    data.spellLevels.forEach((s, lvl) => {
-      set(`spl_perday_${lvl}`, s.perday || '');
-      set(`spl_bonus_${lvl}`,  s.bonus  || '');
-      (s.names || []).forEach((n, i) => set(`spl_name_${lvl}_${i}`, n));
-    });
+    // Restore after page 4 is built (500ms delay)
+    setTimeout(() => {
+      data.spellLevels.forEach((s, lvl) => {
+        set(`spl_perday_${lvl}`, s.perday || '');
+        set(`spl_bonus_${lvl}`,  s.bonus  || '');
+        // Support both old format (names[]) and new format (rows[])
+        const entries = s.rows || (s.names || []).map(n => ({ name: n, prep: false }));
+        entries.forEach((entry, i) => {
+          const name = typeof entry === 'string' ? entry : (entry.name || '');
+          const prep = typeof entry === 'object' ? (entry.prep || false) : false;
+          if (!name) return;
+          // Write to new spell block inputs
+          const nameEl = document.getElementById(`sname_${lvl}_${i}`);
+          const prepEl = document.getElementById(`sprep_${lvl}_${i}`);
+          if (nameEl) {
+            nameEl.value = name;
+            if (prep && prepEl) { prepEl.checked = true; nameEl.classList.add('spell-prepared'); }
+            // Show spell details
+            const spell = typeof SPELLS_DB !== 'undefined'
+              ? SPELLS_DB.find(sp => sp.name.toLowerCase() === name.toLowerCase())
+              : null;
+            const detailEl = document.getElementById(`sdetail_${lvl}_${i}`);
+            if (detailEl) showSpellDetail(detailEl, spell);
+          }
+        });
+      });
+    }, 600);
   }
 
   // ── My Actions ─────────────────────────────────
@@ -3084,25 +3118,42 @@ function onSpellNameType(sl, i) {
     return;
   }
 
-  // Show suggestions
-  if (typeof SPELLS_DB !== 'undefined') {
-    const results = SPELLS_DB.filter(s =>
+  if (typeof SPELLS_DB !== 'undefined' && query.length >= 2) {
+    const classKey = (val('charClass') || '').toLowerCase();
+    const allResults = SPELLS_DB.filter(s =>
       s.name.toLowerCase().startsWith(query.toLowerCase()) ||
       s.name.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 8);
+    ).slice(0, 12);
 
-    if (results.length && query.length >= 2) {
-      sugEl.innerHTML = results.map((s, idx) =>
-        `<div class="spell-sug-item" onmousedown="event.preventDefault();pickSpell(${sl},${i},'${s.name.replace(/'/g,"\'")}')">${s.name} <span class="sug-school">${s.school||''}</span></div>`
-      ).join('');
+    if (allResults.length) {
+      // Determine which spells are on the character's class list
+      // Warpriest uses cleric list
+      const listKey = classKey === 'warpriest' ? 'cleric' :
+                      classKey === 'arcanist'  ? 'wizard'  :
+                      classKey === 'bloodrager'? 'sorcerer':
+                      classKey === 'hunter'    ? 'druid'   :
+                      classKey === 'skald'     ? 'bard'    :
+                      classKey;
+
+      sugEl.innerHTML = allResults.map(s => {
+        const onList  = s.level && (s.level[classKey] !== undefined || s.level[listKey] !== undefined);
+        const spellSL = s.level ? (s.level[classKey] ?? s.level[listKey] ?? null) : null;
+        const wrongLvl = spellSL !== null && spellSL !== sl && sl > 0;
+        const warn = !onList  ? '<span class="sug-warn" title="Not on your class spell list">⚠</span>' :
+                     wrongLvl ? `<span class="sug-warn sug-lvl" title="This is a level ${spellSL} spell for your class">L${spellSL}</span>` : '';
+        const cls = onList && !wrongLvl ? 'spell-sug-item' : 'spell-sug-item sug-off-list';
+        return `<div class="${cls}" onmousedown="event.preventDefault();pickSpell(${sl},${i},'${s.name.replace(/'/g,"\'")}')">${warn}${s.name} <span class="sug-school">${s.school||''}</span></div>`;
+      }).join('');
       sugEl.style.display = 'block';
     } else {
       sugEl.style.display = 'none';
     }
 
-    // If exact match, show detail
+    // Exact match → show detail
     const exact = SPELLS_DB.find(s => s.name.toLowerCase() === query.toLowerCase());
     showSpellDetail(detailEl, exact);
+  } else if (query.length < 2) {
+    sugEl.style.display = 'none';
   }
 }
 
