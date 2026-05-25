@@ -504,48 +504,6 @@ const CLASS_ABILITIES = {
     { level:5,  name:'Bonus Feat',             type:'bonus_feat', description:"Combat or metamagic feat.", bonusFeatCount:1 },
     { level:7,  name:'Medium Armor',           type:'passive',  description:"Cast arcane spells in medium armor without failure." },
   ],
-};
-
-// ── CLASS RESOURCES ──────────────────────────────────
-const CLASS_RESOURCES = {
-  warpriest: [
-    { id:'fervor_pool',        label:'Fervor/day',               formula: (lvl,m) => Math.floor(lvl/2) + m.wis },
-    { id:'blessings_per_day',  label:'Blessings/day',            formula: (lvl)   => 3 + Math.floor(lvl/2) },
-    { id:'sw_enhance_rounds',  label:'Sacred Weapon rounds/day', formula: (lvl)   => lvl },
-    { id:'sa_enhance_minutes', label:'Sacred Armor min/day',     formula: (lvl)   => lvl, minLevel:7 },
-  ],
-  fighter:   [],
-  barbarian: [
-    { id:'rage_rounds',        label:'Rage rounds/day', formula: (lvl,m) => 4 + m.con + (lvl-1)*2 },
-  ],
-  bard: [
-    { id:'bardic_performance', label:'Bardic Performance/day', formula: (lvl,m) => 4 + m.cha + (lvl-1)*2 },
-  ],
-  cleric: [
-    { id:'channel_energy',     label:'Channel Energy/day', formula: (lvl,m) => 3 + m.cha },
-  ],
-  druid: [
-    { id:'wild_shape',         label:'Wild Shape/day', formula: (lvl) => Math.max(0, Math.floor((lvl-2)/2)) },
-  ],
-  paladin: [
-    { id:'smite_evil',         label:'Smite Evil/day',    formula: (lvl) => 1 + Math.floor((lvl-1)/3) },
-    { id:'lay_on_hands',       label:'Lay on Hands/day',  formula: (lvl,m) => Math.floor(lvl/2) + m.cha },
-    { id:'divine_bond',        label:'Divine Bond min/day',formula: (lvl) => lvl, minLevel:5 },
-  ],
-  ranger:   [],
-  rogue:    [],
-  alchemist: [
-    { id:'bombs_per_day',      label:'Bombs/day',     formula: (lvl,m) => lvl + m.int },
-    { id:'mutagen_per_day',    label:'Mutagen/day',   formula: () => 1 },
-  ],
-  monk: [
-    { id:'stunning_fist',      label:'Stunning Fist/day', formula: (lvl) => lvl },
-    { id:'ki_pool',            label:'Ki Pool',           formula: (lvl,m) => Math.floor(lvl/2) + m.wis },
-  ],
-  magus: [
-    { id:'arcane_pool',        label:'Arcane Pool', formula: (lvl,m) => Math.floor(lvl/2) + m.int },
-  ],
-
 
   // ── SORCERER ────────────────────────────────────────────────────────
   sorcerer: [
@@ -853,6 +811,48 @@ const CLASS_RESOURCES = {
     { level:4,  name:'Mounted Archer',     type:'passive',  description:"Reduce penalty for ranged attacks from a moving mount by 4." },
     { level:20, name:'True Resolve',       type:'passive',  description:"Spend 2 resolve to avoid death from any source once per day." },
   ],
+};
+
+// ── CLASS RESOURCES ──────────────────────────────────
+const CLASS_RESOURCES = {
+  warpriest: [
+    { id:'fervor_pool',        label:'Fervor/day',               formula: (lvl,m) => Math.floor(lvl/2) + m.wis },
+    { id:'blessings_per_day',  label:'Blessings/day',            formula: (lvl)   => 3 + Math.floor(lvl/2) },
+    { id:'sw_enhance_rounds',  label:'Sacred Weapon rounds/day', formula: (lvl)   => lvl },
+    { id:'sa_enhance_minutes', label:'Sacred Armor min/day',     formula: (lvl)   => lvl, minLevel:7 },
+  ],
+  fighter:   [],
+  barbarian: [
+    { id:'rage_rounds',        label:'Rage rounds/day', formula: (lvl,m) => 4 + m.con + (lvl-1)*2 },
+  ],
+  bard: [
+    { id:'bardic_performance', label:'Bardic Performance/day', formula: (lvl,m) => 4 + m.cha + (lvl-1)*2 },
+  ],
+  cleric: [
+    { id:'channel_energy',     label:'Channel Energy/day', formula: (lvl,m) => 3 + m.cha },
+  ],
+  druid: [
+    { id:'wild_shape',         label:'Wild Shape/day', formula: (lvl) => Math.max(0, Math.floor((lvl-2)/2)) },
+  ],
+  paladin: [
+    { id:'smite_evil',         label:'Smite Evil/day',    formula: (lvl) => 1 + Math.floor((lvl-1)/3) },
+    { id:'lay_on_hands',       label:'Lay on Hands/day',  formula: (lvl,m) => Math.floor(lvl/2) + m.cha },
+    { id:'divine_bond',        label:'Divine Bond min/day',formula: (lvl) => lvl, minLevel:5 },
+  ],
+  ranger:   [],
+  rogue:    [],
+  alchemist: [
+    { id:'bombs_per_day',      label:'Bombs/day',     formula: (lvl,m) => lvl + m.int },
+    { id:'mutagen_per_day',    label:'Mutagen/day',   formula: () => 1 },
+  ],
+  monk: [
+    { id:'stunning_fist',      label:'Stunning Fist/day', formula: (lvl) => lvl },
+    { id:'ki_pool',            label:'Ki Pool',           formula: (lvl,m) => Math.floor(lvl/2) + m.wis },
+  ],
+  magus: [
+    { id:'arcane_pool',        label:'Arcane Pool', formula: (lvl,m) => Math.floor(lvl/2) + m.int },
+  ],
+
 };
 
 // ── HELPERS ──────────────────────────────────────────
