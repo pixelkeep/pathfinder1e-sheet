@@ -1,0 +1,3750 @@
+/* ══════════════════════════════════════════════════
+   Pathfinder 1e Character Sheet — style.css
+   Aesthetic: parchment-meets-precision, utilitarian
+   Print-optimised, works offline and on GitHub Pages
+   ══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inconsolata:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+/* ── VARIABLES ─────────────────────────────────── */
+:root {
+  --ink:        #1a1209;
+  --ink-light:  #3d2e14;
+  --parchment:  #f5f0e6;
+  --cream:      #faf7f1;
+  --border:     #8b6f3e;
+  --border-light: #c9ab76;
+  --accent:     #8b1a1a;
+  --accent2:    #2a4a6b;
+  --section-bg: #ede8da;
+  --input-bg:   #fffef9;
+  --readonly-bg:#e8e3d6;
+  --toolbar-bg: #2a1f0e;
+  --toolbar-fg: #f0e8d0;
+  --font-heading: 'IM Fell English', serif;
+  --font-body:  'Crimson Pro', serif;
+  --font-mono:  'Inconsolata', monospace;
+  --page-width: 210mm;
+}
+
+/* ── RESET + BASE ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 11px; }
+
+body {
+  background: #3d2e14;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+  font-family: var(--font-body);
+  color: var(--ink);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ── TOOLBAR ───────────────────────────────────── */
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: var(--toolbar-bg);
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+
+.toolbar-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--border-light);
+  letter-spacing: .5px;
+}
+
+.toolbar-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border-light);
+  text-decoration: none;
+  opacity: .7;
+  margin-left: 14px;
+  letter-spacing: .3px;
+  transition: opacity .15s;
+}
+.toolbar-link:hover { opacity: 1; }
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-right button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 5px 14px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--toolbar-fg);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  text-transform: uppercase;
+}
+.toolbar-right button:hover {
+  background: var(--border-light);
+  color: var(--toolbar-bg);
+}
+
+/* ── PAGE ──────────────────────────────────────── */
+.page {
+  width: var(--page-width);
+  margin: 20px auto;
+  background: var(--cream);
+  padding: 8mm 9mm;
+  box-shadow: 0 4px 32px rgba(0,0,0,.6);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+/* subtle parchment texture lines */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 24px,
+    rgba(139,111,62,.06) 24px,
+    rgba(139,111,62,.06) 25px
+  );
+  pointer-events: none;
+}
+
+/* ── HEADER ────────────────────────────────────── */
+.sheet-header {
+  text-align: center;
+  margin-bottom: 4mm;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 3mm;
+}
+
+.header-logo {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--accent);
+  letter-spacing: 4px;
+  text-shadow: 1px 1px 0 rgba(139,111,62,.3);
+}
+
+.header-edition {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: -2px;
+}
+
+.header-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-fields {
+  margin-bottom: 4mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
+.field-row label {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+
+/* ── INPUTS ────────────────────────────────────── */
+input[type="text"],
+input[type="number"],
+textarea {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 11px;
+  padding: 1px 2px;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-bottom-color: var(--accent2);
+  background: rgba(42,74,107,.05);
+}
+
+input[readonly] {
+  background: var(--readonly-bg);
+  color: var(--accent2);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  cursor: default;
+}
+
+/* width helpers */
+input.wide       { width: 130px; }
+input.medium     { width: 90px; }
+input.short      { width: 60px; }
+input.short-text { width: 48px; }
+#load_light, #load_medium, #load_heavy { width: 32px !important; max-width: 32px !important; text-align: right; }
+input.tiny       { width: 42px; }
+input.num        { width: 40px; text-align: center; font-family: var(--font-mono); }
+input.small-num  { width: 32px; text-align: center; font-family: var(--font-mono); font-size: 10px; }
+input.big-num    { width: 44px; text-align: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+input.calc-result { background: var(--readonly-bg); color: var(--accent); font-weight: 700; }
+input.full-width-input { width: 100%; }
+
+/* ── SECTION BOXES ─────────────────────────────── */
+.section-box {
+  background: var(--parchment);
+  border: 1px solid var(--border-light);
+  border-radius: 1px;
+  padding: 3px 5px 5px;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 3px;
+  padding-bottom: 1px;
+  text-transform: uppercase;
+}
+
+/* ── MAIN LAYOUT GRID ──────────────────────────── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.left-col, .right-col { display: flex; flex-direction: column; gap: 4px; overflow: hidden; min-width: 0; }
+
+/* ── ABILITY TABLE ─────────────────────────────── */
+.ability-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.ability-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  padding: 1px 2px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-light);
+}
+.ability-table td { padding: 1px 2px; text-align: center; vertical-align: middle; }
+.ability-name {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: left !important;
+  white-space: nowrap;
+}
+.ability-sub { font-size: 8px; color: var(--border); font-family: var(--font-mono); }
+
+/* ── HP GRID ───────────────────────────────────── */
+.hp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.hp-grid label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+/* ── CALC ROW ──────────────────────────────────── */
+.calc-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.calc-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.calc-op {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border);
+}
+.mt4 { margin-top: 4px; }
+.mt8 { margin-top: 8px; }
+
+/* ── ARMOR CLASS ───────────────────────────────── */
+.ac-grid { display: flex; flex-direction: column; gap: 4px; }
+.ac-main { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 4px; }
+.ac-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--border);
+}
+.ac-table { width: 100%; border-collapse: collapse; }
+.ac-table td { text-align: center; font-family: var(--font-mono); font-size: 9px; color: var(--border); padding: 1px; }
+
+/* ── SAVES ─────────────────────────────────────── */
+.save-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.save-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  text-align: center;
+  padding: 1px 2px;
+  border-bottom: 1px solid var(--border-light);
+}
+.save-table td { text-align: center; padding: 1px 2px; vertical-align: middle; }
+.save-name {
+  text-align: left !important;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--ink);
+}
+.save-name small { font-family: var(--font-mono); font-size: 8px; color: var(--border); }
+
+/* ── SPEED ─────────────────────────────────────── */
+.speed-grid { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.speed-grid label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-light);
+}
+
+/* ── WEAPONS ───────────────────────────────────── */
+.weapon-block {
+  border: 1px solid var(--border-light);
+  padding: 3px 6px 4px;
+  margin-bottom: 4px;
+  background: var(--cream);
+}
+.weapons-fullwidth .weapon-block {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+.weapon-name-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.weapon-name-row label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.weapon-stats-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.weapon-stats-row label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── SKILLS TABLE ──────────────────────────────── */
+.skills-section { height: 100%; }
+.skills-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  table-layout: fixed;
+}
+.skills-table th {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--border);
+  text-align: center;
+  padding: 1px 2px;
+  border-bottom: 1px solid var(--border-light);
+}
+.skills-table td { padding: 1px 2px; vertical-align: middle; }
+.skill-name-col { text-align: left; width: 108px; max-width: 108px; overflow: hidden; }
+.cs-col { width: 16px; text-align: center; }
+.num-col { width: 26px; text-align: center; }
+
+.skill-row td { border-bottom: 1px solid rgba(139,111,62,.1); }
+.skill-row:hover td { background: rgba(42,74,107,.04); }
+
+.skill-name {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 108px;
+}
+.trained-marker { color: var(--border-light); font-size: 8px; }
+.cs-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+}
+.cs-dot.checked { background: var(--accent2); border-color: var(--accent2); }
+
+.skills-footer { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+.skills-footer label { font-family: var(--font-mono); font-size: 9px; color: var(--border); }
+
+/* ── PAGE 2 LAYOUT ─────────────────────────────── */
+.page2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page2-left, .page2-middle, .page2-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.flex-grow { flex: 1; }
+
+/* ── AC ITEMS ──────────────────────────────────── */
+.ac-items-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.ac-items-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+  text-align: center;
+}
+.ac-items-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.ac-items-table tfoot td { font-family: var(--font-mono); border-top: 1px solid var(--border-light); }
+.num-cell { text-align: center; font-family: var(--font-mono); }
+.ac-items-table input { width: 100%; }
+
+/* ── GEAR TABLE ────────────────────────────────── */
+.gear-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.gear-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+}
+.gear-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.gear-table tfoot td { font-family: var(--font-mono); border-top: 1px solid var(--border-light); }
+.gear-table input { width: 100%; }
+.load-table { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; font-family: var(--font-mono); font-size: 9px; color: var(--border); }
+.load-table span { display: flex; align-items: center; gap: 4px; }
+
+/* ── MONEY ─────────────────────────────────────── */
+.money-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.money-grid label { font-family: var(--font-mono); font-size: 10px; display: flex; align-items: center; gap: 4px; }
+
+/* ── XP ────────────────────────────────────────── */
+.xp-grid { display: flex; gap: 8px; }
+.xp-grid label { font-family: var(--font-mono); font-size: 10px; display: flex; align-items: center; gap: 4px; }
+
+/* ── TEXTAREAS ─────────────────────────────────── */
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 3px 4px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+textarea.big-textarea    { min-height: 80px; flex: 1; }
+textarea.medium-textarea { min-height: 50px; }
+textarea.small-textarea  { min-height: 36px; }
+
+/* ── SPELLS ────────────────────────────────────── */
+.spell-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 4px; }
+.spell-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 2px;
+  text-align: center;
+}
+.spell-table td { padding: 1px 3px; border-bottom: 1px solid rgba(139,111,62,.1); text-align: center; font-family: var(--font-mono); }
+.spell-note { font-size: 9px; color: var(--border); font-style: italic; text-align: center; padding: 4px 0; }
+
+/* ── PRINT ─────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 9mm;
+  }
+
+  body {
+    background: white !important;
+    padding: 0;
+  }
+
+  .no-print, #toolbar { display: none !important; }
+
+  .page {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    page-break-after: always;
+  }
+  .page::before { display: none; }
+  .page:last-child { page-break-after: auto; }
+
+  input, textarea {
+    border: none !important;
+    border-bottom: 1px solid #aaa !important;
+    background: transparent !important;
+  }
+  input[readonly] {
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .section-box {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ── SCROLLBAR ─────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #2a1f0e; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ══════════════════════════════════════════════════
+   PAGES 3–5 STYLES
+   ══════════════════════════════════════════════════ */
+
+/* ── PAGE 3: SPELLS + CLASS RESOURCES ─────────── */
+.page3-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page3-left, .page3-right { display: flex; flex-direction: column; gap: 4px; }
+
+.helper-text {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+/* Class resource pool row */
+.resource-pool-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+}
+.resource-pool-row:last-child { border-bottom: none; }
+.resource-pool-label { width: 110px; }
+.resource-pool-max { width: 32px; }
+.pool-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.pool-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background .1s;
+  flex-shrink: 0;
+}
+.pool-dot.filled { background: var(--accent2); border-color: var(--accent2); }
+
+/* Resource table */
+.resource-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.resource-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: center;
+}
+.resource-table td { padding: 1px 3px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.resource-table input { width: 100%; }
+.resource-table input.num { width: 36px; }
+
+/* Spell slots table */
+.spell-slots-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.spell-slots-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.spell-slots-table td { padding: 2px 3px; border-bottom: 1px solid rgba(139,111,62,.1); vertical-align: middle; }
+
+/* Spell meta row */
+.spell-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 4px;
+}
+.spell-meta-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-light);
+}
+
+/* Spell level block */
+.spell-level-block {
+  border: 1px solid var(--border-light);
+  margin-bottom: 4px;
+  background: var(--cream);
+}
+.spell-level-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 5px;
+  background: var(--section-bg);
+  border-bottom: 1px solid var(--border-light);
+}
+.spell-level-label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 48px;
+}
+.spell-level-header label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.spell-slot-dots {
+  display: flex;
+  gap: 3px;
+  margin-left: 4px;
+}
+.spell-slot-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: background .1s;
+}
+.spell-slot-dot.used { background: var(--accent); border-color: var(--accent); }
+.spell-names-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 4px;
+  padding: 2px 5px 3px;
+}
+.spell-names-grid input {
+  width: 100%;
+  font-size: 9.5px;
+  border-bottom: 1px solid rgba(139,111,62,.2);
+}
+
+/* ── PAGE 4: COMBAT REFERENCE ──────────────────── */
+.page4-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.ref-col { display: flex; flex-direction: column; gap: 4px; }
+
+.ref-note {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 3px;
+}
+.ref-note.mt4 { margin-top: 4px; }
+.ref-note strong { color: var(--ink); }
+
+/* Action blocks */
+.action-block { margin-bottom: 5px; }
+.action-type {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  display: inline-block;
+  margin-bottom: 2px;
+  border-radius: 1px;
+}
+.action-type.standard  { background: #8b1a1a; color: #fff; }
+.action-type.move      { background: #2a4a6b; color: #fff; }
+.action-type.full      { background: #3d2e14; color: #f0e8d0; }
+.action-type.swift     { background: #5a6e2a; color: #fff; }
+.action-type.immediate { background: #6b5a2a; color: #fff; }
+.action-type.free      { background: #5a5a5a; color: #fff; }
+.action-limit { font-family: var(--font-mono); font-size: 8px; opacity: .85; }
+
+.action-list {
+  margin: 0 0 0 16px;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.action-list li { margin-bottom: 1px; }
+
+/* Reference tables */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 2px; }
+.ref-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: left;
+}
+.ref-table td {
+  padding: 1px 3px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  font-family: var(--font-body);
+  font-size: 9px;
+  vertical-align: top;
+}
+.ref-table tr:hover td { background: rgba(42,74,107,.04); }
+
+/* Source tag */
+.source-tag {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 4px;
+}
+.source-tag a { color: var(--border); }
+
+/* Conditions table */
+.conditions-table { width: 100%; border-collapse: collapse; }
+.cond-row { border-bottom: 1px solid rgba(139,111,62,.1); }
+.cond-row:hover td { background: rgba(42,74,107,.04); }
+.cond-name {
+  font-family: var(--font-heading);
+  font-size: 9.5px;
+  color: var(--accent);
+  padding: 2px 4px 2px 2px;
+  white-space: nowrap;
+  vertical-align: top;
+  min-width: 68px;
+}
+.cond-row td:last-child {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink);
+  padding: 2px 2px;
+  line-height: 1.35;
+}
+
+/* ── PAGE 5: CHARACTER CHEATSHEET ──────────────── */
+.page5-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 4mm;
+}
+.page5-col { display: flex; flex-direction: column; gap: 4px; }
+
+/* My go-to actions */
+.my-actions-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.my-actions-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.my-actions-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.my-actions-table input { width: 100%; }
+
+/* Buff tracker */
+.buff-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.buff-table th {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+}
+.buff-table td { padding: 1px 2px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.buff-table input { width: 100%; }
+
+/* Carry weight */
+.carry-table { font-family: var(--font-mono); font-size: 9px; }
+.carry-table table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.carry-table th {
+  font-size: 7.5px;
+  text-transform: uppercase;
+  color: var(--border);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1px 3px;
+  text-align: right;
+}
+.carry-table td { padding: 1px 4px; text-align: right; font-size: 9px; border-bottom: 1px solid rgba(139,111,62,.1); }
+.carry-table td:first-child { text-align: left; color: var(--border); }
+.carry-highlight { color: var(--accent2); font-weight: 600; }
+
+/* Offline note */
+.offline-note { color: var(--border); text-align: center; padding: 12px; font-family: var(--font-mono); font-size: 10px; }
+
+/* ══════════════════════════════════════════════════
+   SETUP PANEL + LOOKUP BARS
+   ══════════════════════════════════════════════════ */
+
+.setup-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: flex-end;
+}
+
+.setup-label {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--border);
+  gap: 2px;
+}
+
+.setup-label select,
+.setup-label input {
+  font-family: var(--font-body);
+  font-size: 11px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  color: var(--ink);
+  padding: 2px 4px;
+  outline: none;
+}
+.setup-label select:focus,
+.setup-label input:focus {
+  border-color: var(--accent2);
+}
+
+.setup-apply-btn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 4px 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  align-self: flex-end;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.setup-apply-btn:hover { background: var(--accent2); }
+
+/* ══════════════════════════════════════════════════
+   CHARACTER SETUP ROW — horizontal compact layout
+   ══════════════════════════════════════════════════ */
+.setup-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 4px;
+  overflow-x: auto;
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 100px;
+}
+
+.setup-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.setup-field select,
+.setup-field input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 3px 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.setup-field select:focus,
+.setup-field input:focus {
+  border-color: var(--accent2);
+  outline: none;
+}
+
+.setup-info,
+.setup-info-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 3px;
+  align-items: flex-start;
+  line-height: normal;
+}
+
+.setup-info-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  padding: 2px 6px;
+  color: var(--ink-light);
+  white-space: nowrap;
+  border-radius: 2px;
+}
+
+.setup-info-tag strong {
+  color: var(--ink);
+}
+
+/* Lookup rows */
+.weapon-lookup-row,
+.armor-lookup-row,
+.gear-lookup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-light);
+}
+
+.weapon-lookup-row select,
+.armor-lookup-row select,
+.gear-lookup-row select {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 2px 4px;
+}
+
+.weapon-lookup-row button,
+.armor-lookup-row button,
+.gear-lookup-row button {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  background: var(--accent2);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.weapon-lookup-row button:hover,
+.armor-lookup-row button:hover,
+.gear-lookup-row button:hover { opacity: .85; }
+
+.weapon-lookup-row label,
+.armor-lookup-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Version badge in toolbar */
+.toolbar-version {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  margin-left: 10px;
+  opacity: .7;
+  letter-spacing: .3px;
+}
+
+/* ══════════════════════════════════════════════════
+   SETUP PANELS WRAPPER (above page 1)
+   ══════════════════════════════════════════════════ */
+.setup-panels-wrapper {
+  width: 210mm;
+  margin: 8px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setup-panel-block {
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  padding: 5px 10px 7px;
+}
+
+.setup-panel-title {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 3px;
+  margin-bottom: 5px;
+}
+
+.setup-panel-hint {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   WEAPON BREAKDOWN
+   ══════════════════════════════════════════════════ */
+.weapon-breakdown-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.breakdown-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  min-width: 44px;
+  padding-bottom: 2px;
+  font-weight: 600;
+}
+
+.breakdown-eq {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--border);
+  padding-bottom: 1px;
+}
+
+.breakdown-op {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border-light);
+  padding-bottom: 1px;
+}
+
+.bd-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  text-transform: uppercase;
+  gap: 1px;
+}
+
+.total-cell {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+.atk-total {
+  background: var(--readonly-bg) !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+}
+
+.weapon-flags-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.weapon-flags-row label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-light);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════
+   SPECIAL ABILITIES — bigger textarea for print
+   ══════════════════════════════════════════════════ */
+.special-abilities-textarea {
+  min-height: 160px !important;
+}
+
+@media print {
+  .special-abilities-textarea {
+    min-height: 200px !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 2 REDESIGN — AC Items full width + Blessings
+   ══════════════════════════════════════════════════ */
+
+.p2-fullwidth {
+  margin-bottom: 5px;
+}
+
+.section-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+/* AC Items wide table */
+.ac-items-wide { font-size: 9.5px; }
+.ac-items-wide th { font-size: 8px; text-transform: uppercase; font-family: var(--font-mono); color: var(--border); padding: 2px 4px; border-bottom: 1px solid var(--border-light); }
+.ac-items-wide td { padding: 1px 4px; border-bottom: 1px solid rgba(139,111,62,.1); vertical-align: middle; }
+.ac-items-wide tfoot td { font-family: var(--font-mono); font-weight: 600; border-top: 1px solid var(--border-light); }
+
+.aci-col-name  { width: 28%; }
+.aci-col-bonus { width: 6%;  text-align: center; }
+.aci-col-type  { width: 12%; }
+.aci-col-maxdex{ width: 8%;  text-align: center; }
+.aci-col-check { width: 8%;  text-align: center; }
+.aci-col-sf    { width: 8%;  text-align: center; }
+.aci-col-wt    { width: 7%;  text-align: center; }
+.aci-col-props { width: 23%; }
+
+/* Blessings grid */
+.blessings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.blessing-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.blessing-label {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--accent);
+  gap: 2px;
+}
+
+.blessing-sublabel {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  text-transform: uppercase;
+  gap: 1px;
+}
+
+.blessing-textarea {
+  width: 100%;
+  min-height: 44px;
+  resize: vertical;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 2px 4px;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.level-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border-light);
+  font-style: italic;
+  margin-left: 3px;
+}
+
+.sacred-weapon-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Short select for size dropdown */
+.short-select {
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  padding: 1px 2px;
+  outline: none;
+  width: 80px;
+}
+.short-select:focus { border-bottom-color: var(--accent2); }
+
+/* Level field trigger styling */
+#charLevel { color: var(--accent2); font-weight: 600; font-family: var(--font-mono); }
+
+/* Locked weapon checkboxes — auto-set by weapon type */
+.weapon-flags-row label input[type="checkbox"]:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.weapon-flags-row label:has(input:disabled) {
+  color: var(--accent2);
+  font-style: italic;
+}
+
+/* Deity perk tag in setup panel */
+.setup-info-tag.deity-perk {
+  background: rgba(139,26,26,.06);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: help;
+  white-space: nowrap;
+}
+
+/* Ability tag before skill name */
+.skill-abil-tag {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  letter-spacing: .2px;
+  margin-right: 2px;
+  display: inline-block !important;
+  min-width: 20px;
+  text-align: right;
+  opacity: .8;
+}
+
+/* ══════════════════════════════════════════════════
+   LANGUAGE PICKER
+   ══════════════════════════════════════════════════ */
+.languages-section {
+  margin-bottom: 4px;
+}
+
+.languages-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.lang-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+}
+
+.languages-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 6px;
+  margin-bottom: 3px;
+}
+
+.lang-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 1px 2px;
+}
+.lang-item input[type="checkbox"] {
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent2);
+}
+
+/* Racial languages — bold */
+.lang-item.lang-racial {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Bonus languages — italic blue hint */
+.lang-item.lang-bonus {
+  color: var(--accent2);
+  font-style: italic;
+}
+
+.lang-custom-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-top: 2px;
+}
+
+/* ── Obedience bonus on skill rows ──────────────── */
+.skill-row.obedience-bonus td {
+  background: rgba(139,26,26,.04);
+}
+.skill-row.obedience-bonus .skill-name::after {
+  content: ' ✦';
+  font-size: 7px;
+  color: var(--accent);
+  opacity: .7;
+}
+
+/* ── Obedience note color in special abilities ─── */
+@media print {
+  .languages-grid { font-size: 7.5px; gap: 0px 4px; }
+  .lang-item { padding: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   SKILLS — Bonus column + language full-width
+   ══════════════════════════════════════════════════ */
+
+/* Bonus column — deity/racial auto-bonus */
+.bonus-col {
+  width: 20px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+.skills-table th.bonus-col {
+  color: var(--accent);
+  font-size: 7px;
+}
+
+.skill-bonus-tag {
+  color: var(--accent);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  cursor: help;
+}
+
+/* Languages — full width below main grid */
+.languages-fullwidth {
+  margin-top: 4px;
+}
+
+.languages-grid-wide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 8px;
+  margin: 3px 0;
+}
+
+.lang-bottom-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.lang-custom-input {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 2px;
+  outline: none;
+  width: 200px;
+}
+.lang-custom-input:focus { border-bottom-color: var(--accent2); }
+
+/* languages-section is no longer used — replaced by languages-fullwidth */
+
+@media print {
+  .languages-fullwidth { margin-top: 2px; }
+  .languages-grid-wide { gap: 0 5px; font-size: 7px; }
+  .lang-item { padding: 0 1px; font-size: 7.5px; }
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 2 — Adaptive Feats + Class Abilities
+   ══════════════════════════════════════════════════ */
+
+.p2-adaptive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 200mm; /* fill page */
+}
+.p2-feats-col, .p2-abilities-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Feat rows */
+.feat-row {
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  padding: 2px 0 3px;
+  margin-bottom: 1px;
+}
+.feat-row.feat-bonus {
+  background: rgba(42,74,107,.03);
+}
+.feat-row-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.feat-level-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.feat-badge-regular  { background: var(--section-bg); color: var(--border); border: 1px solid var(--border-light); }
+.feat-badge-bonus    { background: var(--accent2);    color: #fff; }
+.feat-name-input {
+  flex: 1;
+  min-width: 80px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+}
+.feat-name-input:focus { border-bottom-color: var(--accent2); outline: none; }
+.feat-type-select {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 2px;
+  color: var(--border);
+  max-width: 76px;
+}
+.feat-wpn-select {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--accent2);
+  background: rgba(42,74,107,.05);
+  padding: 1px 2px;
+  color: var(--accent2);
+  max-width: 110px;
+}
+.feat-wpn-select.hidden { display: none; }
+.feat-desc-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  background: transparent;
+  padding: 1px 2px 0 24px;
+  margin-top: 1px;
+}
+.feat-desc-input:focus { outline: none; color: var(--ink); }
+
+/* Class abilities */
+.ca-group { margin-bottom: 4px; }
+.ca-passive-group { opacity: .85; }
+.ca-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(139,111,62,.08);
+  flex-wrap: wrap;
+}
+.ca-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  min-width: 26px;
+  text-align: center;
+}
+.ca-badge-resource { background: var(--accent);   color: #fff; }
+.ca-badge-weapon   { background: #5a3a1a;          color: #fff; }
+.ca-badge-armor    { background: #2a4a6b;          color: #fff; }
+.ca-badge-active   { background: var(--accent2);   color: #fff; }
+.ca-badge-passive  { background: var(--section-bg); color: var(--border); border: 1px solid var(--border-light); }
+
+.ca-name {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ca-desc {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  line-height: 1.35;
+}
+.ca-pool-display {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ca-wpn-link {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 2px;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 3 — Armor, Gear, Class-specific
+   ══════════════════════════════════════════════════ */
+
+.p3-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.3fr 1fr;
+  gap: 4px;
+  margin-top: 4px;
+}
+.p3-gear-col, .p3-notes-col, .p3-money-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Warpriest block */
+.warpriest-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 8px;
+}
+.wp-block { display: flex; flex-direction: column; gap: 3px; }
+.wp-block-title {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--accent2);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1px;
+  margin-bottom: 2px;
+}
+.wp-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 4 — Spells / Extracts
+   ══════════════════════════════════════════════════ */
+
+.spells-page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding-top: 4px;
+}
+
+@media print {
+  .p2-adaptive-grid { min-height: 0; }
+  #page4-spells[style*="display:none"] { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   CLASS FEATURES BLOCK
+   ══════════════════════════════════════════════════ */
+.cf-block {
+  background: rgba(42,74,107,.04);
+  border: 1px solid var(--border-light);
+  padding: 4px 6px;
+  margin-bottom: 5px;
+  font-size: 9px;
+}
+.cf-section-title {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--accent2);
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 3px;
+  padding-bottom: 1px;
+}
+.cf-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1px;
+  align-items: baseline;
+}
+.cf-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  text-transform: uppercase;
+  min-width: 72px;
+  flex-shrink: 0;
+}
+.cf-value {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.cf-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  line-height: 1.3;
+}
+.cf-heal .cf-note { color: var(--accent); font-style: italic; }
+.cf-divider {
+  border-top: 1px solid var(--border-light);
+  margin: 4px 0;
+}
+
+/* ══════════════════════════════════════════════════
+   WEAPON MATERIAL + SACRED WEAPON NOTES
+   ══════════════════════════════════════════════════ */
+.wpn-material-select {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 3px;
+  color: var(--ink);
+  max-width: 120px;
+}
+
+.wpn-sacred-note {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.wpn-sacred-note.sacred-better  { background: rgba(42,74,107,.1); color: var(--accent2); }
+.wpn-sacred-note.weapon-better  { background: rgba(139,26,26,.07); color: var(--accent); }
+
+.wpn-material-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: #8b6f3e;
+  margin-left: 4px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   FEAT AUTOCOMPLETE
+   ══════════════════════════════════════════════════ */
+.feat-search-wrap { position: relative; flex: 1; min-width: 80px; }
+
+.feat-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.feat-suggestion-item {
+  padding: 3px 6px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  display: grid;
+  grid-template-columns: auto 60px 1fr;
+  gap: 4px;
+  align-items: baseline;
+}
+.feat-suggestion-item:hover { background: rgba(42,74,107,.08); }
+
+.feat-sug-name {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.feat-sug-type {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  text-transform: uppercase;
+  text-align: center;
+}
+.feat-sug-benefit {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEMS / CHARGES
+   ══════════════════════════════════════════════════ */
+.magic-item-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 0 4px;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+}
+.magic-item-row:last-child { border-bottom: none; }
+
+.mi-name-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+}
+.mi-name-input:focus { border-bottom-color: var(--accent2); outline: none; }
+
+.mi-charges-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.mi-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+}
+.mi-dots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.mi-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity .1s;
+}
+.mi-dot-full { background: var(--accent2); }
+.mi-dot-used { background: var(--border-light); opacity: .4; }
+.mi-dot:hover { opacity: .7; }
+
+.mi-remaining {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ══════════════════════════════════════════════════
+   WANDS / STAVES / COMBAT MAGIC ITEMS
+   ══════════════════════════════════════════════════ */
+.wand-block {
+  border: 1px solid var(--border-light);
+  padding: 3px 6px 4px;
+  margin-bottom: 3px;
+  background: linear-gradient(to right, rgba(42,74,107,.03), transparent);
+}
+
+.wand-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.wand-name-input {
+  flex: 1;
+  min-width: 140px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+  font-weight: 600;
+}
+.wand-name-input:focus { border-bottom-color: var(--accent2); outline: none; }
+
+.wand-type-select {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  padding: 1px 3px;
+  color: var(--accent2);
+}
+
+.wand-cl-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.wand-combat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+}
+
+.wand-atk-label, .wand-dc-label, .wand-effect-label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--border);
+}
+
+.wand-charges-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-left: 4px;
+}
+
+.wand-dots-row {
+  margin-top: 2px;
+  gap: 2px;
+}
+
+/* ══════════════════════════════════════════════════
+   HP LEVELUP INFO + WEAPON NOTES + MISC FIXES
+   ══════════════════════════════════════════════════ */
+
+.hp-levelup-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(139,111,62,.15);
+}
+.hp-info-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  padding: 1px 5px;
+  color: var(--ink-light);
+}
+
+/* Weapon notes row */
+.weapon-notes-row {
+  margin-top: 2px;
+}
+.weapon-notes-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  border-bottom: 1px dashed var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+  font-style: italic;
+}
+.weapon-notes-input:focus { outline: none; color: var(--ink); border-bottom-color: var(--accent2); }
+.weapon-notes-input::placeholder { color: var(--border-light); }
+
+/* Wand notes */
+.wand-notes-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--border);
+  border: none;
+  border-bottom: 1px dashed var(--border-light);
+  background: transparent;
+  padding: 1px 2px;
+  font-style: italic;
+  margin-top: 2px;
+}
+.wand-notes-input:focus { outline: none; color: var(--ink); }
+
+/* Special abilities textarea — much taller */
+.special-abilities-textarea {
+  min-height: 200px !important;
+  flex: 1 !important;
+}
+@media print {
+  .special-abilities-textarea {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Spell page — prevent overflow */
+.spells-page-grid {
+  width: 100%;
+  box-sizing: border-box;
+}
+.spell-level-block {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════
+   SLOT COUNT CONTROLS + WAND BREAKDOWN
+   ══════════════════════════════════════════════════ */
+
+.slot-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.slot-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 18px; height: 18px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  color: var(--accent2);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  border-radius: 2px;
+  transition: background .1s;
+}
+.slot-btn:hover { background: var(--accent2); color: #fff; }
+.slot-count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+  min-width: 8px;
+  text-align: center;
+}
+
+/* Wand breakdown rows */
+.wand-charges-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.wand-dots-inline {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.wand-no-atk-note {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border-light);
+  font-style: italic;
+  margin-left: 6px;
+}
+.bd-fixed {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--border);
+  display: block;
+  text-align: center;
+  margin-top: 2px;
+}
+
+@media print {
+  .slot-controls { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   CONSISTENT COLOR SYSTEM FOR CALCULATED VALUES
+   ══════════════════════════════════════════════════ */
+
+/* Principle:
+   --accent  (dark red)  = auto-calculated totals, read-only results
+   --accent2 (dark blue) = manually entered bonuses that feed calculations
+   #6b8c3a (olive green) = spell/ability effects the player needs to know
+                           (damage dice, healing, DC values)
+*/
+:root {
+  --effect-color: #4a6e1a;  /* olive green — spell/ability effects */
+}
+
+/* Spell calc values — highlighted in olive green */
+.calc-effect,
+.spell-sug-calc {
+  color: var(--effect-color);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+/* In spell list inputs — auto-complete suggestion */
+.spell-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.spell-suggestion-item {
+  padding: 3px 6px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.1);
+  display: grid;
+  grid-template-columns: auto 60px 1fr auto;
+  gap: 4px;
+  align-items: baseline;
+}
+.spell-suggestion-item:hover { background: rgba(74,110,26,.08); }
+
+.spell-sug-calc {
+  font-size: 8.5px;
+  padding: 1px 3px;
+  background: rgba(74,110,26,.1);
+  border-radius: 2px;
+}
+
+/* Wand effect fields — olive green when filled */
+#wands-container input[id^="wand_effect_"] {
+  color: var(--effect-color);
+  font-weight: 600;
+}
+#wands-container input[id^="wand_effect_"]:placeholder-shown {
+  color: var(--border-light);
+  font-weight: normal;
+}
+
+/* Weapon damage total — red (auto-calculated) */
+.atk-total {
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+}
+
+/* Skill totals that have a deity bonus — subtly highlighted */
+.skill-row.obedience-bonus td input[id^="sk_total_"] {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+/* Wand DC total */
+input[id^="wand_dc_"][id$="_0"],
+input[id^="wand_dc_"][id$="_1"],
+input[id^="wand_dc_"][id$="_2"],
+input[id^="wand_dc_"][id$="_3"] {
+  color: var(--effect-color);
+  font-weight: 700;
+}
+
+/* Feat calc values in descriptions */
+.feat-desc-input[value*="d6"],
+.feat-desc-input[value*="d8"],
+.feat-desc-input[value*="d10"],
+.feat-desc-input[value*="d12"] {
+  /* Can't do this in CSS alone — needs JS — but placeholder for future */
+}
+
+/* Class ability descriptions with calc values */
+.ca-desc strong {
+  color: var(--effect-color);
+  font-style: normal;
+}
+
+/* Sacred weapon note colors already defined */
+
+@media print {
+  /* Keep effect colors in print */
+  .calc-effect, .spell-sug-calc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ══════════════════════════════════════════════════
+   MAGIC ITEM QUICK-FILL UI
+   ══════════════════════════════════════════════════ */
+.mi-search-row {
+  display: grid;
+  grid-template-columns: 2fr 70px 70px 1fr;
+  gap: 6px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(139,111,62,.08);
+  align-items: baseline;
+  font-size: 9px;
+}
+.mi-search-row:hover { background: rgba(42,74,107,.06); }
+.mi-search-row.mi-selected { background: rgba(42,74,107,.12); }
+
+.mi-item-name {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.mi-item-slot {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  text-align: center;
+}
+.mi-item-cost {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--accent2);
+  text-align: right;
+}
+.mi-item-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   SETUP BAR TOGGLE
+   ══════════════════════════════════════════════════ */
+.setup-toggle-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 12px;
+  background: rgba(139,26,26,.06);
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+}
+.setup-toggle-bar:hover { background: rgba(139,26,26,.1); }
+.setup-toggle-arrow {
+  font-size: 9px;
+  color: var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL PREPARED CHECKBOXES
+   ══════════════════════════════════════════════════ */
+.spell-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.spell-name-wrap input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+.spell-prep-cb {
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0;
+  accent-color: var(--effect-color);
+  cursor: pointer;
+}
+/* Prepared spell — visually distinct */
+.spell-prepared {
+  color: var(--effect-color) !important;
+  font-weight: 600 !important;
+}
+
+@media print {
+  .setup-toggle-bar { display: none; }
+  #setup-panels-content { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   CHARACTER TRAITS SECTION (Page 3)
+   ══════════════════════════════════════════════════ */
+.traits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.trait-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trait-search-wrap {
+  position: relative;
+}
+
+.trait-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  font-size: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 2px 3px;
+  font-weight: 600;
+}
+.trait-name-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent2);
+}
+
+.trait-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  line-height: 1.35;
+  min-height: 16px;
+  padding: 1px 3px;
+}
+
+.trait-type-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-right: 4px;
+}
+
+.trait-calc-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--effect-color);
+  font-weight: 700;
+  background: rgba(74,110,26,.08);
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.trait-benefit-text {
+  color: var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   ITEM BONUS PANEL
+   ══════════════════════════════════════════════════ */
+.item-bonus-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 0;
+  border-top: 1px dashed var(--border-light);
+  margin-top: 4px;
+}
+
+.item-bonus-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(42,74,107,.07);
+  border: 1px solid var(--accent2);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--accent2);
+}
+
+.item-bonus-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.item-bonus-values {
+  color: var(--accent2);
+}
+
+/* ══════════════════════════════════════════════════
+   ITEM BONUS BADGE on ability mod
+   ══════════════════════════════════════════════════ */
+.item-score-badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent2);
+  border-radius: 3px;
+  padding: 0 3px;
+  cursor: help;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════
+   WEAPON BREAKDOWN INLINE HINT
+   ══════════════════════════════════════════════════ */
+.wpn-breakdown {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-left: 6px;
+  white-space: nowrap;
+  align-self: flex-end;
+  padding-bottom: 2px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   WAND CHARGES — simplified display
+   ══════════════════════════════════════════════════ */
+.wand-remaining-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent2);
+  margin: 0 4px;
+}
+.wand-remaining-badge.wand-low  { color: #b8860b; }
+.wand-remaining-badge.wand-empty { color: var(--accent); }
+
+.wand-use-btn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  color: var(--accent);
+  padding: 1px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.wand-use-btn:hover { background: rgba(139,26,26,.08); }
+
+/* ══════════════════════════════════════════════════
+   LOAD STATUS & ENHANCE BUTTON
+   ══════════════════════════════════════════════════ */
+.load-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.load-light  { color: var(--accent2); background: rgba(42,74,107,.08); }
+.load-medium { color: #8b6a00; background: rgba(139,106,0,.08); }
+.load-heavy  { color: var(--accent); background: rgba(139,26,26,.08); }
+.load-over   { color: #fff; background: var(--accent); }
+
+.load-thresholds {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.load-thresholds input.short-text {
+  width: 36px !important;
+  font-size: 8px;
+  padding: 0 2px;
+}
+
+.enhance-btn {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  background: var(--section-bg);
+  border: 1px solid var(--accent2);
+  color: var(--accent2);
+  padding: 1px 4px;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.enhance-btn:hover { background: rgba(42,74,107,.1); }
+
+/* ══════════════════════════════════════════════════
+   XP SECTION — bottom of page 1
+   ══════════════════════════════════════════════════ */
+.xp-section {
+  margin-top: 4px;
+}
+.xp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.xp-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--border);
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.xp-track-note {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--accent2);
+}
+.xp-input {
+  width: 80px !important;
+}
+.xp-bar-wrap {
+  flex: 1;
+  min-width: 100px;
+  height: 8px;
+  background: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 4px;
+  transition: width .3s ease;
+  min-width: 2px;
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL TRACKER — PAGE 4
+   ══════════════════════════════════════════════════ */
+.spell-tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+}
+.spell-tracker-class { font-weight: 700; color: var(--ink); }
+
+.spell-level-section {
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+.spell-level-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 2px;
+}
+.spell-level-badge {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 60px;
+}
+.spell-dc-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent2);
+  background: rgba(42,74,107,.08);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.spell-slots-dots {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+.spell-slot-dot {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+}
+.spell-slot-dot.used {
+  background: var(--accent);
+}
+
+.spell-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 0;
+  border-bottom: 1px dotted rgba(139,111,62,.15);
+}
+.spell-name-input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.spell-name-input.spell-prepared {
+  color: var(--effect-color);
+  font-weight: 700;
+}
+.spell-prep-cb {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  accent-color: var(--effect-color);
+  cursor: pointer;
+}
+.spell-row-note {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  min-width: 60px;
+}
+.spell-rows { padding: 2px 0; }
+
+/* ══════════════════════════════════════════════════
+   WARPRIEST BLESSINGS
+   ══════════════════════════════════════════════════ */
+.blessings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+.blessing-slot {
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  padding: 6px;
+  background: var(--cream);
+}
+.blessing-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--accent);
+  padding: 2px 0;
+}
+.blessing-name-input:focus { outline: none; border-bottom-color: var(--accent2); }
+.blessing-details { margin-top: 4px; }
+.blessing-power {
+  margin-top: 3px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+.blessing-power-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  min-width: 36px;
+  padding-top: 1px;
+}
+.blessing-major .blessing-power-label { color: var(--accent2); }
+.blessing-major-locked .blessing-power-label { color: var(--border); }
+.locked { color: var(--border); font-style: italic; }
+.blessing-power-text { color: var(--ink-light); }
+
+/* ══════════════════════════════════════════════════
+   SPONTANEOUS CASTING NOTE
+   ══════════════════════════════════════════════════ */
+.spontaneous-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--effect-color);
+  padding: 4px 0 2px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.spont-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--effect-color);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ══════════════════════════════════════════════════
+   ABILITY / RACIAL TRAIT CARDS
+   ══════════════════════════════════════════════════ */
+.ability-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+.ability-card {
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--accent2);
+  border-radius: 2px;
+  padding: 3px 7px;
+}
+.deity-card { border-left-color: var(--accent); }
+.ability-card-name {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 1px;
+}
+.deity-card .ability-card-name { color: var(--accent); }
+.ability-card-text {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink-light);
+  line-height: 1.4;
+}
+.ability-card-req {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--accent);
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* Racial traits — inline compact style (fits more without wrapping) */
+.class-ability-row .ca-name {
+  font-weight: 700;
+}
+.class-ability-row .ca-desc {
+  color: var(--ink-light);
+  font-size: 8.5px;
+}
+
+/* ══════════════════════════════════════════════════
+   XP LEVEL SUMMARY (in spell overview column)
+   ══════════════════════════════════════════════════ */
+.xp-level-summary { margin-top: 8px; border-top: none; }
+.xp-summary-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 4px 8px;
+  background: rgba(42,74,107,.06);
+  border: 1px solid var(--accent2);
+  border-left: 3px solid var(--accent2);
+  border-radius: 2px;
+}
+.xp-sum-label { color: var(--accent); }
+.xp-sum-sep { color: var(--border); font-weight: 400; }
+.xp-sum-xp { margin-left: auto; color: var(--accent2); font-size: 10px; }
+.xp-sum-track { font-style: italic; font-size: 8px; color: var(--border); font-family: var(--font-mono); font-weight: 400; }
+
+/* ══════════════════════════════════════════════════
+   SPELL PAGE IMPROVEMENTS
+   ══════════════════════════════════════════════════ */
+.spell-cb-legend {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.spell-cb-demo {
+  display: inline-block;
+  width: 11px; height: 11px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+.spell-cb-demo.prep { border: 2px solid var(--effect-color); }
+.spell-cb-demo.cast { border: 2px solid var(--accent); }
+
+.spell-prep-cb { accent-color: var(--effect-color); }
+.spell-cast-cb { accent-color: var(--accent); }
+
+.spell-row-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+.spell-row-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px; height: 18px;
+  border: 1px solid var(--border-light);
+  background: var(--cream);
+  color: var(--accent2);
+  cursor: pointer;
+  border-radius: 2px;
+  line-height: 1;
+}
+.spell-row-btn:hover { background: rgba(42,74,107,.1); }
+
+.spell-row-desc {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--border);
+  margin-left: 6px;
+  line-height: 1.3;
+  font-style: italic;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+.spell-desc-school {
+  font-weight: 600;
+  color: var(--accent2);
+  font-style: normal;
+}
+
+.spell-name-input.spell-prepared {
+  color: var(--effect-color);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL PAGE — FIXES v3.11
+   ══════════════════════════════════════════════════ */
+
+/* Column headers */
+.spell-col-headers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 6px;
+}
+.spell-col-prep { min-width: 20px; }
+.spell-col-name { min-width: 160px; }
+.spell-col-desc { flex: 1; }
+
+/* Slot dots label */
+.slot-dots-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Spontaneous casting on page 4 */
+.p4-spont-block { margin-bottom: 12px; }
+.spont-cast-block {
+  background: rgba(107,114,42,.06);
+  border: 1px solid rgba(107,114,42,.3);
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+.spont-cast-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--effect-color);
+  margin-bottom: 2px;
+}
+.spont-cast-note {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  margin-bottom: 4px;
+  font-style: italic;
+}
+.spont-cast-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+}
+.spont-cast-table td { padding: 1px 4px; }
+.sc-lvl {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent2);
+  width: 20px;
+}
+.sc-spell { color: var(--ink-light); }
+.spont-cast-table tr:nth-child(even) { background: rgba(0,0,0,.03); }
+
+/* Spell tracker header — no gap between class and spellcasting */
+.spell-tracker-header {
+  display: flex;
+  align-items: center;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--border);
+}
+.spell-tracker-class { font-weight: 700; color: var(--ink); }
+.spell-tracker-ability { color: var(--border); }
+
+/* Spell +/- consistent with weapon slots */
+.spell-row-controls { margin-left: auto; display: flex; align-items: center; gap: 3px; }
+
+/* Racial traits in class-ability style */
+.racial-traits-section {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 6px;
+}
+.racial-traits-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--border);
+  margin-bottom: 4px;
+}
+
+/* Deity obedience card — match ability card style */
+.deity-card {
+  border-left: 3px solid var(--accent) !important;
+}
+
+/* Force load threshold inputs to stay small */
+.load-thresholds input[type="text"] {
+  width: 32px !important;
+  max-width: 32px !important;
+  min-width: 32px !important;
+  font-size: 8px !important;
+  padding: 0 2px !important;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   XP SECTION BOX — own section at bottom of page 3
+   ══════════════════════════════════════════════════ */
+.xp-own-section {
+  margin-top: 8px;
+}
+.xp-fields-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.xp-field-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.xp-num {
+  width: 90px !important;
+  font-size: 11px;
+}
+.xp-arrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent2);
+  font-weight: 700;
+  padding-top: 12px;
+}
+.xp-bar-wrap {
+  flex: 1;
+  height: 10px;
+  background: var(--border-light);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 12px;
+  min-width: 60px;
+}
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 5px;
+  transition: width .3s ease;
+  min-width: 0;
+}
+.xp-pct {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent2);
+  font-weight: 700;
+  padding-top: 12px;
+  min-width: 28px;
+}
+.xp-level-inline {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL TABLE — column headers + detail rows
+   ══════════════════════════════════════════════════ */
+.spell-col-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  padding: 2px 0 3px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 2px;
+}
+.sch-prep { width: 20px; flex-shrink: 0; }
+.sch-name { width: 200px; flex-shrink: 0; }
+.sch-desc { flex: 1; }
+
+/* Single spell row */
+.spell-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px dotted rgba(139,111,62,.12);
+  flex-wrap: wrap;
+}
+.spell-row:last-child { border-bottom: none; }
+
+.spell-prep-cb {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--effect-color);
+  cursor: pointer;
+}
+
+.spell-name-input {
+  width: 200px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 2px;
+  color: var(--ink);
+}
+.spell-name-input:focus { outline: none; border-bottom-color: var(--accent2); }
+.spell-name-input.spell-prepared {
+  font-weight: 700;
+  color: var(--effect-color);
+}
+
+/* Spell detail block — shows below name when spell is selected */
+.spell-row-details {
+  display: none;
+  width: 100%;
+  padding: 3px 0 2px 20px;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  line-height: 1.5;
+  border-left: 2px solid var(--accent2);
+  margin-left: 20px;
+  margin-top: 2px;
+}
+.spell-row-details.open { display: block; }
+
+.sd-school {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-right: 6px;
+}
+.sd-item {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.sd-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+/* ══════════════════════════════════════════════════
+   SPELL PAGE — clean rebuild v3.11.7
+   ══════════════════════════════════════════════════ */
+.spellblock {
+  margin-bottom: 14px;
+  break-inside: avoid;
+}
+.spellblock-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--section-bg);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--accent);
+  padding: 4px 8px;
+  margin-bottom: 0;
+}
+.sb-label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 60px;
+}
+.sb-dc {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: var(--accent2);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+.sb-dots {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.spell-dot {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.spell-dot.used {
+  background: var(--accent);
+}
+.sb-dotlabel {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+}
+.sb-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 3px;
+}
+
+/* Column header row */
+.spellblock-cols {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--border);
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  background: rgba(0,0,0,.02);
+}
+.sbc-prep   { width: 20px; flex-shrink: 0; }
+.sbc-name   { width: 220px; flex-shrink: 0; }
+.sbc-detail { flex: 1; }
+
+/* Spell rows */
+.spellblock-rows {
+  border: 1px solid var(--border-light);
+  border-top: none;
+}
+.srow {
+  display: grid;
+  grid-template-columns: 20px 220px 1fr;
+  grid-template-rows: auto auto;
+  align-items: start;
+  padding: 3px 6px;
+  border-bottom: 1px dotted rgba(139,111,62,.15);
+  position: relative;
+}
+.srow:last-child { border-bottom: none; }
+.srow-prep {
+  grid-column: 1;
+  grid-row: 1;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  accent-color: var(--effect-color);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.srow-name {
+  grid-column: 2;
+  grid-row: 1;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 4px;
+  width: 100%;
+}
+.srow-name:focus { outline: none; border-bottom-color: var(--accent2); }
+.srow-name.spell-prepared { font-weight: 700; color: var(--effect-color); }
+
+/* Suggestion dropdown */
+.srow-suggest {
+  grid-column: 2;
+  grid-row: 2;
+  display: none;
+  position: absolute;
+  top: 24px;
+  left: 26px;
+  width: 280px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  z-index: 300;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.spell-sug-item {
+  padding: 4px 8px;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+}
+.spell-sug-item:hover { background: rgba(42,74,107,.08); }
+.sug-school {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  float: right;
+}
+
+/* Spell detail */
+.srow-detail {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  padding: 1px 0 1px 10px;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  line-height: 1.4;
+  border-left: 2px solid var(--border-light);
+  margin-left: 8px;
+}
+.srow-detail:empty { border-left: none; }
+.sd-school {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-right: 6px;
+}
+.sd-item {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-right: 8px;
+}
+.sd-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 8.5px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+/* Spell suggestion — class filter indicators */
+.sug-warn {
+  font-size: 9px;
+  margin-right: 4px;
+  font-family: var(--font-mono);
+}
+.sug-warn:not(.sug-lvl) { color: var(--accent); }
+.sug-lvl { color: #b8860b; font-weight: 700; }
+.sug-off-list {
+  opacity: 0.6;
+}
+.sug-off-list:hover { opacity: 1; }
+
+/* ══════════════════════════════════════════════════
+   BARBARIAN RAGE BLOCK
+   ══════════════════════════════════════════════════ */
+.rage-block { margin-top: 8px; }
+
+.rage-tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rage-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rage-num {
+  width: 52px !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.rage-slash {
+  font-size: 18px;
+  color: var(--border);
+  padding-top: 10px;
+}
+.rage-bar-wrap {
+  flex: 1;
+  height: 12px;
+  background: var(--border-light);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 12px;
+  min-width: 60px;
+}
+.rage-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 6px;
+  transition: width .3s, background .3s;
+}
+.rage-left {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  padding-top: 12px;
+  min-width: 40px;
+}
+
+.rage-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px;
+}
+.rage-stat-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-right: 2px;
+}
+.rage-stat {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(139,28,28,.1);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+.rage-penalty { background: rgba(0,0,0,.08); color: var(--border); }
+
+.rage-powers-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  margin-bottom: 4px;
+  margin-top: 6px;
+}
+.rage-power-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.rage-power-input {
+  width: 160px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.rage-power-input:focus { outline: none; border-bottom-color: var(--accent); }
+.rage-power-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  flex: 1;
+  line-height: 1.3;
+}
+.rp-name {
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+.rage-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-top: 6px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   ALCHEMIST BLOCK
+   ══════════════════════════════════════════════════ */
+.alch-block { margin-top: 8px; }
+
+.alch-resource-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.alch-resource-row:last-child { border-bottom: none; }
+
+.alch-resource-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: .5px;
+  min-width: 60px;
+  padding-top: 2px;
+}
+.alch-resource-body { flex: 1; }
+
+.alch-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+.alch-stat {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(42,74,107,.08);
+  color: var(--accent2);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+.alch-tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.alch-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.alch-num {
+  width: 44px !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.alch-mutagen-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  margin-top: 4px;
+}
+.alch-mutagen-row label { cursor: pointer; }
+
+.alch-discoveries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.discovery-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.discovery-input {
+  width: 160px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.discovery-input:focus { outline: none; border-bottom-color: var(--accent2); }
+.discovery-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Mutagen active state */
+.alch-block.mutagen-active { border-color: var(--effect-color); }
+.alch-block.mutagen-active .section-title { color: var(--effect-color); }
+
+/* ── RAGE POWER AUTOCOMPLETE ──────────────────────── */
+.rage-powers-col-header {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  padding: 2px 0 3px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 3px;
+}
+.rp-col-name { width: 160px; flex-shrink: 0; }
+.rp-col-desc { flex: 1; }
+
+.rage-power-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+  position: relative;
+}
+.rp-input-wrap {
+  position: relative;
+  width: 160px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.rage-power-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.rage-power-input:focus { outline: none; border-bottom-color: var(--accent); }
+.rp-suggest {
+  display: none;
+  position: absolute;
+  top: 22px;
+  left: 0;
+  width: 260px;
+  background: #faf8f2;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  z-index: 9999;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.rage-power-desc {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  line-height: 1.4;
+  padding-left: 6px;
+  border-left: 2px solid var(--border-light);
+}
+.rage-power-desc:empty { border-left: none; }
+.rp-name {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Ensure rage power dropdowns are not clipped */
+.rage-powers-section,
+.rage-powers-list,
+.rage-block,
+.rage-block.section-box { overflow: visible !important; }
+
+/* ══ RAGE POWERS TABLE — clean rebuild ══ */
+.rp-section { margin-top: 8px; }
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 9px;
+}
+.rp-th-name, .rp-th-desc {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  padding: 2px 4px 3px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+.rp-th-name { width: 200px; }
+.rp-td-name {
+  width: 200px;
+  padding: 3px 4px;
+  border-bottom: 1px dotted var(--border-light);
+  position: relative;
+  vertical-align: top;
+}
+.rp-td-desc {
+  padding: 3px 8px;
+  border-bottom: 1px dotted var(--border-light);
+  border-left: 2px solid var(--border-light);
+  color: var(--ink-light);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.rp-td-desc strong { color: var(--accent); }
+.rp-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 2px;
+  outline: none;
+}
+.rp-input:focus { border-bottom-color: var(--accent); }
+.rp-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 240px;
+  background: #faf8f2;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.22);
+  z-index: 9999;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.rp-list li {
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  border-bottom: 1px solid var(--border-light);
+}
+.rp-list li:last-child { border-bottom: none; }
+.rp-list li:hover { background: rgba(42,74,107,.08); }
+.rp-no-match { color: var(--border); font-style: italic; cursor: default !important; }
+
+/* ══ SUMMON CREATURE TABLE ══ */
+.sum-block {
+  margin-top: 6px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 4px;
+}
+.sum-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--accent2);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 3px;
+}
+.sum-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 8px;
+  color: var(--ink);
+}
+.sum-table thead tr {
+  background: rgba(42,74,107,.06);
+}
+.sum-table th {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--border);
+  padding: 2px 4px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+.sum-table td {
+  padding: 2px 4px;
+  border-bottom: 1px dotted rgba(139,111,62,.12);
+  vertical-align: top;
+}
+.sum-row:hover { background: rgba(42,74,107,.04); }
+.sum-name { font-weight: 700; color: var(--ink); min-width: 120px; }
+.sum-align { color: var(--border); font-size: 7.5px; white-space: nowrap; }
+.sum-size  { color: var(--border); font-size: 7.5px; }
+.sum-ac, .sum-hp { font-family: var(--font-mono); font-weight: 700; color: var(--accent2); }
+.sum-atk   { font-size: 8px; color: var(--ink-light); max-width: 200px; }
+.sum-special { font-size: 7.5px; color: var(--effect-color); font-style: italic; }
