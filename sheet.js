@@ -3798,12 +3798,74 @@ function pickSpell(sl, i, name) {
 function showSpellDetail(el, spell) {
   if (!el) return;
   if (!spell) { el.innerHTML = ''; return; }
-  el.innerHTML =
+
+  let html =
     `<span class="sd-school">${spell.school || ''}</span>` +
     (spell.castingTime ? `<span class="sd-item">${spell.castingTime}</span>` : '') +
     (spell.range       ? `<span class="sd-item">${spell.range}</span>` : '') +
     (spell.duration    ? `<span class="sd-item">${spell.duration}</span>` : '') +
     (spell.description ? `<div class="sd-desc">${spell.description}</div>` : '');
+
+  // Check if this is a summon spell — show creature list
+  if (typeof SUMMON_LISTS !== 'undefined' && spell.name) {
+    const name = spell.name.toLowerCase();
+    let summonType = null;
+    let summonLevel = null;
+
+    // Detect Summon Monster I-IX
+    const smMatch = name.match(/^summon monster\s+(i{1,3}|iv|vi{0,3}|ix|v|x{0,2})$/);
+    if (smMatch) {
+      summonType = 'monster';
+      summonLevel = romanToInt(smMatch[1]);
+    }
+    // Detect Summon Nature's Ally I-IX
+    const snaMatch = name.match(/^summon nature.s ally\s+(i{1,3}|iv|vi{0,3}|ix|v|x{0,2})$/);
+    if (snaMatch) {
+      summonType = 'nature';
+      summonLevel = romanToInt(snaMatch[1]);
+    }
+
+    if (summonType && summonLevel) {
+      const creatures = (SUMMON_LISTS[summonType] || {})[summonLevel] || [];
+      if (creatures.length) {
+        html += buildSummonTable(creatures, summonLevel);
+      }
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function romanToInt(r) {
+  const map = {i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9,x:10};
+  return map[r.toLowerCase()] || 1;
+}
+
+function buildSummonTable(creatures, level) {
+  const rows = creatures.map(c => `
+    <tr class="sum-row">
+      <td class="sum-name">${c.name}</td>
+      <td class="sum-align">${c.align}</td>
+      <td class="sum-size">${c.size}</td>
+      <td class="sum-ac">${c.ac}</td>
+      <td class="sum-hp">${c.hp}</td>
+      <td class="sum-atk">${c.atk}</td>
+      <td class="sum-special">${c.special || '—'}</td>
+    </tr>`).join('');
+
+  return `
+    <div class="sum-block">
+      <div class="sum-title">Summonable creatures (level ${level})</div>
+      <table class="sum-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>AL</th><th>Size</th>
+            <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
 function addSpellRowTo(sl) {
