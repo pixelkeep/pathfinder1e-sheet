@@ -593,6 +593,9 @@ function enhanceACItem(slot) {
    ══════════════════════════════════════════════════ */
 
 function buildBlessingsBlock(container, level) {
+  // Only for Warpriest
+  const cls = (val('charClass') || '').toLowerCase();
+  if (!cls.includes('warpriest')) return;
   if (!container) container = document.getElementById('class-specific-block');
   if (!container) return;
   if (typeof WARPRIEST_BLESSINGS === 'undefined') return;
@@ -2490,7 +2493,7 @@ function afterApplySetup(classKey, level) {
   buildPage4Spells(classKey, level);
   fillResourcePools(classKey, level);
   fillSpellSlots(classKey, level);
-  buildBlessingsBlock();
+  if (classKey === 'warpriest') buildBlessingsBlock();
   renderRacialTraitCards();
   renderDeityObedienceCard();
   renderSpecialAbilityCards();
