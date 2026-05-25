@@ -2377,6 +2377,16 @@ function applySetup() {
     set('size', race.size);
     const sizeEl = document.getElementById('setup_size');
     if (sizeEl) sizeEl.value = race.size;
+    // Auto-apply size modifiers from SIZE_DATA
+    if (typeof SIZE_DATA !== 'undefined' && SIZE_DATA[race.size]) {
+      const sd = SIZE_DATA[race.size];
+      set('ac_size',   sd.acMod  || 0);
+      set('cmb_size',  sd.cmbMod || 0);
+      set('cmd_size',  sd.cmbMod || 0); // CMD uses same size mod as CMB
+    } else {
+      // Medium = 0 for all
+      set('ac_size', 0); set('cmb_size', 0); set('cmd_size', 0);
+    }
     set('speed_land',  race.speed);
     set('speed_armor', race.size === 'Small' ? race.speed : Math.max(0, race.speed - 10));
 
@@ -3148,25 +3158,24 @@ function buildRageBlock(container, classKey, level) {
       <span class="rage-stat">Cannot use Cha/Dex/Int skills or spells</span>
     </div>
 
-    <!-- Rage powers -->
+    <!-- Rage powers — same pattern as spell rows -->
     ${ragePowerCount > 0 ? `
     <div class="rage-powers-section">
-      <div class="rage-powers-title">Rage Powers (${ragePowerCount} total)</div>
-      <div class="rage-powers-col-header">
-        <span class="rp-col-name">Power</span>
-        <span class="rp-col-desc">Description</span>
+      <div class="spellblock-cols" style="margin-top:6px">
+        <span class="sbc-prep" style="width:8px"></span>
+        <span class="sbc-name">Power</span>
+        <span class="sbc-detail">Description</span>
       </div>
-      <div id="rage-powers-list" class="rage-powers-list">
+      <div class="spellblock-rows" id="rage-powers-list">
         ${Array.from({length: ragePowerCount}, (_, i) => `
-          <div class="rage-power-row">
-            <div class="rp-input-wrap">
-              <input type="text" id="rage_power_${i}" class="rage-power-input"
-                     placeholder="Power name…"
-                     oninput="onRagePowerType(${i})"
-                     autocomplete="off">
-              <div class="rp-suggest" id="rp_suggest_${i}"></div>
-            </div>
-            <div class="rage-power-desc" id="rage_power_desc_${i}"></div>
+          <div class="srow">
+            <span class="sbc-prep"></span>
+            <input type="text" class="srow-name" id="rage_power_${i}"
+                   placeholder="Power name…"
+                   oninput="onRagePowerType(${i})"
+                   autocomplete="off">
+            <div class="srow-suggest" id="rp_suggest_${i}" style="display:none"></div>
+            <div class="srow-detail" id="rage_power_desc_${i}"></div>
           </div>`).join('')}
       </div>
     </div>` : ''}
@@ -3404,56 +3413,36 @@ function updateRageBar() {
 
 function onRagePowerType(i) {
   const inputEl = document.getElementById('rage_power_' + i);
+  const sugEl   = document.getElementById('rp_suggest_' + i);
   const descEl  = document.getElementById('rage_power_desc_' + i);
-  if (!inputEl) return;
+  if (!inputEl || !sugEl) return;
 
   const query = inputEl.value.trim();
 
-  // Use a single shared floating dropdown (like spell autocomplete)
-  let sugEl = document.getElementById('rp-global-suggest');
-  if (!sugEl) {
-    sugEl = document.createElement('div');
-    sugEl.id = 'rp-global-suggest';
-    sugEl.className = 'srow-suggest';
-    sugEl.style.cssText = 'position:fixed;z-index:9999;display:none;min-width:260px;max-height:220px;overflow-y:auto;';
-    document.body.appendChild(sugEl);
-  }
-  sugEl.dataset.targetI = String(i);
-
   if (!query || query.length < 2) {
-    sugEl.style.display = 'none';
-    sugEl.innerHTML = '';
+    sugEl.innerHTML = ''; sugEl.style.display = 'none';
     if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
     return;
   }
 
   const q = query.toLowerCase();
-  const startsWith = Object.keys(RAGE_POWERS).filter(n => n.toLowerCase().startsWith(q));
-  const contains   = Object.keys(RAGE_POWERS).filter(n =>
+  // Match on NAME only (not description)
+  const sw = Object.keys(RAGE_POWERS).filter(n => n.toLowerCase().startsWith(q));
+  const ct = Object.keys(RAGE_POWERS).filter(n =>
     !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
-  const matches = [...startsWith, ...contains].slice(0, 10);
+  const matches = [...sw, ...ct].slice(0, 10);
 
   if (matches.length) {
     sugEl.innerHTML = matches.map(name =>
       `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g,"\'")}')">${name}</div>`
     ).join('');
+    sugEl.style.display = 'block';
   } else {
-    sugEl.innerHTML = '<div class="spell-sug-item" style="color:#999;font-style:italic;cursor:default">No match</div>';
+    sugEl.innerHTML = '<div class="spell-sug-item" style="color:#999;font-style:italic">No match</div>';
+    sugEl.style.display = 'block';
   }
 
-  // Position below the input field
-  const rect = inputEl.getBoundingClientRect();
-  sugEl.style.left  = rect.left + 'px';
-  sugEl.style.top   = (rect.bottom + 2) + 'px';
-  sugEl.style.width = Math.max(260, rect.width) + 'px';
-  sugEl.style.display = 'block';
-
-  // Hide when input loses focus
-  inputEl.onblur = () => setTimeout(() => {
-    const s = document.getElementById('rp-global-suggest');
-    if (s) s.style.display = 'none';
-  }, 150);
-
+  // No description while typing — only after explicit pick
   if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
 }
 
@@ -3465,20 +3454,9 @@ function pickRagePower(i, name) {
   if (sugEl)   { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
   const key  = Object.keys(RAGE_POWERS).find(k => k.toLowerCase() === name.toLowerCase());
   const desc = key ? RAGE_POWERS[key] : null;
-  if (descEl) {
-    if (desc) {
-      descEl.innerHTML = `<span class="rp-name">${key}</span>: ${desc}`;
-      descEl.dataset.picked = '1';
-    } else {
-      descEl.innerHTML = '';
-      delete descEl.dataset.picked;
-    }
-  }
-  // Clear picked flag when user edits the field again
-  if (inputEl) {
-    inputEl.addEventListener('input', () => {
-      if (descEl) delete descEl.dataset.picked;
-    }, { once: true });
+  if (descEl && desc) {
+    descEl.innerHTML = `<span class="sd-school">${key}</span><div class="sd-desc">${desc}</div>`;
+    descEl.dataset.picked = '1';
   }
 }
 
