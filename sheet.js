@@ -3668,6 +3668,28 @@ function buildPage4Spells(classKey, level) {
   }
 
   content.innerHTML = html;
+
+  // Check if spell page overflows A4 — add visual indicator
+  setTimeout(() => {
+    const pg = document.getElementById('page4-spells');
+    if (!pg) return;
+    const a4px = 277 * 3.779527; // 277mm in px at 96dpi
+    if (pg.scrollHeight > a4px * 1.05) {
+      pg.classList.add('page-overflow');
+      // Count how many extra pages needed
+      const pages = Math.ceil(pg.scrollHeight / a4px);
+      const note = pg.querySelector('.page-overflow-note');
+      if (!note) {
+        const div = document.createElement('div');
+        div.className = 'page-overflow-note no-print';
+        div.style.cssText = 'text-align:center;font-family:var(--font-mono);font-size:8px;color:var(--border);padding:6px;border-top:2px dashed rgba(139,111,62,.3);margin-top:8px;font-style:italic';
+        div.textContent = `▼ Spells spread over ~${pages} printed pages — use browser Print to preview`;
+        pg.appendChild(div);
+      }
+    } else {
+      pg.classList.remove('page-overflow');
+    }
+  }, 300);
 }
 
 function buildSpellBlock(sl, dc, rowCount) {
