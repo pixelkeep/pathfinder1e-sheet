@@ -3152,12 +3152,20 @@ function buildRageBlock(container, classKey, level) {
     ${ragePowerCount > 0 ? `
     <div class="rage-powers-section">
       <div class="rage-powers-title">Rage Powers (${ragePowerCount} total)</div>
+      <div class="rage-powers-col-header">
+        <span class="rp-col-name">Power</span>
+        <span class="rp-col-desc">Description</span>
+      </div>
       <div id="rage-powers-list" class="rage-powers-list">
         ${Array.from({length: ragePowerCount}, (_, i) => `
           <div class="rage-power-row">
-            <input type="text" id="rage_power_${i}" class="rage-power-input"
-                   placeholder="Rage power ${i+1}…"
-                   oninput="onRagePowerType(${i})">
+            <div class="rp-input-wrap">
+              <input type="text" id="rage_power_${i}" class="rage-power-input"
+                     placeholder="Power name…"
+                     oninput="onRagePowerType(${i})"
+                     autocomplete="off">
+              <div class="rp-suggest" id="rp_suggest_${i}"></div>
+            </div>
             <div class="rage-power-desc" id="rage_power_desc_${i}"></div>
           </div>`).join('')}
       </div>
@@ -3379,6 +3387,157 @@ function onDiscoveryType(i, classKey) {
     desc.innerHTML = '';
   }
 }
+
+function updateRageBar() {
+  const used  = parseInt(document.getElementById('rage_used')?.value) || 0;
+  const total = parseInt(document.getElementById('rage_total')?.value) || 1;
+  const bar   = document.getElementById('rage-bar');
+  const left  = document.getElementById('rage-rounds-left');
+  if (!bar) return;
+  const remaining = Math.max(0, total - used);
+  const pct = Math.round((remaining / total) * 100);
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 50 ? 'var(--accent)' :
+                         pct > 25 ? '#c8760a' : '#8b0000';
+  if (left) left.textContent = remaining + ' left';
+}
+
+function onRagePowerType(i) {
+  const inputEl  = document.getElementById('rage_power_' + i);
+  const sugEl    = document.getElementById('rp_suggest_' + i);
+  const descEl   = document.getElementById('rage_power_desc_' + i);
+  if (!inputEl) return;
+
+  const query = inputEl.value.trim();
+
+  if (!query || query.length < 2) {
+    if (sugEl) { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
+    if (descEl) descEl.innerHTML = '';
+    return;
+  }
+
+  const q = query.toLowerCase();
+
+  // Find matches
+  const matches = Object.entries(RAGE_POWERS).filter(([name]) =>
+    name.toLowerCase().startsWith(q) || name.toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  // Show suggestions
+  if (sugEl) {
+    if (matches.length && query.length >= 2) {
+      sugEl.innerHTML = matches.map(([name, desc]) =>
+        `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g,"\'")}')">${name}</div>`
+      ).join('');
+      sugEl.style.display = 'block';
+    } else {
+      sugEl.innerHTML = '';
+      sugEl.style.display = 'none';
+    }
+  }
+
+  // Exact match — show description
+  const exact = Object.entries(RAGE_POWERS).find(([name]) =>
+    name.toLowerCase() === q
+  );
+  if (exact && descEl) {
+    descEl.innerHTML = `<span class="rp-name">${exact[0]}</span>: ${exact[1]}`;
+  } else if (descEl && !exact) {
+    // Partial — show first match desc as preview
+    if (matches.length === 1) {
+      descEl.innerHTML = `<span class="rp-name">${matches[0][0]}</span>: ${matches[0][1]}`;
+    } else {
+      descEl.innerHTML = '';
+    }
+  }
+}
+
+function pickRagePower(i, name) {
+  const inputEl = document.getElementById('rage_power_' + i);
+  const sugEl   = document.getElementById('rp_suggest_' + i);
+  const descEl  = document.getElementById('rage_power_desc_' + i);
+  if (inputEl) inputEl.value = name;
+  if (sugEl)   { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
+  const desc = RAGE_POWERS[name] || RAGE_POWERS[Object.keys(RAGE_POWERS).find(k => k.toLowerCase() === name.toLowerCase())];
+  if (descEl && desc) {
+    descEl.innerHTML = `<span class="rp-name">${name}</span>: ${desc}`;
+  }
+}
+
+// ── RAGE POWERS DATABASE ────────────────────────────────────────────
+const RAGE_POWERS = {
+  // ── LEVEL 1+ ───────────────────────────────────────────────────
+  'Animal Fury':          'Gain a bite attack (1d4 + Str) as a bonus attack in a full attack while raging. If the bite hits a grappled foe, you can attempt a free grapple maneuver.',
+  'Auspicious Mark':      'Once per rage as a swift action, gain +1d6 on one d20 roll you just made (before result is revealed). Requires a divine mark on your body.',
+  'Beast Totem':          'Gain two claw attacks (1d6 for M) as primary natural attacks while raging.',
+  'Brawler':              'While raging, you are treated as if you had Improved Unarmed Strike. Your unarmed strikes deal 1d4 damage.',
+  'Burning Rage':         'While raging, your natural attacks and unarmed strikes deal 1d6 extra fire damage.',
+  'Celestial Totem':      'While raging, gain SR equal to 6 + your barbarian level against spells with the evil descriptor.',
+  'Clear Mind':           'Once per rage, reroll a Will saving throw. Take the better result.',
+  'Climber':              'While raging, you gain a climb speed equal to your base speed.',
+  'Come and Get Me':      'Free action: until next turn, any adjacent enemy can AoO you. Each does so at +4. Your attacks vs them deal +4 damage and ignore DR.',
+  'Controlled Rage':      'When entering rage, gain +4 to two ability scores (or +2 to all three) instead of the standard bonus. No penalties to skills or spells.',
+  'Dazing Assault':       'Prereq: Power Attack, Str 13, BAB +8. Take –5 on attacks to daze target for 1 round (Fort negates, DC 10 + ½ level + Str).',
+  'Deadly Accuracy':      'Prereq: Surprise Accuracy. Reroll any 1 on sneak attack or precision damage dice.',
+  'Disruptive':           'While raging: +4 to the DC to cast spells defensively within your threatened area. Prereq: BAB +6.',
+  'Elemental Rage':       'Prereq: BAB +8. Once per rage as a swift action, all melee attacks deal +1d6 elemental damage (acid/cold/electricity/fire) for 1 round.',
+  'Energy Absorption':    'Prereq: Energy Resistance. Absorb elemental damage up to 3× your level/day; excess heals 1 hp per 5 points absorbed.',
+  'Energy Resistance':    'While raging, gain resist 5 to one energy type. Stacks with existing resistance.',
+  'Eater of Magic':       'Prereq: Spell Sunder, BAB +12. When succeeding on a save vs spell/SLA, gain 2 rounds of rage.',
+  'Ferocious Mount':      'While raging on a mount, the mount gains the benefits of your rage (Str/Con bonus).',
+  'Ferocious Trample':    'Prereq: Ferocious Mount. Your mount gains the trample ability (1d8 + 1.5×Str, Ref half, DC 10 + ½ level + Str).',
+  'Fierce Wolf Stance':   'While raging, you can use trip as a free action on a successful bite attack.',
+  'Good for What Ails You':'While raging you can attempt to end the following conditions with a drink of alcohol: fatigued, shaken, or sickened (Fort DC 10 + level of original effect).',
+  'Ground Breaker':       'Once per rage as a standard action, smash the ground in a 10-ft radius: difficult terrain for 1d4+1 rounds. Prereq: BAB +6.',
+  'Guarded Stance':       '+1 dodge bonus to AC per 4 barbarian levels (min +1) while raging.',
+  'Hurling':              'Prereq: Str 13. While raging, throw any object up to your light load as an improvised thrown weapon (range increment 10 ft, 1d8 + Str for M objects).',
+  'Internal Fortitude':   'While raging, immune to the sickened and nauseated conditions.',
+  'Intimidating Glare':   'While raging, demoralize a single adjacent foe as a move action. If successful, foe is shaken for at least 1 round per 5 points by which you beat the DC.',
+  'Knockback':            'Once per round on a successful melee hit, make a free bull rush without provoking AoO. If you move the target, deal an additional 1d6 + Str damage.',
+  'Lethal Accuracy':      'Prereq: Surprise Accuracy, BAB +16. Treat critical threat rolls of 19-20 as 20s for confirmation.',
+  'Lesser Elemental Rage':'Prereq: BAB +4. Once per rage as a swift action, next hit deals +1d6 elemental damage (acid/cold/elec/fire) of your choice.',
+  'Mighty Swing':         'Prereq: BAB +12, Powerful Blow, Devastating Blow. Once per rage, make a melee attack that automatically confirms a crit (if you hit). Still roll to hit.',
+  'Night Vision':         'Gain darkvision 60 ft while raging (or +30 ft to existing darkvision).',
+  'No Escape':            'When an adjacent enemy takes a withdraw action, you may move up to your speed as an immediate action to follow. You must end adjacent to the enemy.',
+  'Overbearing Advance':  'While raging, moving through a foe\'s square as part of an overrun does not provoke AoO.',
+  'Overbearing Onslaught':'Prereq: Overbearing Advance. While raging, overrun up to one creature per 5 levels as part of a charge.',
+  'Powerful Blow':        'Once per rage, add +½ level (min +1) bonus damage to one melee attack. Declare before rolling.',
+  'Primal Scent':         'Prereq: Scent. While raging, gain the scent ability with 60 ft range (or +30 ft). Use scent to pinpoint hidden/invisible creatures within 5 ft.',
+  'Quick Reflexes':       'While raging, you may make one additional AoO per round.',
+  'Raging Climber':       'While raging, add your barbarian level to Climb checks.',
+  'Raging Leaper':        'While raging, add your barbarian level to Acrobatics checks for jumping. Jumps are always running jumps.',
+  'Raging Swimmer':       'While raging, add your barbarian level to Swim checks.',
+  'Reckless Abandon':     'While raging, take a –1 penalty to AC per +1 bonus to attack rolls (up to –4/+4). Declare at start of rage.',
+  'Renewed Vigor':        'Once per day while raging as a standard action, heal 1d8 + Con modifier hp.',
+  'Roaring Drunk':        'Prereq: Raging Drunk. While raging after drinking, all enemies within 30 ft must make a Will save (DC 10 + ½ level + Str) or be shaken for 1 round.',
+  'Rolling Dodge':        'While raging, gain a +1 dodge bonus to AC per 6 barbarian levels against ranged attacks.',
+  'Roused Anger':         'You may enter rage even when fatigued (but you become exhausted when it ends).',
+  'Samsaran Mind Blank':  'Prereq: Samsaran, BAB +6. While raging, immune to mind-affecting effects.',
+  'Scent':                'While raging, gain the scent ability.',
+  'Shrug It Off':         'While raging, gain DR 1/— once per day when hit. Stacks up to 5 times per rage. Prereq: Stalwart.',
+  'Skin of Your Teeth':   'Once per rage as an immediate action when reduced to 0 or fewer hp, immediately end your rage and stabilize.',
+  'Smash':                'While raging, gain a +4 bonus on Strength checks to break objects. Sunder attempts deal +½ level damage.',
+  'Spell Sunder':         'Prereq: Improved Sunder, BAB +8. While raging, make a sunder attempt against a magical effect on a creature (CMB vs dispel check DC).',
+  'Spellbreaker':         'Prereq: Disruptive, BAB +10. While raging, enemies in your threatened area that fail Concentration checks lose the spell and the spell slot.',
+  'Spirit Totem':         'While raging, you are surrounded by spirits. Gain a slam attack (1d6 negative energy + Cha mod) as a secondary natural attack.',
+  'Staggering Blow':      'Prereq: BAB +6. Once per round while raging, if you hit with a melee attack, the target must make a Fort save (DC 10 + ½ level + Str) or be staggered for 1 round.',
+  'Stamina':              'While raging, you gain an additional 1 hp per 2 barbarian levels.',
+  'Strength Surge':       'Once per rage, add your barbarian level as an insight bonus to a Strength check or CMB check.',
+  'Superstition':         'While raging, gain +2 morale bonus on saves vs spells, SLAs, and supernatural abilities per 4 levels. Must attack spellcasters each round if possible.',
+  'Surprise Accuracy':    'Once per rage, gain +4 morale bonus on one attack roll.',
+  'Swift Foot':           'Gain +5 ft to base speed while raging. Can be taken multiple times.',
+  'Terrifying Howl':      'Prereq: Intimidating Glare. As a standard action, all shaken foes within 30 ft must make a Will save (DC 10 + ½ level + Str) or become frightened for 1d4+1 rounds.',
+  'Thick Hide':           'Gain a +1 natural armor bonus (stacks). While raging, +2 natural armor.',
+  'Unexpected Strike':    'Once per rage, when a foe enters a square you threaten, make an AoO against that foe (even if you have already used AoO this round).',
+  'Witch Hunter':         'While raging, +1 damage per die on attacks vs creatures with spells or SLAs currently affecting them.',
+  'World Serpent Totem':  'While raging, gain a +1 insight bonus to AC and CMD per 4 barbarian levels.',
+  // ── SKALD-SPECIFIC ────────────────────────────────────────────
+  'Inspired Blow':        '(Skald) Spend 1 round of raging song to allow one ally to reroll an attack. Take the better result.',
+  'Song of Strength':     '(Skald) Allies under your raging song gain +2 additional Str (total +4 Str).',
+  'Song of the Fallen':   '(Skald) Allies under your raging song gain fast healing 3 while below half hp.',
+  'Deathless Frenzy':     '(Skald) Allies under your raging song continue fighting for 1 round past 0 hp before dying.',
+};
+
 
 function updateRageBar() {
   const used  = parseInt(document.getElementById('rage_used')?.value) || 0;
