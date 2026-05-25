@@ -1,0 +1,940 @@
+{
+  "charName": "Dvalin Stoneheart",
+  "alignment": "LN",
+  "player": "",
+  "charClass": "Warpriest",
+  "charLevel": "7",
+  "deity": "Arqueros",
+  "homeland": "",
+  "race": "Dwarf",
+  "size": "Medium",
+  "gender": "M",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "hair": "",
+  "eyes": "",
+  "str_score": "16",
+  "dex_score": "13",
+  "con_score": "15",
+  "int_score": "10",
+  "wis_score": "16",
+  "cha_score": "5",
+  "str_temp": "",
+  "dex_temp": "",
+  "con_temp": "",
+  "int_temp": "",
+  "wis_temp": "",
+  "cha_temp": "",
+  "hp_max": "59",
+  "hp_current": "59",
+  "hp_nonlethal": "",
+  "dr": "",
+  "init_misc": "",
+  "ac_armor": "11",
+  "ac_shield": "",
+  "ac_size": "",
+  "ac_natural": "",
+  "ac_deflect": "",
+  "ac_misc": "",
+  "fort_base": "5",
+  "fort_magic": "",
+  "fort_misc": "0",
+  "fort_temp": "",
+  "ref_base": "2",
+  "ref_magic": "",
+  "ref_misc": "10",
+  "ref_temp": "",
+  "will_base": "5",
+  "will_magic": "",
+  "will_misc": "0",
+  "will_temp": "",
+  "bab": "5",
+  "spell_res": "",
+  "cmb_size": "",
+  "cmb_misc": "",
+  "cmd_size": "",
+  "speed_land": "30",
+  "speed_armor": "10",
+  "speed_fly": "",
+  "speed_maneuv": "",
+  "speed_swim": "",
+  "speed_climb": "",
+  "speed_burrow": "",
+  "languages_custom": "",
+  "skill_conditional": "",
+  "_applied_race": "dwarf",
+  "money_pp": "",
+  "money_gp": "8950",
+  "money_sp": "22",
+  "money_cp": "",
+  "xp_current": "",
+  "xp_next": "51000",
+  "special_abilities": "[Trait: Fate's Favored] +1 to all existing luck bonuses — Whenever you benefit from a luck bonus, that bonus is increased by 1.",
+  "load_light": "76",
+  "load_medium": "153",
+  "load_heavy": "230",
+  "spell_ability": "WIS",
+  "caster_level": "7",
+  "domain_school": "",
+  "trait1_name": "Tortured",
+  "trait2_name": "Fate's Favored",
+  "formulae_book": "",
+  "campaign_notes": "",
+  "skills": {
+    "acrobatics": {
+      "cs": false,
+      "ranks": "",
+      "misc": "5"
+    },
+    "appraise": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "bluff": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "climb": {
+      "cs": true,
+      "ranks": "1",
+      "misc": ""
+    },
+    "craft1": {
+      "cs": true,
+      "ranks": "",
+      "misc": ""
+    },
+    "craft2": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "diplomacy": {
+      "cs": true,
+      "ranks": "",
+      "misc": ""
+    },
+    "disable_device": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "disguise": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "escape_artist": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "fly": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "handle_animal": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "heal": {
+      "cs": true,
+      "ranks": "2",
+      "misc": ""
+    },
+    "intimidate": {
+      "cs": true,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_arcana": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_dungeoneering": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_engineering": {
+      "cs": true,
+      "ranks": "2",
+      "misc": ""
+    },
+    "k_geography": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_history": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_local": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_nature": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_nobility": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_planes": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "k_religion": {
+      "cs": true,
+      "ranks": "5",
+      "misc": ""
+    },
+    "linguistics": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "perception": {
+      "cs": false,
+      "ranks": "2",
+      "misc": ""
+    },
+    "perform1": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "perform2": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "profession1": {
+      "cs": true,
+      "ranks": "",
+      "misc": ""
+    },
+    "profession2": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "ride": {
+      "cs": true,
+      "ranks": "",
+      "misc": ""
+    },
+    "sense_motive": {
+      "cs": true,
+      "ranks": "1",
+      "misc": ""
+    },
+    "sleight_of_hand": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "spellcraft": {
+      "cs": true,
+      "ranks": "2",
+      "misc": ""
+    },
+    "stealth": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    },
+    "survival": {
+      "cs": true,
+      "ranks": "1",
+      "misc": ""
+    },
+    "swim": {
+      "cs": true,
+      "ranks": "1",
+      "misc": ""
+    },
+    "use_magic_device": {
+      "cs": false,
+      "ranks": "",
+      "misc": ""
+    }
+  },
+  "weapons": [
+    {
+      "name": "Lucerne hammer",
+      "material": "Alchemical Silver",
+      "crit": "×2",
+      "type": "B or P",
+      "range": "melee",
+      "ammo": "",
+      "enh": "0",
+      "feat": "1",
+      "miscAtk": "",
+      "dmgDice": "1d12",
+      "dmgFeat": "2",
+      "dmgMisc": "",
+      "twoHanded": true,
+      "offHand": false,
+      "ranged": false,
+      "mw": false,
+      "notes": ""
+    },
+    {
+      "name": "",
+      "material": "Normal",
+      "crit": "",
+      "type": "",
+      "range": "",
+      "ammo": "",
+      "enh": "",
+      "feat": "",
+      "miscAtk": "",
+      "dmgDice": "",
+      "dmgFeat": "",
+      "dmgMisc": "",
+      "twoHanded": false,
+      "offHand": false,
+      "ranged": false,
+      "mw": false,
+      "notes": ""
+    }
+  ],
+  "wands": [
+    {
+      "name": "Wand of Spiritual Weapon (Sword)",
+      "type": "wand",
+      "cl": "",
+      "spelllvl": "",
+      "attackType": "none",
+      "miscAtk": "7",
+      "dcAbil": "0",
+      "dcMisc": "",
+      "effect": "1D8 +1",
+      "duration": "",
+      "chargesMax": "45",
+      "chargesUsed": "",
+      "notes": "Crit: 19-20/x2 (Sword)"
+    },
+    {
+      "name": "Wand of Cure Moderate Wounds",
+      "type": "wand",
+      "cl": "",
+      "spelllvl": "",
+      "attackType": "melee_touch",
+      "miscAtk": "",
+      "dcAbil": "",
+      "dcMisc": "",
+      "effect": "2D8+3",
+      "duration": "",
+      "chargesMax": "",
+      "chargesUsed": "",
+      "notes": ""
+    }
+  ],
+  "acItems": [
+    {
+      "name": "Belt of Giant Strength +2",
+      "bonus": "",
+      "type": "Belt",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "1",
+      "props": ""
+    },
+    {
+      "name": "Full plate +1",
+      "bonus": "10",
+      "type": "Heavy armor",
+      "maxDex": "",
+      "check": "-6",
+      "sf": "35",
+      "wt": "50",
+      "props": ""
+    },
+    {
+      "name": "Boots of Striding and Springing",
+      "bonus": "",
+      "type": "Feet",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "1",
+      "props": ""
+    },
+    {
+      "name": "Headband of Inspired Wisdom +2",
+      "bonus": "",
+      "type": "Headband",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "",
+      "props": ""
+    },
+    {
+      "name": "Cloak of Resistance +2",
+      "bonus": "",
+      "type": "Shoulders",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "1",
+      "props": ""
+    },
+    {
+      "name": "Dusty Rose Prism Ioun Stone",
+      "bonus": "1",
+      "type": "insight",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "",
+      "props": ""
+    },
+    {
+      "name": "",
+      "bonus": "",
+      "type": "",
+      "maxDex": "",
+      "check": "",
+      "sf": "",
+      "wt": "",
+      "props": ""
+    }
+  ],
+  "gear": [
+    {
+      "name": "",
+      "wt": "0"
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    },
+    {
+      "name": "",
+      "wt": ""
+    }
+  ],
+  "feats_structured": [
+    {
+      "name": "Endurance",
+      "desc": "+4 on checks to avoid nonlethal damage, +4 saves vs. sleep/paralysis from environment.",
+      "type": "general",
+      "wpn": "0"
+    },
+    {
+      "name": "Weapon Focus",
+      "desc": "+1 on attack rolls with chosen weapon.",
+      "type": "combat",
+      "wpn": "0"
+    },
+    {
+      "name": "Power Attack",
+      "desc": "–1 atk/+2 dmg (–2/+4 two-handed). Scales: –1/+2 per 4 BAB above +1.",
+      "type": "combat",
+      "wpn": "0"
+    },
+    {
+      "name": "Cleave",
+      "desc": "After hitting, make one additional attack against adjacent foe (standard action only). –2 AC until next turn.",
+      "type": "combat",
+      "wpn": "0"
+    },
+    {
+      "name": "Diehard",
+      "desc": "Automatically stabilize at negative HP. Remain conscious and can act (staggered) until –CON.",
+      "type": "general",
+      "wpn": "0"
+    },
+    {
+      "name": "Weapon Specialization",
+      "desc": "+2 on damage rolls with chosen weapon.",
+      "type": "combat",
+      "wpn": "0"
+    }
+  ],
+  "magicItems": [
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    },
+    {
+      "name": "",
+      "chargesMax": "",
+      "chargesUsed": ""
+    }
+  ],
+  "blessings": {
+    "b1name": "Protection",
+    "b1minor": "",
+    "b1major": "",
+    "b2name": "War",
+    "b2minor": "",
+    "b2major": "",
+    "sacredWeaponName": "",
+    "sacredWeaponEnh": "",
+    "sacredWeaponDmg": "",
+    "sacredWeaponSpecial": "",
+    "sacredArmorName": "",
+    "sacredArmorEnh": "",
+    "sacredArmorSpecial": "",
+    "weaponFocus": "",
+    "classNotes": ""
+  },
+  "resourcePools": [
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    },
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    },
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    },
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    },
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    },
+    {
+      "label": "",
+      "max": "",
+      "filled": 0
+    }
+  ],
+  "dailyAbilities": [
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    },
+    {
+      "name": "",
+      "max": "",
+      "used": ""
+    }
+  ],
+  "spellLevels": [
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [
+        {
+          "name": "Detect Magic",
+          "prep": true
+        },
+        {
+          "name": "Guidance",
+          "prep": true
+        },
+        {
+          "name": "Light",
+          "prep": true
+        },
+        {
+          "name": "Read Magic",
+          "prep": true
+        },
+        {
+          "name": "Stabilize",
+          "prep": true
+        }
+      ],
+      "names": [
+        "Detect Magic",
+        "Guidance",
+        "Light",
+        "Read Magic",
+        "Stabilize"
+      ]
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [
+        {
+          "name": "Divine Favor",
+          "prep": true
+        },
+        {
+          "name": "Obscuring Mist",
+          "prep": true
+        },
+        {
+          "name": "Bless",
+          "prep": true
+        },
+        {
+          "name": "Protection from Evil",
+          "prep": true
+        },
+        {
+          "name": "Shield of Faith",
+          "prep": true
+        },
+        {
+          "name": "Entropic Shield",
+          "prep": false
+        }
+      ],
+      "names": [
+        "Divine Favor",
+        "Obscuring Mist",
+        "Bless",
+        "Protection from Evil",
+        "Shield of Faith",
+        "Entropic Shield"
+      ]
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [
+        {
+          "name": "Calm Emotions",
+          "prep": true
+        },
+        {
+          "name": "Hold Person",
+          "prep": true
+        },
+        {
+          "name": "Resist Energy",
+          "prep": true
+        },
+        {
+          "name": "Weapon of Awe",
+          "prep": false
+        },
+        {
+          "name": "Aid",
+          "prep": false
+        },
+        {
+          "name": "Silence",
+          "prep": false
+        }
+      ],
+      "names": [
+        "Calm Emotions",
+        "Hold Person",
+        "Resist Energy",
+        "Weapon of Awe",
+        "Aid",
+        "Silence"
+      ]
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [
+        {
+          "name": "Channel Vigor",
+          "prep": true
+        },
+        {
+          "name": "Dispel Magic",
+          "prep": true
+        },
+        {
+          "name": "Stone Shape",
+          "prep": false
+        }
+      ],
+      "names": [
+        "Channel Vigor",
+        "Dispel Magic",
+        "Stone Shape"
+      ]
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    },
+    {
+      "perday": "",
+      "bonus": "",
+      "rows": [],
+      "names": []
+    }
+  ],
+  "myActions": [
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "type": "",
+      "roll": "",
+      "notes": ""
+    }
+  ],
+  "buffs": [
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    },
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    },
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    },
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    },
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    },
+    {
+      "name": "",
+      "effect": "",
+      "duration": ""
+    }
+  ],
+  "_deityBonusKey": "Arqueros",
+  "_deityBonuses": "{\"skill_ability\":[{\"type\":\"skill_ability\",\"amount\":4,\"bonusType\":\"sacred\",\"targets\":[\"str\"]}],\"skill\":[],\"save\":[],\"attack\":[],\"concentration\":[],\"ac\":[]}",
+  "_version": "3.3"
+}
