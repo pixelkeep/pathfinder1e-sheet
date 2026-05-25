@@ -3158,26 +3158,27 @@ function buildRageBlock(container, classKey, level) {
       <span class="rage-stat">Cannot use Cha/Dex/Int skills or spells</span>
     </div>
 
-    <!-- Rage powers — same pattern as spell rows -->
+    <!-- Rage powers — simple table -->
     ${ragePowerCount > 0 ? `
-    <div class="rage-powers-section">
-      <div class="spellblock-cols" style="margin-top:6px">
-        <span class="sbc-prep" style="width:8px"></span>
-        <span class="sbc-name">Power</span>
-        <span class="sbc-detail">Description</span>
-      </div>
-      <div class="spellblock-rows" id="rage-powers-list">
-        ${Array.from({length: ragePowerCount}, (_, i) => `
-          <div class="srow">
-            <span class="sbc-prep"></span>
-            <input type="text" class="srow-name" id="rage_power_${i}"
-                   placeholder="Power name…"
-                   oninput="onRagePowerType(${i})"
-                   autocomplete="off">
-            <div class="srow-suggest" id="rp_suggest_${i}" style="display:none"></div>
-            <div class="srow-detail" id="rage_power_desc_${i}"></div>
-          </div>`).join('')}
-      </div>
+    <div class="rp-section">
+      <table class="rp-table">
+        <thead>
+          <tr><th class="rp-th-name">Power</th><th class="rp-th-desc">Description</th></tr>
+        </thead>
+        <tbody id="rp-tbody">
+          ${Array.from({length: ragePowerCount}, (_, i) => `
+          <tr id="rp-row-${i}">
+            <td class="rp-td-name">
+              <input type="text" id="rage_power_${i}" class="rp-input"
+                     placeholder="Type to search…" autocomplete="off"
+                     oninput="rpSearch(${i}, this.value)"
+                     onblur="rpBlur(${i})">
+              <ul class="rp-list" id="rp-list-${i}"></ul>
+            </td>
+            <td class="rp-td-desc" id="rp-desc-${i}"></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
     </div>` : ''}
 
     <!-- Fatigue note -->
@@ -3411,54 +3412,54 @@ function updateRageBar() {
   if (left) left.textContent = remaining + ' left';
 }
 
-function onRagePowerType(i) {
-  const inputEl = document.getElementById('rage_power_' + i);
-  const sugEl   = document.getElementById('rp_suggest_' + i);
-  const descEl  = document.getElementById('rage_power_desc_' + i);
-  if (!inputEl || !sugEl) return;
+function rpSearch(i, query) {
+  const listEl = document.getElementById('rp-list-' + i);
+  const descEl = document.getElementById('rp-desc-' + i);
+  if (!listEl) return;
 
-  const query = inputEl.value.trim();
-
-  if (!query || query.length < 2) {
-    sugEl.innerHTML = ''; sugEl.style.display = 'none';
-    if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
+  query = (query || '').trim();
+  if (query.length < 2) {
+    listEl.innerHTML = '';
+    listEl.style.display = 'none';
     return;
   }
 
   const q = query.toLowerCase();
-  // Match on NAME only (not description)
   const sw = Object.keys(RAGE_POWERS).filter(n => n.toLowerCase().startsWith(q));
-  const ct = Object.keys(RAGE_POWERS).filter(n =>
-    !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
-  const matches = [...sw, ...ct].slice(0, 10);
+  const ct = Object.keys(RAGE_POWERS).filter(n => !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
+  const hits = [...sw, ...ct].slice(0, 10);
 
-  if (matches.length) {
-    sugEl.innerHTML = matches.map(name =>
-      `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g,"\'")}')">${name}</div>`
-    ).join('');
-    sugEl.style.display = 'block';
+  if (!hits.length) {
+    listEl.innerHTML = '<li class="rp-no-match">Geen resultaten</li>';
   } else {
-    sugEl.innerHTML = '<div class="spell-sug-item" style="color:#999;font-style:italic">No match</div>';
-    sugEl.style.display = 'block';
+    listEl.innerHTML = hits.map(name =>
+      `<li onmousedown="event.preventDefault();rpPick(${i},'${name.replace(/'/g,"\'")}')">` +
+      `${name}</li>`
+    ).join('');
   }
-
-  // No description while typing — only after explicit pick
-  if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
+  listEl.style.display = 'block';
 }
 
-function pickRagePower(i, name) {
+function rpBlur(i) {
+  setTimeout(() => {
+    const l = document.getElementById('rp-list-' + i);
+    if (l) l.style.display = 'none';
+  }, 200);
+}
+
+function rpPick(i, name) {
   const inputEl = document.getElementById('rage_power_' + i);
-  const sugEl   = document.getElementById('rp_suggest_' + i);
-  const descEl  = document.getElementById('rage_power_desc_' + i);
+  const listEl  = document.getElementById('rp-list-' + i);
+  const descEl  = document.getElementById('rp-desc-' + i);
   if (inputEl) inputEl.value = name;
-  if (sugEl)   { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
-  const key  = Object.keys(RAGE_POWERS).find(k => k.toLowerCase() === name.toLowerCase());
-  const desc = key ? RAGE_POWERS[key] : null;
-  if (descEl && desc) {
-    descEl.innerHTML = `<span class="sd-school">${key}</span><div class="sd-desc">${desc}</div>`;
-    descEl.dataset.picked = '1';
-  }
+  if (listEl)  { listEl.innerHTML = ''; listEl.style.display = 'none'; }
+  const key  = Object.keys(RAGE_POWERS).find(k => k.toLowerCase() === name.toLowerCase()) || name;
+  const desc = RAGE_POWERS[key] || '';
+  if (descEl) descEl.innerHTML = desc
+    ? `<strong>${key}:</strong> ${desc}`
+    : '';
 }
+
 
 // ── RAGE POWERS DATABASE ────────────────────────────────────────────
 const RAGE_POWERS = {
