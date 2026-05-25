@@ -739,7 +739,16 @@ function renderRacialTraitCards() {
   const container = document.getElementById('racial-traits-cards');
   if (!container) return;
 
-  const raceKey = val('_applied_race') || '';
+  // Try _applied_race first, then charRace display value lowercased
+  let raceKey = val('_applied_race') || '';
+  if (!raceKey) {
+    const raceName = (val('charRace') || '').toLowerCase().trim();
+    if (raceName && typeof RACES !== 'undefined') {
+      // Find key that matches name
+      raceKey = Object.keys(RACES).find(k => k.toLowerCase() === raceName ||
+        (RACES[k].name || '').toLowerCase() === raceName) || '';
+    }
+  }
   const raceData = (raceKey && typeof RACES !== 'undefined') ? RACES[raceKey] : null;
   const traits = raceData ? raceData.traits : [];
 
@@ -3009,6 +3018,12 @@ function restoreFeatData(feats) {
   });
   // Apply all feat bonuses after restoring
   setTimeout(updateWeaponFeatBonuses, 100);
+}
+
+function getClassAbilitiesForLevel(classKey, level) {
+  if (typeof CLASS_ABILITIES === 'undefined') return [];
+  const list = CLASS_ABILITIES[classKey] || [];
+  return list.filter(a => a.level <= level).sort((a, b) => a.level - b.level);
 }
 
 function buildClassAbilitiesSection(classKey, level) {
