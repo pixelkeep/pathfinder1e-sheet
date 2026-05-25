@@ -3317,3 +3317,235 @@ input[id^="wand_dc_"][id$="_3"] {
   opacity: 0.6;
 }
 .sug-off-list:hover { opacity: 1; }
+
+/* ══════════════════════════════════════════════════
+   BARBARIAN RAGE BLOCK
+   ══════════════════════════════════════════════════ */
+.rage-block { margin-top: 8px; }
+
+.rage-tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rage-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rage-num {
+  width: 52px !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.rage-slash {
+  font-size: 18px;
+  color: var(--border);
+  padding-top: 10px;
+}
+.rage-bar-wrap {
+  flex: 1;
+  height: 12px;
+  background: var(--border-light);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 12px;
+  min-width: 60px;
+}
+.rage-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 6px;
+  transition: width .3s, background .3s;
+}
+.rage-left {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  padding-top: 12px;
+  min-width: 40px;
+}
+
+.rage-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px;
+}
+.rage-stat-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--border);
+  margin-right: 2px;
+}
+.rage-stat {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(139,28,28,.1);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+.rage-penalty { background: rgba(0,0,0,.08); color: var(--border); }
+
+.rage-powers-title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--border);
+  margin-bottom: 4px;
+  margin-top: 6px;
+}
+.rage-power-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.rage-power-input {
+  width: 160px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.rage-power-input:focus { outline: none; border-bottom-color: var(--accent); }
+.rage-power-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  flex: 1;
+  line-height: 1.3;
+}
+.rp-name {
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+.rage-note {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  font-style: italic;
+  margin-top: 6px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   ALCHEMIST BLOCK
+   ══════════════════════════════════════════════════ */
+.alch-block { margin-top: 8px; }
+
+.alch-resource-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.alch-resource-row:last-child { border-bottom: none; }
+
+.alch-resource-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: .5px;
+  min-width: 60px;
+  padding-top: 2px;
+}
+.alch-resource-body { flex: 1; }
+
+.alch-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+.alch-stat {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  background: rgba(42,74,107,.08);
+  color: var(--accent2);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+.alch-tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.alch-field-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.alch-num {
+  width: 44px !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.alch-mutagen-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  margin-top: 4px;
+}
+.alch-mutagen-row label { cursor: pointer; }
+
+.alch-discoveries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.discovery-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.discovery-input {
+  width: 160px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 3px;
+}
+.discovery-input:focus { outline: none; border-bottom-color: var(--accent2); }
+.discovery-desc {
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  color: var(--ink-light);
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Mutagen active state */
+.alch-block.mutagen-active { border-color: var(--effect-color); }
+.alch-block.mutagen-active .section-title { color: var(--effect-color); }

@@ -1734,6 +1734,22 @@ function collectData() {
     });
   }
 
+  // ── Alchemist (bombs, mutagen, discoveries) ──────
+  data.alchemist = {
+    bombUsed:    val('bomb_used')    || '0',
+    bombTotal:   val('bomb_total')   || '0',
+    mutagenType: (document.querySelector('input[name="mutagen_type"]:checked') || {}).value || '',
+    mutagenActive: document.getElementById('mutagen_active')?.checked || false,
+    discoveries: Array.from({length: 20}, (_, i) => val('discovery_' + i) || ''),
+  };
+
+  // ── Rage (Barbarian/Bloodrager) ─────────────────
+  data.rage = {
+    used:   val('rage_used')  || '0',
+    total:  val('rage_total') || '0',
+    powers: Array.from({length: 10}, (_, i) => val('rage_power_' + i) || ''),
+  };
+
   // ── Blessings / class-specific (page 3) ────────
   data.blessings = {
     b1name:  val('blessing1_name'),  b1minor: val('blessing1_minor'), b1major: val('blessing1_major'),
@@ -1982,6 +1998,33 @@ function populateData(data) {
   }
 
   // ── Blessings ──────────────────────────────────
+  if (data.alchemist) {
+    const a = data.alchemist;
+    setTimeout(() => {
+      set('bomb_used',  a.bombUsed  || '0');
+      set('bomb_total', a.bombTotal || '0');
+      if (a.mutagenType) {
+        const radio = document.querySelector(`input[name="mutagen_type"][value="${a.mutagenType}"]`);
+        if (radio) radio.checked = true;
+      }
+      const mcheck = document.getElementById('mutagen_active');
+      if (mcheck) { mcheck.checked = a.mutagenActive || false; updateMutagenState(mcheck.checked); }
+      (a.discoveries || []).forEach((d, i) => {
+        if (d) { set('discovery_' + i, d); onDiscoveryType(i, val('charClass')?.toLowerCase()); }
+      });
+      updateBombBar();
+    }, 400);
+  }
+
+  if (data.rage) {
+    set('rage_used',  data.rage.used  || '0');
+    set('rage_total', data.rage.total || '0');
+    (data.rage.powers || []).forEach((p, i) => {
+      if (p) { set('rage_power_' + i, p); onRagePowerType(i); }
+    });
+    updateRageBar();
+  }
+
   if (data.blessings) {
     const b = data.blessings;
     set('blessing1_name',  b.b1name  || ''); set('blessing1_minor', b.b1minor || ''); set('blessing1_major', b.b1major || '');
@@ -2463,12 +2506,12 @@ function showSpontaneousCasting(classKey) {
 
 function getSpontaneousCastingFull(classKey) {
   const cureLevels = {
-    1: 'Cure Light Wounds (1d8+CL, max +5)',
-    2: 'Cure Moderate Wounds (2d8+CL, max +10)',
-    3: 'Cure Serious Wounds (3d8+CL, max +15)',
-    4: 'Cure Critical Wounds (4d8+CL, max +20)',
-    5: 'Cure Light Wounds, Mass (1d8+CL per target, max +25)',
-    6: 'Cure Moderate Wounds, Mass (2d8+CL per target, max +30)',
+    1: { name: 'Cure Light Wounds',        effect: '1d8+CL (max +5)',              clMin: 1  },
+    2: { name: 'Cure Moderate Wounds',     effect: '2d8+CL (max +10)',             clMin: 3  },
+    3: { name: 'Cure Serious Wounds',      effect: '3d8+CL (max +15)',             clMin: 5  },
+    4: { name: 'Cure Critical Wounds',     effect: '4d8+CL (max +20)',             clMin: 7  },
+    5: { name: 'Cure Light Wounds, Mass',  effect: '1d8+1/lvl per target (max+25)',clMin: 9  },
+    6: { name: 'Cure Moderate Wounds, Mass',effect:'2d8+1/lvl per target (max+30)',clMin: 11 },
   };
   const inflictLevels = {
     1: 'Inflict Light Wounds (1d8+CL, max +5)',
@@ -2479,12 +2522,21 @@ function getSpontaneousCastingFull(classKey) {
     6: 'Inflict Moderate Wounds, Mass',
   };
   if (['cleric','warpriest','inquisitor','shaman'].includes(classKey)) {
+    const playerLevel = typeof val !== 'undefined' ? (parseInt(val('charLevel')) || 0) : 0;
     const rows = Object.entries(cureLevels)
-      .map(([sl, name]) => `<tr><td class="sc-lvl">${sl}</td><td class="sc-spell">${name}</td></tr>`)
-      .join('');
+      .map(([sl, s]) => {
+        const available = playerLevel >= s.clMin;
+        const style = available ? '' : 'opacity:0.4';
+        return `<tr style="${style}">
+          <td class="sc-lvl">${sl}</td>
+          <td class="sc-spell">${s.name}</td>
+          <td class="sc-effect">${s.effect}</td>
+          <td class="sc-cl" title="Minimum caster level">CL ${s.clMin}+</td>
+        </tr>`;
+      }).join('');
     return `<div class="spont-cast-block">
       <div class="spont-cast-title">⚡ Spontaneous Casting — Cure Spells</div>
-      <div class="spont-cast-note">Sacrifice any prepared spell to cast the corresponding Cure spell. No need to prepare these.</div>
+      <div class="spont-cast-note">Sacrifice any prepared spell to cast the Cure spell of the same level or lower. No need to prepare these separately.</div>
       <table class="spont-cast-table">${rows}</table>
     </div>`;
   }
@@ -2541,6 +2593,20 @@ function getSpontaneousCasting(classKey) {
 
 function getSpellTable(classKey) {
   const tables = {
+    alchemist: {
+                1:[1,0,0,0,0,0], 2:[2,0,0,0,0,0], 3:[3,1,0,0,0,0], 4:[3,2,0,0,0,0],
+                5:[4,3,1,0,0,0], 6:[4,3,2,0,0,0], 7:[4,4,2,1,0,0], 8:[4,4,3,2,0,0],
+                9:[5,4,3,3,0,0], 10:[5,4,4,3,1,0], 11:[5,4,4,4,2,0], 12:[5,5,4,4,3,0],
+                13:[5,5,4,4,4,1], 14:[5,5,4,4,4,2], 15:[5,5,5,4,4,3], 16:[5,5,5,4,4,4],
+                17:[5,5,5,5,4,4], 18:[5,5,5,5,5,4], 19:[5,5,5,5,5,5], 20:[5,5,5,5,5,5],
+    },
+    investigator: {
+                1:[1,0,0,0,0,0], 2:[2,0,0,0,0,0], 3:[3,0,0,0,0,0], 4:[3,1,0,0,0,0],
+                5:[4,2,0,0,0,0], 6:[4,3,1,0,0,0], 7:[4,3,2,0,0,0], 8:[4,4,3,1,0,0],
+                9:[5,4,3,2,0,0], 10:[5,4,4,3,0,0], 11:[5,4,4,3,1,0], 12:[5,5,4,4,2,0],
+                13:[5,5,4,4,3,0], 14:[5,5,4,4,3,1], 15:[5,5,5,4,4,2], 16:[5,5,5,4,4,3],
+                17:[5,5,5,5,4,4], 18:[5,5,5,5,5,4], 19:[5,5,5,5,5,5], 20:[5,5,5,5,5,5],
+    },
     warpriest: {
                 1:[1,0,0,0,0,0], 2:[2,0,0,0,0,0], 3:[3,0,0,0,0,0], 4:[3,1,0,0,0,0],
                 5:[4,2,0,0,0,0], 6:[4,3,0,0,0,0], 7:[4,3,1,0,0,0], 8:[4,4,2,0,0,0],
@@ -2971,6 +3037,358 @@ function buildClassSpecificBlock(classKey, level) {
   if (classKey === 'warpriest') {
     buildBlessingsBlock(container, level);
   }
+  if (classKey === 'barbarian' || classKey === 'bloodrager') {
+    buildRageBlock(container, classKey, level);
+  }
+  if (classKey === 'skald') {
+    buildRageBlock(container, 'skald', level);
+  }
+  if (classKey === 'alchemist' || classKey === 'investigator') {
+    buildAlchemistBlock(container, classKey, level);
+  }
+}
+
+function buildRageBlock(container, classKey, level) {
+  // Rage rounds per day: 4 + CON mod + (level-1)*2 for barbarian
+  // Bloodrager: 4 + CON mod + (level-1)*2 as well
+  const conMod = typeof getEffectiveMod !== 'undefined' ? getEffectiveMod('con') : 0;
+  const isSkald = classKey === 'skald';
+  const label = isSkald ? 'Inspired Rage' : 'Rage';
+
+  // Rage rounds: barbarian gets 4+CON at level 1, +2 per level after
+  const baseRounds = isSkald
+    ? (3 + (typeof getEffectiveMod !== 'undefined' ? getEffectiveMod('cha') : 0) + (level * 2))
+    : (4 + conMod + ((level - 1) * 2));
+
+  // Rage bonuses
+  const rageStr  = isSkald ? 2 : 4;
+  const rageCon  = isSkald ? 2 : 4;
+  const rageWill = isSkald ? 2 : 2;
+  const rageAC   = isSkald ? 0 : -2;
+
+  // Rage powers — one per 2 levels for barbarian
+  const ragePowerCount = Math.floor(level / 2);
+
+  const div = document.createElement('div');
+  div.className = 'rage-block section-box';
+  div.innerHTML = `
+    <div class="section-title">${label}
+      <span class="section-note">${baseRounds} rounds/day · Swift action to enter</span>
+    </div>
+
+    <!-- Rage tracker -->
+    <div class="rage-tracker">
+      <div class="rage-tracker-row">
+        <label class="rage-field-label">Rounds used today
+          <input type="number" id="rage_used" class="num rage-num" value="0" min="0"
+                 max="${baseRounds}" oninput="updateRageBar()">
+        </label>
+        <span class="rage-slash">/</span>
+        <label class="rage-field-label">Total rounds
+          <input type="number" id="rage_total" class="num rage-num" value="${baseRounds}" readonly>
+        </label>
+        <div class="rage-bar-wrap">
+          <div id="rage-bar" class="rage-bar" style="width:100%"></div>
+        </div>
+        <span id="rage-rounds-left" class="rage-left">${baseRounds} left</span>
+      </div>
+    </div>
+
+    <!-- Rage bonuses reference -->
+    <div class="rage-stats">
+      <span class="rage-stat-label">While raging:</span>
+      <span class="rage-stat">+${rageStr} STR</span>
+      <span class="rage-stat">+${rageCon} CON</span>
+      <span class="rage-stat">+${rageWill} Will saves</span>
+      ${rageAC !== 0 ? `<span class="rage-stat rage-penalty">${rageAC} AC</span>` : ''}
+      <span class="rage-stat">Cannot use Cha/Dex/Int skills or spells</span>
+    </div>
+
+    <!-- Rage powers -->
+    ${ragePowerCount > 0 ? `
+    <div class="rage-powers-section">
+      <div class="rage-powers-title">Rage Powers (${ragePowerCount} total)</div>
+      <div id="rage-powers-list" class="rage-powers-list">
+        ${Array.from({length: ragePowerCount}, (_, i) => `
+          <div class="rage-power-row">
+            <input type="text" id="rage_power_${i}" class="rage-power-input"
+                   placeholder="Rage power ${i+1}…"
+                   oninput="onRagePowerType(${i})">
+            <div class="rage-power-desc" id="rage_power_desc_${i}"></div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- Fatigue note -->
+    <div class="rage-note">After raging: fatigued for twice as many rounds as you raged. Cannot re-enter rage while fatigued.</div>
+  `;
+  container.appendChild(div);
+  updateRageBar();
+}
+
+function buildAlchemistBlock(container, classKey, level) {
+  const intMod = typeof getEffectiveMod !== 'undefined' ? getEffectiveMod('int') : 0;
+  const isInvestigator = classKey === 'investigator';
+
+  // Bombs per day: level + INT mod (alchemist). Investigator: level/2 + INT mod
+  const bombsPerDay = isInvestigator
+    ? Math.floor(level / 2) + intMod
+    : level + intMod;
+
+  // Bomb damage: 1d6 per 2 alchemist levels (round up)
+  const bombDice = Math.ceil(level / 2);
+  const bombDmg  = `${bombDice}d6 + ${intMod > 0 ? '+' + intMod : intMod} fire`;
+
+  // Discoveries: 1 per 2 levels (alch), 1 per 2 levels (inv = talents)
+  const discoveryCount = Math.floor(level / 2);
+  const discoveryLabel = isInvestigator ? 'Investigator Talents' : 'Discoveries';
+
+  // Mutagen (alchemist only)
+  const mutagenBonus = level >= 16 ? 8 : level >= 12 ? 6 : level >= 8 ? 4 : 2;
+  const mutagenAC    = level >= 16 ? -4 : level >= 12 ? -3 : level >= 8 ? -2 : -2;
+  const mutagenDur   = level + ' min';
+
+  const div = document.createElement('div');
+  div.className = 'alch-block section-box';
+  div.innerHTML = `
+    <div class="section-title">${isInvestigator ? 'Investigator' : 'Alchemist'} Resources</div>
+
+    ${!isInvestigator ? `
+    <!-- Bombs -->
+    <div class="alch-resource-row">
+      <div class="alch-resource-label">BOMBS</div>
+      <div class="alch-resource-body">
+        <div class="alch-stat-row">
+          <span class="alch-stat">${bombsPerDay}/day</span>
+          <span class="alch-stat">${bombDmg}</span>
+          <span class="alch-stat">Range 20 ft (throw)</span>
+          <span class="alch-stat">Reflex DC ${10 + Math.floor(level/2) + intMod} = half</span>
+        </div>
+        <div class="alch-tracker-row">
+          <label class="alch-field-label">Used today
+            <input type="number" id="bomb_used" class="num alch-num" value="0" min="0"
+                   max="${bombsPerDay}" oninput="updateBombBar()">
+          </label>
+          <span class="rage-slash">/</span>
+          <label class="alch-field-label">Total
+            <input type="number" id="bomb_total" class="num alch-num"
+                   value="${bombsPerDay}" readonly>
+          </label>
+          <div class="rage-bar-wrap">
+            <div id="bomb-bar" class="rage-bar" style="width:100%;background:var(--accent2)"></div>
+          </div>
+          <span id="bomb-left" class="rage-left" style="color:var(--accent2)">${bombsPerDay} left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mutagen -->
+    <div class="alch-resource-row">
+      <div class="alch-resource-label">MUTAGEN</div>
+      <div class="alch-resource-body">
+        <div class="alch-stat-row">
+          <span class="alch-stat">1/day · ${mutagenDur}</span>
+          <span class="alch-stat">+${mutagenBonus} Str/Dex/Con</span>
+          <span class="alch-stat">${mutagenAC} AC · −2 mental stat</span>
+        </div>
+        <div class="alch-mutagen-row">
+          <span class="alch-field-label">Which stat:</span>
+          <label><input type="radio" name="mutagen_type" value="str"> STR (+${mutagenBonus})</label>
+          <label><input type="radio" name="mutagen_type" value="dex"> DEX (+${mutagenBonus})</label>
+          <label><input type="radio" name="mutagen_type" value="con"> CON (+${mutagenBonus})</label>
+          <input type="checkbox" id="mutagen_active" onchange="updateMutagenState(this.checked)">
+          <label for="mutagen_active" style="font-size:9px;font-weight:700">Active</label>
+        </div>
+      </div>
+    </div>` : `
+    <!-- Inspiration (Investigator) -->
+    <div class="alch-resource-row">
+      <div class="alch-resource-label">INSPIRATION</div>
+      <div class="alch-resource-body">
+        <div class="alch-stat-row">
+          <span class="alch-stat">${level + intMod} points/day</span>
+          <span class="alch-stat">+1d6 to skill/attack</span>
+          <span class="alch-stat">Free on trained INT/WIS skills</span>
+        </div>
+        <div class="alch-tracker-row">
+          <label class="alch-field-label">Used
+            <input type="number" id="bomb_used" class="num alch-num" value="0" min="0"
+                   max="${level + intMod}" oninput="updateBombBar()">
+          </label>
+          <span class="rage-slash">/</span>
+          <label class="alch-field-label">Total
+            <input type="number" id="bomb_total" class="num alch-num"
+                   value="${level + intMod}" readonly>
+          </label>
+          <div class="rage-bar-wrap">
+            <div id="bomb-bar" class="rage-bar" style="width:100%;background:var(--accent2)"></div>
+          </div>
+          <span id="bomb-left" class="rage-left" style="color:var(--accent2)">${level + intMod} left</span>
+        </div>
+      </div>
+    </div>`}
+
+    <!-- Discoveries / Talents -->
+    <div class="alch-resource-row">
+      <div class="alch-resource-label">${discoveryLabel.toUpperCase()}</div>
+      <div class="alch-resource-body">
+        <div class="alch-discoveries">
+          ${Array.from({length: discoveryCount}, (_, i) => `
+            <div class="discovery-row">
+              <input type="text" id="discovery_${i}" class="discovery-input"
+                     placeholder="${isInvestigator ? 'Talent' : 'Discovery'} ${i+1}…"
+                     oninput="onDiscoveryType(${i}, '${classKey}')">
+              <div class="discovery-desc" id="discovery_desc_${i}"></div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+  updateBombBar();
+}
+
+function updateBombBar() {
+  const used  = parseInt(document.getElementById('bomb_used')?.value)  || 0;
+  const total = parseInt(document.getElementById('bomb_total')?.value) || 1;
+  const bar   = document.getElementById('bomb-bar');
+  const left  = document.getElementById('bomb-left');
+  if (!bar) return;
+  const remaining = Math.max(0, total - used);
+  const pct = Math.round((remaining / total) * 100);
+  bar.style.width = pct + '%';
+  if (left) left.textContent = remaining + ' left';
+}
+
+function updateMutagenState(active) {
+  // Visual indicator when mutagen is active
+  const block = document.querySelector('.alch-block');
+  if (block) block.classList.toggle('mutagen-active', active);
+}
+
+function onDiscoveryType(i, classKey) {
+  const input = document.getElementById('discovery_' + i);
+  const desc  = document.getElementById('discovery_desc_' + i);
+  if (!input || !desc) return;
+  const query = input.value.trim().toLowerCase();
+  if (!query || query.length < 2) { desc.innerHTML = ''; return; }
+
+  const DISCOVERIES = {
+    // Alchemist discoveries
+    'acid bomb':         'Throw acid bomb dealing acid damage instead of fire. No splash damage.',
+    'all-purpose mutagen': 'Mutagen provides +2 to Str, Dex, and Con but penalty to all mental stats.',
+    'blinding bomb':     'Blind target for 1 round on direct hit (Ref neg). Splash: dazzled 1 round.',
+    'cognatogen':        'Int/Wis/Cha mutagen: +4 mental stat, –2 physical, +2 natural armor.',
+    'concussive bomb':   'Deafens on direct hit (Fort neg). Splash: deafened 1 round.',
+    'curse bomb':        'Bestow curse effect on target hit. Will neg.',
+    'delayed bomb':      'Plant a bomb set to detonate in up to CL rounds on command.',
+    'demolition charge': 'Prepare a bomb that deals triple damage to objects/constructs.',
+    'directed bomb':     'Splash only damages squares you choose, not all adjacent.',
+    'dispelling bomb':   'Targeted dispel magic on direct hit.',
+    'eternal potion':    'One potion/extract remains active permanently (dose per 24h).',
+    'explosive bomb':    'Splash radius 10 ft instead of 5 ft. Targets in splash take 1d6 fire.',
+    'fast bombs':        'Full attack action with bombs (one per attack).',
+    'force bomb':        'Deals force damage; knock target prone (Ref neg).',
+    'frost bomb':        'Cold damage. Slow on direct hit (Fort neg).',
+    'grand mutagen':     'Prerequisite: greater mutagen. +6/+4/+2 to physical, –2/–2 to mental.',
+    'greater mutagen':   'Prerequisite: 12th level. +4 to two physical stats, –2 to two mental.',
+    'healing touch':     'Once per day, heal as cleric of alchemist level.',
+    'infusion':          'Extracts can be used by other characters.',
+    'internal bomb':     'Swallow a bomb as a standard action. Deal blast damage to self + 1 nearby creature on start of next turn.',
+    'lingering spirit':  'Once per day, if reduced to 0 hp, remain active for 1 round.',
+    'miasmic bomb':      'Nauseates on direct hit (Fort neg). Splash: sicken 1 round.',
+    'mutagen':           'Create and drink mutagen as standard action. Already a class feature.',
+    'nauseating flesh':  'Biters must save (Fort DC 10+½level+Con) or be nauseated 1 round.',
+    'poison bomb':       'Cloud of contact poison (Fort neg). Lasts 1 round.',
+    'precise bombs':     'Choose squares to exclude from splash damage.',
+    'shock bomb':        'Electricity damage. Dazzles on direct hit.',
+    'smoke bomb':        'Creates obscuring smoke cloud for 1 round/level.',
+    'sticky bomb':       'Splash damage on direct hit persists (1d6/round, 1 round/5 CL).',
+    'stink bomb':        'Creates nauseating cloud for 1 round/level.',
+    'strafe bomb':       'Throw bombs in a line with one throw.',
+    'sunlight bomb':     'Affects light sensitivity. Blinds light-sensitive on direct hit.',
+    'tanglefoot bomb':   'Entangles target (Ref neg). Splash: 5-ft movement penalty.',
+    'tumor familiar':    'Graft familiar into body. Familiar hides inside; still grants benefits.',
+    'vestigial arm':     'Grow extra arm. Cannot hold shields but can hold items/wield weapons.',
+    // Investigator talents
+    'amazing inspiration':  'Roll two d6 for inspiration, take higher result.',
+    'combat inspiration':   'Use inspiration for attack/saves without spending a use (once/round).',
+    'deduction':            'Once per day, know exact HP of a creature you study.',
+    'empathy':              'Use Sense Motive as move action, +1d6 insight vs creatures you study.',
+    'expanded inspiration': 'Use inspiration on Diplomacy, Heal, Perception, Profession, Sense Motive for free.',
+    'greater combat inspiration': 'Use inspiration on attacks without spending extra use.',
+    'inspirational expertise': 'When using inspiration on a skill, treat skill as trained.',
+    'investigator talent':  'Generic investigator class talent.',
+    'knock-out blow':       'Once/day, if studied target fails Fort, knocked unconscious 1d6 rounds.',
+    'quick study':          'Study target as move action instead of standard.',
+    'tenacious inspiration': 'Roll inspiration die twice, take higher result.',
+    'underworld inspiration': 'Free inspiration on Bluff, Disable Device, Disguise, Sleight of Hand, Stealth.',
+  };
+
+  const q = query.toLowerCase();
+  const match = Object.entries(DISCOVERIES).find(([name]) =>
+    name.includes(q) || q.includes(name)
+  );
+  if (match) {
+    desc.innerHTML = `<span class="rp-name">${match[0]}</span>: ${match[1]}`;
+  } else {
+    desc.innerHTML = '';
+  }
+}
+
+function updateRageBar() {
+  const used  = parseInt(document.getElementById('rage_used')?.value) || 0;
+  const total = parseInt(document.getElementById('rage_total')?.value) || 1;
+  const bar   = document.getElementById('rage-bar');
+  const left  = document.getElementById('rage-rounds-left');
+  if (!bar) return;
+  const remaining = Math.max(0, total - used);
+  const pct = Math.round((remaining / total) * 100);
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 50 ? 'var(--accent)' :
+                         pct > 25 ? '#c8760a' : '#8b0000';
+  if (left) left.textContent = remaining + ' left';
+}
+
+function onRagePowerType(i) {
+  const input = document.getElementById('rage_power_' + i);
+  const desc  = document.getElementById('rage_power_desc_' + i);
+  if (!input || !desc) return;
+  const query = input.value.trim().toLowerCase();
+  if (!query || query.length < 2) { desc.innerHTML = ''; return; }
+
+  // Look up rage powers from class_features if available
+  const RAGE_POWERS = {
+    'animal fury':      'Gain a bite attack (1d4+Str) as a bonus attack in full attack while raging.',
+    'clear mind':       'Once per rage, reroll a Will saving throw. Take the better result.',
+    'come and get me':  'Free action: provoke AoO from all adjacent enemies. Until next turn, attacks against you gain +4, your attacks vs those enemies deal +4 damage.',
+    'knockback':        'Once per round on a successful hit, attempt a bull rush as a free action without provoking AoO.',
+    'lesser elemental rage': 'Elemental Rage prereq. As a swift action once/rage, deal +1d6 elemental damage on next hit.',
+    'night vision':     'Gain darkvision 60 ft while raging (30 ft if already have darkvision).',
+    'no escape':        'Take an AoO when an adjacent enemy withdraws. Move with them (up to your speed).',
+    'powerful blow':    'Once per rage, add +1d6 damage to a single melee attack. +1d6 per 4 levels above 4th.',
+    'quick reflexes':   '+1 additional attack of opportunity per round while raging.',
+    'raging climber':   '+4 climb speed while raging.',
+    'raging leaper':    '+4 to Acrobatics for jumping while raging. Jumps are always running jumps.',
+    'raging swimmer':   '+4 swim speed while raging.',
+    'renewed vigor':    'Once per day while raging: heal 1d8+Con mod hp as a standard action.',
+    'rolling dodge':    'Gain a +1 dodge bonus to AC per 6 barbarian levels while raging (min +1).',
+    'roused anger':     'Enter rage even while fatigued. Still become exhausted after.',
+    'scent':            'Gain the scent ability while raging.',
+    'superstition':     '+2 to saves vs magic per 4 levels while raging. Must attack spellcasters if possible.',
+    'surprising charge':'Once per rage, move up to your speed as an immediate action before your turn.',
+    'swift foot':       '+5 ft enhancement to speed while raging.',
+    'terrifying howl':  'Standard action: all shaken enemies within 30 ft must make Will save (DC 10+½level+Str) or become frightened for 1d4+1 rounds.',
+    'thick skin':       '+1 natural armor bonus. +1 per 6 barbarian levels.',
+    'unexpected strike':'Once per rage, make an AoO against a foe that moves into a threatened square.',
+  };
+
+  const match = Object.entries(RAGE_POWERS).find(([name]) => name.includes(query) || query.includes(name));
+  if (match) {
+    desc.innerHTML = `<span class="rp-name">${match[0]}</span>: ${match[1]}`;
+  } else {
+    desc.innerHTML = '';
+  }
 }
 
 
@@ -3009,6 +3427,7 @@ function buildPage4Spells(classKey, level) {
     'swashbuckler','slayer','cavalier','samurai','ninja','kineticist'];
   if (nonCasters.includes(classKey)) { page.style.display = 'none'; return; }
   page.style.display = '';
+  window._currentClass = classKey;
 
   const content = document.getElementById('page4-spells-content');
   if (!content) return;
@@ -3024,11 +3443,19 @@ function buildPage4Spells(classKey, level) {
   // Spontaneous casting block at top
   const spontHTML = typeof getSpontaneousCastingFull !== 'undefined'
     ? (getSpontaneousCastingFull(classKey) || '') : '';
+  // For alchemist: rename "Spells" to "Extracts" in page title
+  const pageTitle = document.getElementById('page4-title');
+  if (pageTitle) {
+    pageTitle.textContent = (classKey === 'alchemist' || classKey === 'investigator')
+      ? 'Extracts' : 'Spells – Page 4';
+  }
 
+  // Alchemist / Investigator: extracts, no orisons
+  const isAlchemist = classKey === 'alchemist' || classKey === 'investigator';
   let html = spontHTML;
 
-  // Orison block (level 0)
-  html += buildSpellBlock(0, 0, 6);
+  // Orison block (level 0) — not for alchemist
+  if (!isAlchemist) html += buildSpellBlock(0, 0, 6);
 
   // Spell level blocks 1-9
   for (let sl = 1; sl <= 9; sl++) {
