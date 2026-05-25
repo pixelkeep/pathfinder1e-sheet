@@ -3410,48 +3410,37 @@ function onRagePowerType(i) {
 
   const query = inputEl.value.trim();
 
-  // Clear if too short
   if (!query || query.length < 2) {
     sugEl.innerHTML = '';
     sugEl.style.display = 'none';
-    // Only clear desc if no exact match already selected
-    if (descEl && !descEl.dataset.selected) descEl.innerHTML = '';
+    if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
     return;
   }
 
   const q = query.toLowerCase();
 
-  // Find matches — starts-with first, then contains
-  const startsWith = Object.entries(RAGE_POWERS).filter(([name]) =>
+  // Matches on NAME only — not description text
+  const startsWith = Object.keys(RAGE_POWERS).filter(name =>
     name.toLowerCase().startsWith(q));
-  const contains   = Object.entries(RAGE_POWERS).filter(([name]) =>
+  const contains   = Object.keys(RAGE_POWERS).filter(name =>
     !name.toLowerCase().startsWith(q) && name.toLowerCase().includes(q));
-  const matches    = [...startsWith, ...contains].slice(0, 10);
+  const matches = [...startsWith, ...contains].slice(0, 10);
 
-  // Always show dropdown with results
+  // Show dropdown
   if (matches.length) {
-    sugEl.innerHTML = matches.map(([name]) =>
-      `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g, "\'")}')">${name}</div>`
+    sugEl.innerHTML = matches.map(name =>
+      `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g,"\'")}')">${name}</div>`
     ).join('');
     sugEl.style.display = 'block';
   } else {
-    sugEl.innerHTML = '<div class="spell-sug-item" style="color:var(--border);font-style:italic">No matching powers</div>';
+    sugEl.innerHTML = `<div class="spell-sug-item" style="color:var(--border);font-style:italic;cursor:default">No match found</div>`;
     sugEl.style.display = 'block';
   }
 
-  // Only show description on EXACT match (not partial)
-  if (descEl) {
-    const exact = Object.entries(RAGE_POWERS).find(([name]) =>
-      name.toLowerCase() === q
-    );
-    if (exact) {
-      descEl.innerHTML = `<span class="rp-name">${exact[0]}</span>: ${exact[1]}`;
-      descEl.dataset.selected = '1';
-    } else {
-      // Not an exact match — clear description (user is still typing)
-      descEl.innerHTML = '';
-      delete descEl.dataset.selected;
-    }
+  // Description ONLY when user has picked (dataset.picked set by pickRagePower)
+  // and the input still matches that pick exactly
+  if (descEl && !descEl.dataset.picked) {
+    descEl.innerHTML = '';
   }
 }
 
@@ -3461,17 +3450,22 @@ function pickRagePower(i, name) {
   const descEl  = document.getElementById('rage_power_desc_' + i);
   if (inputEl) inputEl.value = name;
   if (sugEl)   { sugEl.innerHTML = ''; sugEl.style.display = 'none'; }
-  // Find description (case-insensitive)
   const key  = Object.keys(RAGE_POWERS).find(k => k.toLowerCase() === name.toLowerCase());
   const desc = key ? RAGE_POWERS[key] : null;
   if (descEl) {
     if (desc) {
       descEl.innerHTML = `<span class="rp-name">${key}</span>: ${desc}`;
-      descEl.dataset.selected = '1';
+      descEl.dataset.picked = '1';
     } else {
       descEl.innerHTML = '';
-      delete descEl.dataset.selected;
+      delete descEl.dataset.picked;
     }
+  }
+  // Clear picked flag when user edits the field again
+  if (inputEl) {
+    inputEl.addEventListener('input', () => {
+      if (descEl) delete descEl.dataset.picked;
+    }, { once: true });
   }
 }
 
