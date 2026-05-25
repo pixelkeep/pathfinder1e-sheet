@@ -3404,44 +3404,57 @@ function updateRageBar() {
 
 function onRagePowerType(i) {
   const inputEl = document.getElementById('rage_power_' + i);
-  const sugEl   = document.getElementById('rp_suggest_' + i);
   const descEl  = document.getElementById('rage_power_desc_' + i);
-  if (!inputEl || !sugEl) return;
+  if (!inputEl) return;
 
   const query = inputEl.value.trim();
 
+  // Use a single shared floating dropdown (like spell autocomplete)
+  let sugEl = document.getElementById('rp-global-suggest');
+  if (!sugEl) {
+    sugEl = document.createElement('div');
+    sugEl.id = 'rp-global-suggest';
+    sugEl.className = 'srow-suggest';
+    sugEl.style.cssText = 'position:fixed;z-index:9999;display:none;min-width:260px;max-height:220px;overflow-y:auto;';
+    document.body.appendChild(sugEl);
+  }
+  sugEl.dataset.targetI = String(i);
+
   if (!query || query.length < 2) {
-    sugEl.innerHTML = '';
     sugEl.style.display = 'none';
+    sugEl.innerHTML = '';
     if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
     return;
   }
 
   const q = query.toLowerCase();
-
-  // Matches on NAME only — not description text
-  const startsWith = Object.keys(RAGE_POWERS).filter(name =>
-    name.toLowerCase().startsWith(q));
-  const contains   = Object.keys(RAGE_POWERS).filter(name =>
-    !name.toLowerCase().startsWith(q) && name.toLowerCase().includes(q));
+  const startsWith = Object.keys(RAGE_POWERS).filter(n => n.toLowerCase().startsWith(q));
+  const contains   = Object.keys(RAGE_POWERS).filter(n =>
+    !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
   const matches = [...startsWith, ...contains].slice(0, 10);
 
-  // Show dropdown
   if (matches.length) {
     sugEl.innerHTML = matches.map(name =>
       `<div class="spell-sug-item" onmousedown="event.preventDefault();pickRagePower(${i},'${name.replace(/'/g,"\'")}')">${name}</div>`
     ).join('');
-    sugEl.style.display = 'block';
   } else {
-    sugEl.innerHTML = `<div class="spell-sug-item" style="color:var(--border);font-style:italic;cursor:default">No match found</div>`;
-    sugEl.style.display = 'block';
+    sugEl.innerHTML = '<div class="spell-sug-item" style="color:#999;font-style:italic;cursor:default">No match</div>';
   }
 
-  // Description ONLY when user has picked (dataset.picked set by pickRagePower)
-  // and the input still matches that pick exactly
-  if (descEl && !descEl.dataset.picked) {
-    descEl.innerHTML = '';
-  }
+  // Position below the input field
+  const rect = inputEl.getBoundingClientRect();
+  sugEl.style.left  = rect.left + 'px';
+  sugEl.style.top   = (rect.bottom + 2) + 'px';
+  sugEl.style.width = Math.max(260, rect.width) + 'px';
+  sugEl.style.display = 'block';
+
+  // Hide when input loses focus
+  inputEl.onblur = () => setTimeout(() => {
+    const s = document.getElementById('rp-global-suggest');
+    if (s) s.style.display = 'none';
+  }, 150);
+
+  if (descEl && !descEl.dataset.picked) descEl.innerHTML = '';
 }
 
 function pickRagePower(i, name) {
