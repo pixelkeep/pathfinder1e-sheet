@@ -3578,6 +3578,7 @@ input[id^="wand_dc_"][id$="_3"] {
   position: relative;
   width: 160px;
   flex-shrink: 0;
+  overflow: visible;
 }
 .rage-power-input {
   width: 100%;
@@ -3592,14 +3593,15 @@ input[id^="wand_dc_"][id$="_3"] {
 .rp-suggest {
   display: none;
   position: absolute;
-  top: 20px;
+  top: 22px;
   left: 0;
-  width: 240px;
-  background: var(--cream);
+  width: 260px;
+  background: #faf8f2;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,.2);
-  z-index: 300;
-  max-height: 180px;
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  z-index: 9999;
+  max-height: 200px;
   overflow-y: auto;
 }
 .rage-power-desc {
@@ -3616,3 +3618,9 @@ input[id^="wand_dc_"][id$="_3"] {
   font-weight: 700;
   color: var(--accent);
 }
+
+/* Ensure rage power dropdowns are not clipped */
+.rage-powers-section,
+.rage-powers-list,
+.rage-block,
+.rage-block.section-box { overflow: visible !important; }
