@@ -3864,20 +3864,39 @@ function romanToInt(r) {
 }
 
 function buildSummonTable(creatures, level) {
-  const rows = creatures.map(c => `
-    <tr class="sum-row">
-      <td class="sum-name">${c.name}</td>
+  // Get character's deity for deity-specific filtering
+  const charDeity = (val('deity') || '').trim();
+
+  const rows = creatures.map(c => {
+    // Deity-specific entries: only show if deity matches or no deity set
+    const isDeitySpecific = !!c.deity;
+    if (isDeitySpecific && charDeity && !charDeity.toLowerCase().includes(c.deity.toLowerCase())
+        && !c.deity.toLowerCase().includes(charDeity.toLowerCase())) {
+      return ''; // hide — wrong deity
+    }
+    const deityTag = isDeitySpecific
+      ? `<span class="sum-deity-tag" title="Requires ${c.deity} worship">⚜ ${c.deity}</span>` : '';
+    const rowClass = isDeitySpecific ? 'sum-row sum-row-deity' : 'sum-row';
+    return `
+    <tr class="${rowClass}">
+      <td class="sum-name">${c.name}${deityTag}</td>
       <td class="sum-align">${c.align}</td>
       <td class="sum-size">${c.size}</td>
       <td class="sum-ac">${c.ac}</td>
       <td class="sum-hp">${c.hp}</td>
       <td class="sum-atk">${c.atk}</td>
       <td class="sum-special">${c.special || '—'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
+
+  const deityNote = charDeity
+    ? `<span class="sum-deity-note">⚜ = ${charDeity}-specific additions shown</span>`
+    : `<span class="sum-deity-note">⚜ deity-specific entries hidden — set deity in Character Setup</span>`;
 
   return `
     <div class="sum-block">
-      <div class="sum-title">Summonable creatures (level ${level})</div>
+      <div class="sum-title">Summonable creatures — level ${level} &nbsp;${deityNote}</div>
+      <div class="sum-template-note">* = gets Celestial (good caster) or Fiendish (evil caster) template</div>
       <table class="sum-table">
         <thead>
           <tr>

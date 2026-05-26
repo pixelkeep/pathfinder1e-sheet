@@ -3798,3 +3798,27 @@ input[id^="wand_dc_"][id$="_3"] {
 .sum-ac, .sum-hp { font-family: var(--font-mono); font-weight: 700; color: var(--accent2); }
 .sum-atk   { font-size: 8px; color: var(--ink-light); max-width: 200px; }
 .sum-special { font-size: 7.5px; color: var(--effect-color); font-style: italic; }
+
+/* Summon deity-specific rows */
+.sum-row-deity { background: rgba(139,111,62,.06); }
+.sum-deity-tag {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 7px;
+  color: var(--accent2);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.sum-deity-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--accent2);
+  margin-left: 8px;
+}
+.sum-template-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  font-style: italic;
+  margin-bottom: 3px;
+}
