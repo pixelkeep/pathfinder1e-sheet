@@ -3892,22 +3892,28 @@ function buildSummonTable(creatures, level) {
   // Get character's deity for deity-specific filtering
   const charDeity = (val('deity') || '').trim();
 
-  const rows = creatures.map(cr => {
+  // Sort: standard entries A-Z first, then deity-specific A-Z
+  const sorted = [...creatures].sort((a, b) => {
+    if (!!a.deity !== !!b.deity) return a.deity ? 1 : -1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const rows = sorted.map(cr => {
     const isDeitySpecific = !!cr.deity;
-    // Check if this deity entry matches character's deity
-    const deityMatch = !isDeitySpecific || !charDeity ? false :
+    const deityMatch = isDeitySpecific && charDeity && (
       charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
-      cr.deity.toLowerCase().includes(charDeity.toLowerCase());
-    // Always show standard entries; show deity entries always but grey if no match
+      cr.deity.toLowerCase().includes(charDeity.toLowerCase())
+    );
     const rowClass = isDeitySpecific
-      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity sum-row-deity-grey')
+      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
       : 'sum-row';
     const deityTag = isDeitySpecific
       ? `<span class="sum-deity-tag" title="Requires ${cr.deity} worship">⚜ ${cr.deity}</span>` : '';
     const nameEsc = cr.name.replace(/'/g,"\'");
+    const greyStyle = isDeitySpecific && !deityMatch ? 'opacity:0.5' : '';
     return `
-    <tr class="${rowClass}" onclick="selectSummon(this,'${nameEsc}')" style="cursor:pointer" title="Click to select this summon">
-      <td class="sum-sel-col" id="sum-sel-${cr.name.replace(/ /g,'_')}"></td>
+    <tr class="${rowClass}" style="${greyStyle};cursor:pointer" onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
+      <td class="sum-sel-col"></td>
       <td class="sum-name">${cr.name}${deityTag}</td>
       <td class="sum-align">${cr.align}</td>
       <td class="sum-size">${cr.size}</td>
@@ -3919,8 +3925,8 @@ function buildSummonTable(creatures, level) {
   }).join('');
 
   const deityNote = charDeity
-    ? `<span class="sum-deity-note">⚜ = deity-specific (highlighted = available to ${charDeity})</span>`
-    : `<span class="sum-deity-note">⚜ = deity-specific (set deity in Setup to highlight available ones)</span>`;
+    ? `<span class="sum-deity-note">⚜ = deity-specific (gold = available to ${charDeity})</span>`
+    : `<span class="sum-deity-note">⚜ = deity-specific (greyed out — set deity in Setup)</span>`;
 
   return `
     <div class="sum-block">
