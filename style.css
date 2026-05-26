@@ -3757,7 +3757,7 @@ input[id^="wand_dc_"][id$="_3"] {
   padding-top: 4px;
 }
 .sum-table-wrap {
-  max-height: 260px;
+  max-height: 400px;
   overflow-y: auto;
   border: 1px solid var(--border-light);
   border-radius: 2px;
@@ -3843,4 +3843,17 @@ input[id^="wand_dc_"][id$="_3"] {
   font-family: var(--font-body);
   font-size: 9px;
   color: var(--accent2);
+}
+
+/* Deity separator row */
+.sum-row-deity-sep td {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--accent2);
+  background: rgba(139,111,62,.06);
+  padding: 3px 4px;
+  border-top: 1px solid var(--border-light);
 }

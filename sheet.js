@@ -3889,6 +3889,101 @@ function romanToInt(r) {
 }
 
 function buildSummonTable(creatures, level) {
+  const charDeity = (val('deity') || '').trim();
+
+  // Sort: standard A-Z, then deity-specific A-Z
+  const standard  = creatures.filter(cr => !cr.deity).sort((a,b) => a.name.localeCompare(b.name));
+  const deitySpec = creatures.filter(cr => !!cr.deity).sort((a,b) => a.name.localeCompare(b.name));
+
+  function makeRow(cr) {
+    const isDeity = !!cr.deity;
+    const deityMatch = isDeity && charDeity && (
+      charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
+      cr.deity.toLowerCase().includes(charDeity.toLowerCase())
+    );
+    const rowClass = isDeity
+      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
+      : 'sum-row';
+    const deityTag = isDeity
+      ? `<span class="sum-deity-tag">⚜ ${cr.deity}</span>` : '';
+    const opacity  = isDeity && !deityMatch ? 'opacity:0.5' : '';
+    const nameEsc  = cr.name.replace(/'/g, "\'");
+    return `<tr class="${rowClass}" style="${opacity};cursor:pointer"
+              onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
+      <td class="sum-sel-col"></td>
+      <td class="sum-name">${cr.name}${deityTag}</td>
+      <td class="sum-align">${cr.align}</td>
+      <td class="sum-size">${cr.size}</td>
+      <td class="sum-ac">${cr.ac}</td>
+      <td class="sum-hp">${cr.hp}</td>
+      <td class="sum-atk">${cr.atk}</td>
+      <td class="sum-special">${cr.special || '—'}</td>
+    </tr>`;
+  }
+
+  const sepRow = deitySpec.length ? `
+    <tr class="sum-row-deity-sep">
+      <td colspan="8">⚜ Deity-specific additions${charDeity ? ' — ' + charDeity : ' (set deity in Character Setup)'}</td>
+    </tr>` : '';
+
+  const allRows = standard.map(makeRow).join('') + sepRow + deitySpec.map(makeRow).join('');
+
+  const deityNote = charDeity
+    ? `<span class="sum-deity-note">⚜ gold = available to ${charDeity}</span>`
+    : `<span class="sum-deity-note">⚜ = deity-specific</span>`;
+
+  return `
+    <div class="sum-block">
+      <div class="sum-title">Summonable creatures — level ${level} &nbsp;${deityNote}</div>
+      <div class="sum-template-note">* = gets Celestial (good caster) or Fiendish (evil caster) template</div>
+      <div class="sum-selected" id="sum-selected-display" style="display:none">
+        ✔ <strong id="sum-selected-name"></strong>
+        <button onclick="clearSummon()" style="margin-left:8px;font-size:8px;padding:1px 5px">✕ clear</button>
+      </div>
+      <div class="sum-table-wrap">
+        <table class="sum-table">
+          <thead><tr>
+            <th></th><th>Name</th><th>AL</th><th>Size</th>
+            <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
+          </tr></thead>
+          <tbody>${allRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+
+function selectSummon(row, name) {
+  // Deselect all rows in this table
+  const table = row.closest('table');
+  if (table) {
+    table.querySelectorAll('tr').forEach(r => r.classList.remove('sum-row-selected'));
+    table.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
+  }
+  // Select this row
+  row.classList.add('sum-row-selected');
+  const selCell = row.querySelector('.sum-sel-col');
+  if (selCell) selCell.textContent = '✔';
+  // Show selected display
+  const disp = document.getElementById('sum-selected-display');
+  const nameEl = document.getElementById('sum-selected-name');
+  if (disp) disp.style.display = 'block';
+  if (nameEl) nameEl.textContent = name;
+}
+
+function clearSummon() {
+  document.querySelectorAll('.sum-row-selected').forEach(r => r.classList.remove('sum-row-selected'));
+  document.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
+  const disp = document.getElementById('sum-selected-display');
+  if (disp) disp.style.display = 'none';
+}
+
+function romanToInt(r) {
+  const map = {i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9,x:10};
+  return map[r.toLowerCase()] || 1;
+}
+
+function buildSummonTable(creatures, level) {
   // Get character's deity for deity-specific filtering
   const charDeity = (val('deity') || '').trim();
 
@@ -3922,11 +4017,48 @@ function buildSummonTable(creatures, level) {
       <td class="sum-atk">${cr.atk}</td>
       <td class="sum-special">${cr.special || '—'}</td>
     </tr>`;
-  }).join('');
+  }, '');
+
+  // Build standard rows + separator + deity rows separately
+  const standard = sorted.filter(cr => !cr.deity);
+  const deitySpec = sorted.filter(cr => !!cr.deity);
+
+  const makeRow = cr => {
+    const isDeitySpecific = !!cr.deity;
+    const deityMatch = isDeitySpecific && charDeity && (
+      charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
+      cr.deity.toLowerCase().includes(charDeity.toLowerCase())
+    );
+    const rowClass = isDeitySpecific
+      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
+      : 'sum-row';
+    const deityTag = isDeitySpecific
+      ? `<span class="sum-deity-tag" title="Requires ${cr.deity} worship">⚜ ${cr.deity}</span>` : '';
+    const nameEsc = cr.name.replace(/'/g,"\'");
+    const opacity = isDeitySpecific && !deityMatch ? 'opacity:0.5' : '';
+    return `
+    <tr class="${rowClass}" style="${opacity};cursor:pointer" onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
+      <td class="sum-sel-col"></td>
+      <td class="sum-name">${cr.name}${deityTag}</td>
+      <td class="sum-align">${cr.align}</td>
+      <td class="sum-size">${cr.size}</td>
+      <td class="sum-ac">${cr.ac}</td>
+      <td class="sum-hp">${cr.hp}</td>
+      <td class="sum-atk">${cr.atk}</td>
+      <td class="sum-special">${cr.special || '—'}</td>
+    </tr>`;
+  };
+
+  const sepRow = deitySpec.length ? `
+    <tr class="sum-row-deity-sep">
+      <td colspan="8">⚜ Deity-specific additions${charDeity ? ' — ' + charDeity : ' (set deity in Setup)'}</td>
+    </tr>` : '';
+
+  const allRows = standard.map(makeRow).join('') + sepRow + deitySpec.map(makeRow).join('');
 
   const deityNote = charDeity
-    ? `<span class="sum-deity-note">⚜ = deity-specific (gold = available to ${charDeity})</span>`
-    : `<span class="sum-deity-note">⚜ = deity-specific (greyed out — set deity in Setup)</span>`;
+    ? `<span class="sum-deity-note">⚜ gold = available to ${charDeity}</span>`
+    : `<span class="sum-deity-note">⚜ = deity-specific</span>`;
 
   return `
     <div class="sum-block">
@@ -3944,7 +4076,7 @@ function buildSummonTable(creatures, level) {
             <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
           </tr>
         </thead>
-        <tbody>${rows}</tbody>
+        <tbody>${allRows}</tbody>
       </table>
       </div>
     </div>`;
