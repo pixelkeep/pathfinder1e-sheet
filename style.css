@@ -3756,6 +3756,12 @@ input[id^="wand_dc_"][id$="_3"] {
   border-top: 1px solid var(--border-light);
   padding-top: 4px;
 }
+.sum-table-wrap {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+}
 .sum-title {
   font-family: var(--font-mono);
   font-size: 8px;
@@ -3769,7 +3775,7 @@ input[id^="wand_dc_"][id$="_3"] {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-body);
-  font-size: 8px;
+  font-size: 7.5px;
   color: var(--ink);
 }
 .sum-table thead tr {
@@ -3787,9 +3793,9 @@ input[id^="wand_dc_"][id$="_3"] {
   border-bottom: 1px solid var(--border-light);
 }
 .sum-table td {
-  padding: 2px 4px;
+  padding: 1px 4px;
   border-bottom: 1px dotted rgba(139,111,62,.12);
-  vertical-align: top;
+  vertical-align: middle;
 }
 .sum-row:hover { background: rgba(42,74,107,.04); }
 .sum-name { font-weight: 700; color: var(--ink); min-width: 120px; }
@@ -3821,4 +3827,20 @@ input[id^="wand_dc_"][id$="_3"] {
   color: var(--border);
   font-style: italic;
   margin-bottom: 3px;
+}
+
+/* Summon selection */
+.sum-row-selected { background: rgba(42,74,107,.12) !important; }
+.sum-row-selected .sum-name { font-weight: 900; color: var(--accent2); }
+.sum-row-deity-grey { opacity: 0.4; }
+.sum-row-deity-match { background: rgba(139,111,62,.08); }
+.sum-sel-col { width: 14px; text-align: center; color: var(--accent2); font-weight: 700; font-size: 9px; }
+.sum-selected {
+  margin-bottom: 5px;
+  padding: 3px 8px;
+  background: rgba(42,74,107,.08);
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--accent2);
 }

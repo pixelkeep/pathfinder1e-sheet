@@ -3858,6 +3858,31 @@ function showSpellDetail(el, spell) {
   el.innerHTML = html;
 }
 
+function selectSummon(row, name) {
+  // Deselect all rows in this table
+  const table = row.closest('table');
+  if (table) {
+    table.querySelectorAll('tr').forEach(r => r.classList.remove('sum-row-selected'));
+    table.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
+  }
+  // Select this row
+  row.classList.add('sum-row-selected');
+  const selCell = row.querySelector('.sum-sel-col');
+  if (selCell) selCell.textContent = '✔';
+  // Show selected display
+  const disp = document.getElementById('sum-selected-display');
+  const nameEl = document.getElementById('sum-selected-name');
+  if (disp) disp.style.display = 'block';
+  if (nameEl) nameEl.textContent = name;
+}
+
+function clearSummon() {
+  document.querySelectorAll('.sum-row-selected').forEach(r => r.classList.remove('sum-row-selected'));
+  document.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
+  const disp = document.getElementById('sum-selected-display');
+  if (disp) disp.style.display = 'none';
+}
+
 function romanToInt(r) {
   const map = {i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9,x:10};
   return map[r.toLowerCase()] || 1;
@@ -3867,45 +3892,55 @@ function buildSummonTable(creatures, level) {
   // Get character's deity for deity-specific filtering
   const charDeity = (val('deity') || '').trim();
 
-  const rows = creatures.map(c => {
-    // Deity-specific entries: only show if deity matches or no deity set
-    const isDeitySpecific = !!c.deity;
-    if (isDeitySpecific && charDeity && !charDeity.toLowerCase().includes(c.deity.toLowerCase())
-        && !c.deity.toLowerCase().includes(charDeity.toLowerCase())) {
-      return ''; // hide — wrong deity
-    }
+  const rows = creatures.map(cr => {
+    const isDeitySpecific = !!cr.deity;
+    // Check if this deity entry matches character's deity
+    const deityMatch = !isDeitySpecific || !charDeity ? false :
+      charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
+      cr.deity.toLowerCase().includes(charDeity.toLowerCase());
+    // Always show standard entries; show deity entries always but grey if no match
+    const rowClass = isDeitySpecific
+      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity sum-row-deity-grey')
+      : 'sum-row';
     const deityTag = isDeitySpecific
-      ? `<span class="sum-deity-tag" title="Requires ${c.deity} worship">⚜ ${c.deity}</span>` : '';
-    const rowClass = isDeitySpecific ? 'sum-row sum-row-deity' : 'sum-row';
+      ? `<span class="sum-deity-tag" title="Requires ${cr.deity} worship">⚜ ${cr.deity}</span>` : '';
+    const nameEsc = cr.name.replace(/'/g,"\'");
     return `
-    <tr class="${rowClass}">
-      <td class="sum-name">${c.name}${deityTag}</td>
-      <td class="sum-align">${c.align}</td>
-      <td class="sum-size">${c.size}</td>
-      <td class="sum-ac">${c.ac}</td>
-      <td class="sum-hp">${c.hp}</td>
-      <td class="sum-atk">${c.atk}</td>
-      <td class="sum-special">${c.special || '—'}</td>
+    <tr class="${rowClass}" onclick="selectSummon(this,'${nameEsc}')" style="cursor:pointer" title="Click to select this summon">
+      <td class="sum-sel-col" id="sum-sel-${cr.name.replace(/ /g,'_')}"></td>
+      <td class="sum-name">${cr.name}${deityTag}</td>
+      <td class="sum-align">${cr.align}</td>
+      <td class="sum-size">${cr.size}</td>
+      <td class="sum-ac">${cr.ac}</td>
+      <td class="sum-hp">${cr.hp}</td>
+      <td class="sum-atk">${cr.atk}</td>
+      <td class="sum-special">${cr.special || '—'}</td>
     </tr>`;
   }).join('');
 
   const deityNote = charDeity
-    ? `<span class="sum-deity-note">⚜ = ${charDeity}-specific additions shown</span>`
-    : `<span class="sum-deity-note">⚜ deity-specific entries hidden — set deity in Character Setup</span>`;
+    ? `<span class="sum-deity-note">⚜ = deity-specific (highlighted = available to ${charDeity})</span>`
+    : `<span class="sum-deity-note">⚜ = deity-specific (set deity in Setup to highlight available ones)</span>`;
 
   return `
     <div class="sum-block">
       <div class="sum-title">Summonable creatures — level ${level} &nbsp;${deityNote}</div>
       <div class="sum-template-note">* = gets Celestial (good caster) or Fiendish (evil caster) template</div>
+      <div class="sum-selected" id="sum-selected-display" style="display:none">
+        ✔ <strong id="sum-selected-name"></strong>
+        <button onclick="clearSummon()" style="margin-left:8px;font-size:8px;padding:1px 5px">✕ clear</button>
+      </div>
+      <div class="sum-table-wrap">
       <table class="sum-table">
         <thead>
           <tr>
-            <th>Name</th><th>AL</th><th>Size</th>
+            <th></th><th>Name</th><th>AL</th><th>Size</th>
             <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
+      </div>
     </div>`;
 }
 
