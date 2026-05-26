@@ -101,12 +101,28 @@ body {
 /* ── PAGE ──────────────────────────────────────── */
 .page {
   width: var(--page-width);
+  min-height: 277mm; /* A4 height minus margins — visual guide */
   margin: 20px auto;
   background: var(--cream);
   padding: 8mm 9mm;
   box-shadow: 0 4px 32px rgba(0,0,0,.6);
   border: 1px solid var(--border);
   position: relative;
+  box-sizing: border-box;
+}
+
+/* Page overflow indicator — dashed line at A4 boundary */
+.page.page-overflow::after {
+  content: '▼ Overflows to next printed page';
+  display: block;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  border-top: 2px dashed rgba(139,111,62,.3);
+  margin-top: 8px;
+  padding-top: 4px;
+  font-style: italic;
 }
 
 /* subtle parchment texture lines */
@@ -551,6 +567,7 @@ textarea.small-textarea  { min-height: 36px; }
 
   .no-print, #toolbar { display: none !important; }
 
+  /* Each .page div = one A4 page */
   .page {
     width: 100%;
     margin: 0;
@@ -558,9 +575,35 @@ textarea.small-textarea  { min-height: 36px; }
     box-shadow: none;
     border: none;
     page-break-after: always;
+    break-after: page;
+    /* Limit to A4 height — overflow goes to next page */
+    max-height: none;
+    overflow: visible;
   }
   .page::before { display: none; }
-  .page:last-child { page-break-after: auto; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  /* Spell page: each level block stays together, breaks between blocks */
+  .spellblock {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Summon table inside spell detail: can break */
+  .sum-block { break-inside: auto; }
+
+  /* Spell page content: allow natural flow across pages */
+  #page4-spells-content {
+    overflow: visible !important;
+    max-height: none !important;
+    columns: 1;
+  }
+
+  /* Rage block, alchemist block: keep together */
+  .rage-block, .alch-block { break-inside: avoid; }
+
+  /* Suggestions/dropdowns: hide when printing */
+  .rp-list, .srow-suggest, .rp-suggest, #rp-global-suggest { display: none !important; }
 
   input, textarea {
     border: none !important;
@@ -573,7 +616,14 @@ textarea.small-textarea  { min-height: 36px; }
     print-color-adjust: exact;
   }
 
-  .section-box {
+  .section-box, .spellblock-header, .spellblock-cols {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Spell dots: show filled state correctly when printing */
+  .spell-dot.used {
+    background: #8b1a1a !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -3748,3 +3798,27 @@ input[id^="wand_dc_"][id$="_3"] {
 .sum-ac, .sum-hp { font-family: var(--font-mono); font-weight: 700; color: var(--accent2); }
 .sum-atk   { font-size: 8px; color: var(--ink-light); max-width: 200px; }
 .sum-special { font-size: 7.5px; color: var(--effect-color); font-style: italic; }
+
+/* Summon deity-specific rows */
+.sum-row-deity { background: rgba(139,111,62,.06); }
+.sum-deity-tag {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 7px;
+  color: var(--accent2);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.sum-deity-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--accent2);
+  margin-left: 8px;
+}
+.sum-template-note {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--border);
+  font-style: italic;
+  margin-bottom: 3px;
+}
