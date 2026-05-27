@@ -3857,3 +3857,16 @@ input[id^="wand_dc_"][id$="_3"] {
   padding: 3px 4px;
   border-top: 1px solid var(--border-light);
 }
+
+/* ══ ACTIVE SUMMONS PANEL ══ */
+.active-summons-panel {
+  margin-bottom: 8px;
+  border-color: var(--accent2);
+}
+.active-summons-panel .section-title {
+  color: var(--accent2);
+}
+.active-summons-panel .sum-table td {
+  padding: 2px 5px;
+  font-size: 8.5px;
+}

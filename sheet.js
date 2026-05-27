@@ -3667,7 +3667,23 @@ function buildPage4Spells(classKey, level) {
     if (total > 0) html += buildSpellBlock(sl, dc, total + 2);
   }
 
-  content.innerHTML = html;
+  // Prepend active summons panel (hidden until a summon is selected)
+  const summonPanel = `
+    <div id="active-summons-panel" class="active-summons-panel section-box" style="display:none">
+      <div class="section-title">Active Summons
+        <button onclick="document.getElementById('active-summons-tbody').innerHTML='';
+                         document.getElementById('active-summons-panel').style.display='none'"
+                style="float:right;font-size:8px;padding:1px 6px;cursor:pointer">Clear all</button>
+      </div>
+      <table class="sum-table" style="width:100%">
+        <thead><tr>
+          <th>Name</th><th>AL</th><th>Size</th>
+          <th>AC</th><th>HP</th><th>Attack</th><th>Special</th><th></th>
+        </tr></thead>
+        <tbody id="active-summons-tbody"></tbody>
+      </table>
+    </div>`;
+  content.innerHTML = summonPanel + html;
 
   // Check if spell page overflows A4 — add visual indicator
   setTimeout(() => {
@@ -3858,30 +3874,45 @@ function showSpellDetail(el, spell) {
   el.innerHTML = html;
 }
 
-function selectSummon(row, name) {
-  // Deselect all rows in this table
-  const table = row.closest('table');
-  if (table) {
-    table.querySelectorAll('tr').forEach(r => r.classList.remove('sum-row-selected'));
-    table.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
-  }
-  // Select this row
-  row.classList.add('sum-row-selected');
-  const selCell = row.querySelector('.sum-sel-col');
-  if (selCell) selCell.textContent = '✔';
-  // Show selected display
-  const disp = document.getElementById('sum-selected-display');
-  const nameEl = document.getElementById('sum-selected-name');
-  if (disp) disp.style.display = 'block';
-  if (nameEl) nameEl.textContent = name;
+function selectSummon(name, crJson) {
+  let cr;
+  try { cr = JSON.parse(crJson.replace(/\'/g,"'")); } catch(e) { cr = {name}; }
+
+  // Get or create the active summons container on page 4
+  let panel = document.getElementById('active-summons-panel');
+  if (!panel) return;
+
+  // Add row to active summons table
+  const tbody = document.getElementById('active-summons-tbody');
+  if (!tbody) return;
+
+  // Check if already added
+  if (tbody.querySelector(`[data-name="${name}"]`)) return;
+
+  const tr = document.createElement('tr');
+  tr.dataset.name = name;
+  tr.innerHTML = `
+    <td class="sum-name">${cr.name}</td>
+    <td class="sum-align">${cr.align||''}</td>
+    <td class="sum-size">${cr.size||''}</td>
+    <td class="sum-ac">${cr.ac||''}</td>
+    <td class="sum-hp">${cr.hp||''}</td>
+    <td class="sum-atk">${cr.atk||''}</td>
+    <td class="sum-special">${cr.special||''}</td>
+    <td><button onclick="this.closest('tr').remove();updateActiveSummons()" 
+         style="font-size:8px;padding:1px 4px;cursor:pointer">✕</button></td>`;
+  tbody.appendChild(tr);
+  panel.style.display = 'block';
+  updateActiveSummons();
 }
 
-function clearSummon() {
-  document.querySelectorAll('.sum-row-selected').forEach(r => r.classList.remove('sum-row-selected'));
-  document.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
-  const disp = document.getElementById('sum-selected-display');
-  if (disp) disp.style.display = 'none';
+function updateActiveSummons() {
+  const tbody = document.getElementById('active-summons-tbody');
+  const panel = document.getElementById('active-summons-panel');
+  if (!tbody || !panel) return;
+  if (tbody.children.length === 0) panel.style.display = 'none';
 }
+
 
 function romanToInt(r) {
   const map = {i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9,x:10};
@@ -3891,26 +3922,26 @@ function romanToInt(r) {
 function buildSummonTable(creatures, level) {
   const charDeity = (val('deity') || '').trim();
 
-  // Sort: standard A-Z, then deity-specific A-Z
   const standard  = creatures.filter(cr => !cr.deity).sort((a,b) => a.name.localeCompare(b.name));
   const deitySpec = creatures.filter(cr => !!cr.deity).sort((a,b) => a.name.localeCompare(b.name));
 
   function makeRow(cr) {
-    const isDeity = !!cr.deity;
+    const isDeity    = !!cr.deity;
     const deityMatch = isDeity && charDeity && (
       charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
       cr.deity.toLowerCase().includes(charDeity.toLowerCase())
     );
-    const rowClass = isDeity
+    const rowClass  = isDeity
       ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
       : 'sum-row';
-    const deityTag = isDeity
-      ? `<span class="sum-deity-tag">⚜ ${cr.deity}</span>` : '';
-    const opacity  = isDeity && !deityMatch ? 'opacity:0.5' : '';
-    const nameEsc  = cr.name.replace(/'/g, "\'");
+    const deityTag  = isDeity ? `<span class="sum-deity-tag">⚜ ${cr.deity}</span>` : '';
+    const opacity   = isDeity && !deityMatch ? 'opacity:0.45' : '';
+    const nameEsc   = cr.name.replace(/'/g,"\'");
+    const crJson    = JSON.stringify({name:cr.name, align:cr.align, size:cr.size,
+                        ac:cr.ac, hp:cr.hp, atk:cr.atk, special:cr.special||''})
+                        .replace(/'/g,"\'");
     return `<tr class="${rowClass}" style="${opacity};cursor:pointer"
-              onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
-      <td class="sum-sel-col"></td>
+              onclick="selectSummon('${nameEsc}','${crJson}')" title="Click to add to active summons">
       <td class="sum-name">${cr.name}${deityTag}</td>
       <td class="sum-align">${cr.align}</td>
       <td class="sum-size">${cr.size}</td>
@@ -3922,533 +3953,29 @@ function buildSummonTable(creatures, level) {
   }
 
   const sepRow = deitySpec.length ? `
-    <tr class="sum-row-deity-sep">
-      <td colspan="8">⚜ Deity-specific additions${charDeity ? ' — ' + charDeity : ' (set deity in Character Setup)'}</td>
-    </tr>` : '';
+    <tr class="sum-row-deity-sep"><td colspan="7">
+      ⚜ Deity-specific${charDeity ? ' — ' + charDeity : ' (set deity in Setup)'}
+    </td></tr>` : '';
 
   const allRows = standard.map(makeRow).join('') + sepRow + deitySpec.map(makeRow).join('');
 
   const deityNote = charDeity
-    ? `<span class="sum-deity-note">⚜ gold = available to ${charDeity}</span>`
+    ? `<span class="sum-deity-note">⚜ = ${charDeity}-specific</span>`
     : `<span class="sum-deity-note">⚜ = deity-specific</span>`;
 
-  return `
-    <div class="sum-block">
-      <div class="sum-title">Summonable creatures — level ${level} &nbsp;${deityNote}</div>
-      <div class="sum-template-note">* = gets Celestial (good caster) or Fiendish (evil caster) template</div>
-      <div class="sum-selected" id="sum-selected-display" style="display:none">
-        ✔ <strong id="sum-selected-name"></strong>
-        <button onclick="clearSummon()" style="margin-left:8px;font-size:8px;padding:1px 5px">✕ clear</button>
-      </div>
-      <div class="sum-table-wrap">
-        <table class="sum-table">
-          <thead><tr>
-            <th></th><th>Name</th><th>AL</th><th>Size</th>
-            <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
-          </tr></thead>
-          <tbody>${allRows}</tbody>
-        </table>
-      </div>
-    </div>`;
-}
-
-
-function selectSummon(row, name) {
-  // Deselect all rows in this table
-  const table = row.closest('table');
-  if (table) {
-    table.querySelectorAll('tr').forEach(r => r.classList.remove('sum-row-selected'));
-    table.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
-  }
-  // Select this row
-  row.classList.add('sum-row-selected');
-  const selCell = row.querySelector('.sum-sel-col');
-  if (selCell) selCell.textContent = '✔';
-  // Show selected display
-  const disp = document.getElementById('sum-selected-display');
-  const nameEl = document.getElementById('sum-selected-name');
-  if (disp) disp.style.display = 'block';
-  if (nameEl) nameEl.textContent = name;
-}
-
-function clearSummon() {
-  document.querySelectorAll('.sum-row-selected').forEach(r => r.classList.remove('sum-row-selected'));
-  document.querySelectorAll('.sum-sel-col').forEach(td => td.textContent = '');
-  const disp = document.getElementById('sum-selected-display');
-  if (disp) disp.style.display = 'none';
-}
-
-function romanToInt(r) {
-  const map = {i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9,x:10};
-  return map[r.toLowerCase()] || 1;
-}
-
-function buildSummonTable(creatures, level) {
-  // Get character's deity for deity-specific filtering
-  const charDeity = (val('deity') || '').trim();
-
-  // Sort: standard entries A-Z first, then deity-specific A-Z
-  const sorted = [...creatures].sort((a, b) => {
-    if (!!a.deity !== !!b.deity) return a.deity ? 1 : -1;
-    return a.name.localeCompare(b.name);
-  });
-
-  const rows = sorted.map(cr => {
-    const isDeitySpecific = !!cr.deity;
-    const deityMatch = isDeitySpecific && charDeity && (
-      charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
-      cr.deity.toLowerCase().includes(charDeity.toLowerCase())
-    );
-    const rowClass = isDeitySpecific
-      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
-      : 'sum-row';
-    const deityTag = isDeitySpecific
-      ? `<span class="sum-deity-tag" title="Requires ${cr.deity} worship">⚜ ${cr.deity}</span>` : '';
-    const nameEsc = cr.name.replace(/'/g,"\'");
-    const greyStyle = isDeitySpecific && !deityMatch ? 'opacity:0.5' : '';
-    return `
-    <tr class="${rowClass}" style="${greyStyle};cursor:pointer" onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
-      <td class="sum-sel-col"></td>
-      <td class="sum-name">${cr.name}${deityTag}</td>
-      <td class="sum-align">${cr.align}</td>
-      <td class="sum-size">${cr.size}</td>
-      <td class="sum-ac">${cr.ac}</td>
-      <td class="sum-hp">${cr.hp}</td>
-      <td class="sum-atk">${cr.atk}</td>
-      <td class="sum-special">${cr.special || '—'}</td>
-    </tr>`;
-  }, '');
-
-  // Build standard rows + separator + deity rows separately
-  const standard = sorted.filter(cr => !cr.deity);
-  const deitySpec = sorted.filter(cr => !!cr.deity);
-
-  const makeRow = cr => {
-    const isDeitySpecific = !!cr.deity;
-    const deityMatch = isDeitySpecific && charDeity && (
-      charDeity.toLowerCase().includes(cr.deity.toLowerCase()) ||
-      cr.deity.toLowerCase().includes(charDeity.toLowerCase())
-    );
-    const rowClass = isDeitySpecific
-      ? (deityMatch ? 'sum-row sum-row-deity sum-row-deity-match' : 'sum-row sum-row-deity')
-      : 'sum-row';
-    const deityTag = isDeitySpecific
-      ? `<span class="sum-deity-tag" title="Requires ${cr.deity} worship">⚜ ${cr.deity}</span>` : '';
-    const nameEsc = cr.name.replace(/'/g,"\'");
-    const opacity = isDeitySpecific && !deityMatch ? 'opacity:0.5' : '';
-    return `
-    <tr class="${rowClass}" style="${opacity};cursor:pointer" onclick="selectSummon(this,'${nameEsc}')" title="Click to select">
-      <td class="sum-sel-col"></td>
-      <td class="sum-name">${cr.name}${deityTag}</td>
-      <td class="sum-align">${cr.align}</td>
-      <td class="sum-size">${cr.size}</td>
-      <td class="sum-ac">${cr.ac}</td>
-      <td class="sum-hp">${cr.hp}</td>
-      <td class="sum-atk">${cr.atk}</td>
-      <td class="sum-special">${cr.special || '—'}</td>
-    </tr>`;
-  };
-
-  const sepRow = deitySpec.length ? `
-    <tr class="sum-row-deity-sep">
-      <td colspan="8">⚜ Deity-specific additions${charDeity ? ' — ' + charDeity : ' (set deity in Setup)'}</td>
-    </tr>` : '';
-
-  const allRows = standard.map(makeRow).join('') + sepRow + deitySpec.map(makeRow).join('');
-
-  const deityNote = charDeity
-    ? `<span class="sum-deity-note">⚜ gold = available to ${charDeity}</span>`
-    : `<span class="sum-deity-note">⚜ = deity-specific</span>`;
-
-  return `
-    <div class="sum-block">
-      <div class="sum-title">Summonable creatures — level ${level} &nbsp;${deityNote}</div>
-      <div class="sum-template-note">* = gets Celestial (good caster) or Fiendish (evil caster) template</div>
-      <div class="sum-selected" id="sum-selected-display" style="display:none">
-        ✔ <strong id="sum-selected-name"></strong>
-        <button onclick="clearSummon()" style="margin-left:8px;font-size:8px;padding:1px 5px">✕ clear</button>
-      </div>
-      <div class="sum-table-wrap">
+  return `<div class="sum-block">
+    <div class="sum-title">Click to add to active summons — level ${level} &nbsp;${deityNote}</div>
+    <div class="sum-template-note">* = Celestial (good) or Fiendish (evil) template applies</div>
+    <div class="sum-table-wrap">
       <table class="sum-table">
-        <thead>
-          <tr>
-            <th></th><th>Name</th><th>AL</th><th>Size</th>
-            <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>Name</th><th>AL</th><th>Size</th>
+          <th>AC</th><th>HP</th><th>Attack</th><th>Special</th>
+        </tr></thead>
         <tbody>${allRows}</tbody>
       </table>
-      </div>
-    </div>`;
-}
-
-function addSpellRowTo(sl) {
-  const container = document.getElementById('sbrows_' + sl);
-  if (!container) return;
-  const i = container.querySelectorAll('.srow').length;
-  const div = document.createElement('div');
-  div.className = 'srow';
-  div.id = `srow_${sl}_${i}`;
-  div.innerHTML = `
-    <input type="checkbox" class="srow-prep" id="sprep_${sl}_${i}"
-           onchange="onSpellPrepChange(${sl},${i},this.checked)" title="Prepared">
-    <input type="text" class="srow-name" id="sname_${sl}_${i}"
-           placeholder="Spell name…" oninput="onSpellNameType(${sl},${i})" autocomplete="off">
-    <div class="srow-suggest" id="ssug_${sl}_${i}"></div>
-    <div class="srow-detail" id="sdetail_${sl}_${i}"></div>`;
-  container.appendChild(div);
-}
-
-function removeSpellRowFrom(sl) {
-  const container = document.getElementById('sbrows_' + sl);
-  if (!container) return;
-  const rows = container.querySelectorAll('.srow');
-  if (rows.length <= 1) return;
-  rows[rows.length - 1].remove();
-}
-
-function onSpellNameInput(inputId) {
-  // Legacy compat — map old IDs to new function
-  const parts = inputId.split('_');
-  const sl = parseInt(parts[2]);
-  const i  = parseInt(parts[3]);
-  onSpellNameType(sl, i);
+    </div>
+  </div>`;
 }
 
 
-function buildSpellAutocomplete(inputId, onSelect) {
-  const input = document.getElementById(inputId);
-  if (!input || input.dataset.spellWrapped) return;
-  input.dataset.spellWrapped = '1';
-  const wrap = document.createElement('div');
-  wrap.style.position = 'relative';
-  input.parentNode.insertBefore(wrap, input);
-  wrap.appendChild(input);
-  const sug = document.createElement('div');
-  sug.className = 'spell-suggestions';
-  sug.style.display = 'none';
-  wrap.appendChild(sug);
-  input.addEventListener('input', () => {
-    const q = input.value;
-    if (typeof searchSpells==='undefined' || q.length<2) { sug.style.display='none'; return; }
-    const results = searchSpells(q);
-    if (!results.length) { sug.style.display='none'; return; }
-    sug.innerHTML = results.map(s => {
-      const lvlStr = Object.entries(s.level).map(([k,v])=>`${k} ${v}`).join(', ');
-      return `<div class="feat-suggestion-item" onclick="selectSpellInto('${inputId}','${s.name.replace(/'/g,"\\'")}')" >
-        <span class="feat-sug-name">${s.name}</span>
-        <span class="feat-sug-type">${s.school.split(' ')[0]}</span>
-        ${s.calcValue?`<span class="spell-sug-calc">${s.calcValue}</span>`:''}
-        <span class="feat-sug-benefit">${lvlStr}</span>
-      </div>`;
-    }).join('');
-    sug.style.display = 'block';
-  });
-  input.addEventListener('blur', () => setTimeout(()=>{ sug.style.display='none'; }, 200));
-}
-
-function selectSpellInto(inputId, name) {
-  set(inputId, name);
-  const spell = typeof getSpellByName!=='undefined' ? getSpellByName(name) : null;
-  if (!spell) return;
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const wandBlock = input.closest('.wand-block');
-  if (wandBlock && spell) {
-    const idx = (wandBlock.querySelector('[id^="wand_name_"]')||{}).id?.replace('wand_name_','');
-    if (idx !== undefined) {
-      const minLevel = Math.min(...Object.values(spell.level));
-      set('wand_spelllvl_'+idx, minLevel);
-      if (spell.calcValue) set('wand_effect_'+idx, spell.calcValue);
-      if (spell.duration)  set('wand_duration_'+idx, spell.duration);
-      const atkSel = document.getElementById('wand_attack_type_'+idx);
-      if (atkSel) {
-        if (spell.description.toLowerCase().includes('ranged touch')) atkSel.value='ranged_touch';
-        else if (spell.description.toLowerCase().includes('melee touch')) atkSel.value='melee_touch';
-        else atkSel.value='none';
-      }
-      calcWand(parseInt(idx));
-    }
-  }
-}
-
-function onTraitSearch(slot) {
-  const inputId = 'trait'+slot+'_name';
-  const sugId   = 'trait'+slot+'_suggestions';
-  const query   = val(inputId);
-  const sug     = document.getElementById(sugId);
-  if (!sug || typeof searchTraits==='undefined') return;
-  if (query.length < 2) { sug.style.display='none'; return; }
-  const results = searchTraits(query, null);
-  if (!results.length) { sug.style.display='none'; return; }
-  // Store results for retrieval by index (avoids quoting issues with apostrophes)
-  sug._traitResults = results;
-  sug.innerHTML = results.map((t, idx) =>
-    `<div class="feat-suggestion-item" onmousedown="event.preventDefault();selectTraitByIndex(${slot},${idx})">
-      <span class="feat-sug-name">${t.name}</span>
-      <span class="feat-sug-type">${t.type}</span>
-      <span class="feat-sug-benefit">${t.benefit.substring(0,70)}${t.benefit.length>70?'…':''}</span>
-    </div>`
-  ).join('');
-  sug.style.display = 'block';
-}
-
-function clearTraitDesc(slot) {
-  const descEl = document.getElementById('trait' + slot + '_desc');
-  if (descEl) descEl.innerHTML = '';
-  const sug = document.getElementById('trait' + slot + '_suggestions');
-  if (sug) sug.style.display = 'none';
-}
-
-function selectTraitByIndex(slot, idx) {
-  const sugId = 'trait' + slot + '_suggestions';
-  const sug   = document.getElementById(sugId);
-  if (!sug || !sug._traitResults) return;
-  const trait = sug._traitResults[idx];
-  if (!trait) return;
-  selectTrait(slot, trait.name);
-}
-
-function selectTrait(slot, name) {
-  name = name.replace(/&#39;/g,"'");
-  set('trait'+slot+'_name', name);
-  const trait = typeof getTraitByName!=='undefined' ? getTraitByName(name) : null;
-  const descEl = document.getElementById('trait'+slot+'_desc');
-  if (descEl && trait) {
-    const calc = trait.calcValue ? `<span class="trait-calc-badge">${trait.calcValue}</span>` : '';
-    descEl.innerHTML = `<span class="trait-type-badge">${trait.type} · ${trait.source}</span>${calc}<span class="trait-benefit-text">${trait.benefit}</span>`;
-  }
-  if (trait) {
-    if (trait.skillBonus && !trait.saveCondition) {
-      Object.entries(trait.skillBonus).forEach(([skillId,amt]) => {
-        const cur = parseInt(val('sk_misc_'+skillId))||0;
-        set('sk_misc_'+skillId, cur+amt);
-        calcSkill(skillId);
-      });
-    }
-    if (trait.saveBonus && !trait.saveCondition) {
-      ['fort','ref','will'].forEach(s => {
-        if (trait.saveBonus[s]) { const cur=parseInt(val(s+'_misc'))||0; set(s+'_misc',cur+trait.saveBonus[s]); }
-      });
-      calcSaves();
-    }
-    if ((trait.saveBonus && trait.saveCondition) || trait.calcValue) {
-      const note = trait.calcValue
-        ? `[Trait: ${name}] ${trait.calcValue} — ${trait.benefit}`
-        : `[Trait: ${name}] ${trait.benefit}`;
-      const sa = val('special_abilities');
-      if (!sa.includes('[Trait: '+name+']')) set('special_abilities', sa ? sa+'\n'+note : note);
-    }
-  }
-  const sug = document.getElementById('trait'+slot+'_suggestions');
-  if (sug) sug.style.display='none';
-}
-
-function restoreTraitDescriptions() {
-  [1,2].forEach(slot => {
-    const name = val('trait'+slot+'_name');
-    if (name) selectTrait(slot, name);
-  });
-}
-
-function applyMagicItemLookup() {
-  if (!_selectedMagicItem) { alert('Select an item first.'); return; }
-  const item = typeof getMagicItem!=='undefined' ? getMagicItem(_selectedMagicItem) : null;
-  if (!item) return;
-  const target = (document.getElementById('mi_lookup_target')||{}).value || 'ac';
-  const acSlot = parseInt((document.getElementById('mi_lookup_acslot')||{}).value||'0');
-  if (target === 'ac') {
-    set('aci_name_'+acSlot,   _selectedMagicItem);
-    set('aci_bonus_'+acSlot,  item.acBonus  || '');
-    set('aci_type_'+acSlot,   item.acType   || item.slot || '');
-    set('aci_maxdex_'+acSlot, item.maxDex !== undefined && item.maxDex < 99 ? item.maxDex : '');
-    set('aci_check_'+acSlot,  item.checkPen !== undefined ? item.checkPen : '');
-    set('aci_sf_'+acSlot,     item.spellFail || '');
-    set('aci_wt_'+acSlot,     item.weight || '');
-    set('aci_props_'+acSlot,  item.note || '');
-    calcACItems();
-    // Auto-apply item bonuses to ability scores / skills / saves
-    registerItemBonus(_selectedMagicItem, acSlot);
-  } else {
-    // gear_auto: find first empty gear slot
-    for (let i=0; i<GEAR_COUNT; i++) {
-      if (!val('gear_name_'+i)) {
-        set('gear_name_'+i, _selectedMagicItem);
-        set('gear_wt_'+i, item.weight||0);
-        calcGear();
-        _selectedMagicItem = null;
-        searchMagicItemUI();
-        return;
-      }
-    }
-    alert('No empty gear slots. Clear one first.');
-  }
-  _selectedMagicItem = null;
-  searchMagicItemUI();
-}
-
-let _selectedMagicItem = null;
-function searchMagicItemUI() {
-  const query   = val('mi_lookup_search');
-  const slotFil = (document.getElementById('mi_lookup_slot')||{}).value || '';
-  const results = document.getElementById('mi_search_results');
-  if (!results || typeof searchMagicItems==='undefined') return;
-  const items = searchMagicItems(query, slotFil||null);
-  results.innerHTML = items.map(([name,item]) => `
-    <div class="mi-search-row ${_selectedMagicItem===name?'mi-selected':''}"
-         onclick="selectMagicItem('${name.replace(/'/g,"\\'")}')">
-      <span class="mi-item-name">${name}</span>
-      <span class="mi-item-slot">${item.slot}</span>
-      <span class="mi-item-cost">${item.cost?item.cost.toLocaleString()+' gp':''}</span>
-      <span class="mi-item-note">${(item.note||'').substring(0,60)}${(item.note||'').length>60?'…':''}</span>
-    </div>`).join('') || '<p class="helper-text" style="padding:4px">No items found.</p>';
-}
-
-function selectMagicItem(name) {
-  _selectedMagicItem = name;
-  searchMagicItemUI();
-}
-
-function updateMagicItemDots(i) {
-  const max  = parseInt(val('mi_charges_max_'+i))||0;
-  const used = parseInt(val('mi_charges_used_'+i))||0;
-  const rem  = Math.max(0, max-used);
-  const remEl = document.getElementById('mi_remaining_'+i);
-  if (remEl) remEl.textContent = max>0 ? rem+'/'+max : '';
-  const dotsEl = document.getElementById('mi_dots_'+i);
-  if (!dotsEl||max===0) { if(dotsEl) dotsEl.innerHTML=''; return; }
-  const show = Math.min(max,20);
-  const usedD = Math.round((used/max)*show);
-  let html='';
-  for(let d=0;d<show;d++){
-    const cls = d<(show-usedD)?'mi-dot-full':'mi-dot-used';
-    html+=`<span class="mi-dot ${cls}" onclick="useMagicItemCharge(${i})"></span>`;
-  }
-  dotsEl.innerHTML = html;
-}
-
-function useMagicItemCharge(i) {
-  const max=parseInt(val('mi_charges_max_'+i))||0;
-  const used=parseInt(val('mi_charges_used_'+i))||0;
-  if(used<max){set('mi_charges_used_'+i,used+1);updateMagicItemDots(i);}
-}
-
-function buildMagicItems() {
-  const container = document.getElementById('magic-items-container');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i=0; i<MAGIC_ITEM_COUNT; i++) {
-    const row = document.createElement('div');
-    row.className = 'magic-item-row';
-    row.innerHTML = `
-      <input type="text" id="mi_name_${i}" class="mi-name-input" placeholder="e.g. Wand of Cure Moderate Wounds">
-      <div class="mi-charges-wrap">
-        <input type="number" id="mi_charges_max_${i}" class="num small-num" placeholder="50" oninput="updateMagicItemDots(${i})" min="0" max="50">
-        <span class="mi-label">max</span>
-        <input type="number" id="mi_charges_used_${i}" class="num small-num" placeholder="0" oninput="updateMagicItemDots(${i})" min="0">
-        <span class="mi-label">used</span>
-        <span id="mi_dots_${i}" class="mi-dots"></span>
-        <span id="mi_remaining_${i}" class="mi-remaining"></span>
-      </div>`;
-    container.appendChild(row);
-  }
-}
-
-function toggleSetupBar() {
-  const content = document.getElementById('setup-panels-content');
-  const arrow   = document.getElementById('setup-toggle-arrow');
-  if (!content) return;
-  const hidden = content.style.display === 'none';
-  content.style.display = hidden ? '' : 'none';
-  if (arrow) arrow.textContent = hidden ? '▲ hide' : '▼ show';
-  try { localStorage.setItem('pf1_setup_hidden', hidden?'0':'1'); } catch(e){}
-}
-
-function newCharacter() {
-  if (!confirm('Start a new character? All unsaved changes will be lost.')) return;
-  document.querySelectorAll('input:not([readonly]), textarea').forEach(el => el.value='');
-  document.querySelectorAll('.cs-dot').forEach(d => d.classList.remove('checked'));
-  document.querySelectorAll('.lang-checkbox').forEach(cb => cb.checked=false);
-  calcAll(); calcACItems(); calcGear();
-}
-
-function saveCharacter() {
-  const data = collectData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = (val('charName')||'character').replace(/[^a-z0-9]/gi,'_')+'.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function loadCharacter() {
-  document.getElementById('fileInput').click();
-}
-
-function handleFileLoad(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      populateData(data);
-    } catch(err) {
-      console.error('Load error:', err);
-      alert('Could not load file: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-function calcSpellMeta() {
-  const ab    = val('spell_ability') || 'WIS';
-  const clvl  = parseInt(val('caster_level')) || 0;
-  const abKey = ab.toLowerCase().substring(0,3);
-  const abMod = getEffectiveMod(abKey);
-  set('spell_dc_base',    10 + abMod);
-  set('concentration_mod', clvl + abMod);
-}
-
-function initPages35() {
-  // Pool dots, daily tracker, buff tracker init
-  for (let i=0; i<RESOURCE_POOL_COUNT; i++) updatePoolDots(i);
-}
-
-function updatePoolDots(i) {
-  const max    = parseInt(val('pool_max_'+i))||0;
-  const dotsEl = document.getElementById('pool_dots_'+i);
-  if (!dotsEl) return;
-  dotsEl.innerHTML = '';
-  for (let d=0; d<Math.min(max,20); d++) {
-    const span = document.createElement('span');
-    span.className = 'pool-dot';
-    span.onclick   = () => { span.classList.toggle('filled'); };
-    dotsEl.appendChild(span);
-  }
-}
-
-function updateCarryWeight() {
-  const str = parseInt(val('str_score'))||10;
-  if (typeof getCarryCapacity === 'undefined') return;
-  const cap = getCarryCapacity(str, val('size')||'Medium');
-  set('load_light',  cap.light);
-  set('load_medium', cap.medium);
-  set('load_heavy',  cap.heavy);
-}
-
-/* ══════════════════════════════════════════════════
-   XP PROGRESS BAR
-   ══════════════════════════════════════════════════ */
-function updateXPBar() {
-  const current  = parseInt(val('xp_current')) || 0;
-  const next     = parseInt(val('xp_next'))    || 0;
-  const bar      = document.getElementById('xp-progress-bar');
-  if (!bar || !next) return;
-  const pct = Math.min(100, Math.round((current / next) * 100));
-  bar.style.width = pct + '%';
-  bar.title = `${current.toLocaleString()} / ${next.toLocaleString()} XP (${pct}%)`;
-}
